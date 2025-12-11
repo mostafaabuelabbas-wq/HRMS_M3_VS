@@ -1059,7 +1059,7 @@ GO
 
 
 -- 20. ApproveLeaveRequest
-CREATE PROCEDURE ApproveLeaveRequest
+CREATE or ALTER PROCEDURE ApproveLeaveRequest
     @LeaveRequestID INT,
     @ManagerID INT
 AS

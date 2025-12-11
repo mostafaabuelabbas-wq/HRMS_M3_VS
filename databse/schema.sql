@@ -86,12 +86,7 @@ CREATE TABLE Contract (
     end_date DATE,
     current_state VARCHAR(50)
 );
-ALTER TABLE Contract
-ADD employee_id INT NULL;
-ALTER TABLE Contract
-ADD CONSTRAINT FK_Contract_Employee
-FOREIGN KEY (employee_id) REFERENCES Employee(employee_id);
-EXEC sp_help Contract;
+
 
 CREATE TABLE Insurance (
     insurance_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -658,4 +653,9 @@ CREATE TABLE LineManager (
     approval_limit DECIMAL(18,2),
     FOREIGN KEY (employee_id) REFERENCES Employee(employee_id)
 );
+ALTER TABLE Contract
+ADD employee_id INT NULL;
+ALTER TABLE Contract
+ADD CONSTRAINT FK_Contract_Employee
+FOREIGN KEY (employee_id) REFERENCES Employee(employee_id);
 SELECT name FROM sys.tables ORDER BY name;

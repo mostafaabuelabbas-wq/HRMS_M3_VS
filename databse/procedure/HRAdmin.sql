@@ -1,7 +1,7 @@
 USE HRMS
 GO
 --HR admin
-ALTER PROCEDURE CreateContract
+CREATE PROCEDURE CreateContract
     @EmployeeID INT,
     @Type VARCHAR(50),
     @StartDate DATE,
