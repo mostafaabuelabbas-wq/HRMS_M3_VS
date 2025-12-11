@@ -1,0 +1,20 @@
+﻿@model HRMS_M3_VS.Areas.Employee.Models.ContractRenewViewModel
+@{
+    ViewData["Title"] = "Renew Contract";
+}
+
+<h2 class="fw-bold mb-4">Renew Contract</h2>
+
+<form asp-action="Renew" method="post" class="row g-3">
+    <input asp-for="ContractId" type="hidden" />
+
+    <div class="col-md-4">
+        <label asp-for="NewEndDate" class="form-label">New End Date</label>
+        <input asp-for="NewEndDate" type="date" class="form-control" />
+    </div>
+
+    <div class="col-12 mt-3">
+        <button class="btn btn-success">Renew</button>
+        <a asp-action="Details" asp-route-id="@Model.ContractId" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>

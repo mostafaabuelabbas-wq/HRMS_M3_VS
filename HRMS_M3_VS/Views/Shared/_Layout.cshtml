@@ -1,0 +1,170 @@
+﻿@using System.Security.Claims
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - HRMS</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: #F8FAFC;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* ------------------------------
+                   SIDEBAR (Upgraded)
+                ------------------------------ */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background-color: #1E293B;
+            color: white;
+            padding-top: 10px;
+            border-right: 1px solid #0F172A;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            box-shadow: 3px 0 8px rgba(0,0,0,0.15);
+        }
+
+        /* Sidebar header */
+        .sidebar-header {
+            padding: 20px;
+            text-align: left;
+            font-size: 22px;
+            font-weight: bold;
+            color: #FFFFFF;
+            letter-spacing: 1px;
+        }
+
+            .sidebar-header span {
+                color: #3B82F6; /* blue accent */
+            }
+
+        /* Nav styling */
+        .sidebar .nav-link {
+            color: #CBD5E1;
+            padding: 12px 20px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 6px;
+            transition: 0.2s ease;
+        }
+
+            .sidebar .nav-link i {
+                width: 22px;
+                text-align: center;
+                font-size: 17px;
+            }
+
+            .sidebar .nav-link:hover {
+                background-color: #334155;
+                color: #fff;
+                transform: translateX(4px);
+            }
+
+            /* Active state */
+            .sidebar .nav-link.active {
+                background-color: #3B82F6;
+                color: white !important;
+            }
+
+        /* Content area */
+        .main-content {
+            margin-left: 260px;
+            padding: 35px;
+            transition: margin-left 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <!-- HRMS HEADER -->
+        <div class="sidebar-header">
+            HR<span>MS</span>
+        </div>
+
+        <nav class="nav flex-column px-3">
+
+            <!-- ALL USERS -->
+            <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+
+            <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Profile">
+                <i class="fas fa-id-card"></i> My Profile
+            </a>
+
+            <a class="nav-link" asp-area="Employee" asp-controller="Attendance" asp-action="Index">
+                <i class="fas fa-clock"></i> Attendance & Shifts
+            </a>
+
+            <a class="nav-link" asp-area="Employee" asp-controller="Leave" asp-action="Index">
+                <i class="fas fa-calendar-alt"></i> Leave Management
+            </a>
+
+            <a class="nav-link" asp-area="Employee" asp-controller="Mission" asp-action="Index">
+                <i class="fas fa-briefcase"></i> Missions
+            </a>
+
+            <!-- MANAGER ONLY -->
+            @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+            {
+                <a class="nav-link" asp-area="Employee" asp-controller="Manager" asp-action="Index">
+                    <i class="fas fa-users-cog"></i> My Team
+                </a>
+            }
+
+            <!-- HR ADMIN ONLY -->
+            @if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+            {
+                <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-users"></i> Employee Profiles
+                </a>
+
+                <a class="nav-link" asp-area="Employee" asp-controller="HRAdmin" asp-action="ProfileCompleteness">
+                    <i class="fas fa-check-circle"></i> Profile Completeness
+                </a>
+                <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
+                    <i class="fas fa-file-contract me-2"></i> Contracts
+                </a>
+
+            }
+
+            <!-- SYSTEM ADMIN ONLY -->
+            @if (User.IsInRole("SystemAdmin"))
+            {
+                <a class="nav-link" asp-area="Employee" asp-controller="Role" asp-action="Index">
+                    <i class="fas fa-user-shield"></i> Roles Management
+                </a>
+
+                <a class="nav-link" asp-controller="AdminSettings" asp-action="Index">
+                    <i class="fas fa-cog"></i> System Settings
+                </a>
+            }
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        @RenderBody()
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+
+</body>
+</html>

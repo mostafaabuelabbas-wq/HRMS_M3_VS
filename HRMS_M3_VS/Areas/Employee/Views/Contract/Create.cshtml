@@ -1,0 +1,29 @@
+﻿@model HRMS_M3_VS.Areas.Employee.Models.ContractCreateViewModel
+@{
+    ViewData["Title"] = "Create Contract";
+}
+
+<h2>Create Contract</h2>
+
+<form asp-action="Create" method="post" class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="EmployeeId" class="form-label">Employee ID</label>
+        <input asp-for="EmployeeId" class="form-control" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Type" class="form-label">Type</label>
+        <input asp-for="Type" class="form-control" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="StartDate" class="form-label">Start Date</label>
+        <input asp-for="StartDate" class="form-control" type="date" />
+    </div>
+    <div class="col-md-4">
+        <label asp-for="EndDate" class="form-label">End Date</label>
+        <input asp-for="EndDate" class="form-control" type="date" />
+    </div>
+    <div class="col-12">
+        <button class="btn btn-primary">Create</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>

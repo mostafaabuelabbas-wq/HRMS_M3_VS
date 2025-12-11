@@ -1,0 +1,35 @@
+﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.EmployeeDto>
+
+<h2 class="fw-bold mb-4">Employee Profiles</h2>
+
+<div class="card p-3 shadow-sm">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>Full Name</th>
+                <th>Department</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var emp in Model)
+            {
+                <tr>
+                    <td>@emp.Employee_Id</td>
+                    <td>@emp.Full_Name</td>
+                    <td>@emp.Department</td>
+
+                    <td>
+                        <a asp-action="Profile"
+                           asp-route-id="@emp.Employee_Id"
+                           class="btn btn-primary btn-sm">
+                            View Profile
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

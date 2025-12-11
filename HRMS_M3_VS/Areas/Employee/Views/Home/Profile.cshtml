@@ -1,0 +1,37 @@
+﻿@model HRMS_M3_VS.Areas.Employee.Models.EmployeeDto
+
+<h2 class="fw-bold">@Model.Full_Name</h2>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <img src="@Model.Profile_Image" class="img-fluid rounded shadow-sm" alt="Profile Image" />
+    </div>
+
+    <div class="col-md-8">
+        <div class="card p-4 shadow-sm">
+            <h4 class="mb-3">Employee Information</h4>
+
+            <p><strong>Email:</strong> @Model.Email</p>
+            <p><strong>Phone:</strong> @Model.Phone</p>
+            <p><strong>Department:</strong> @Model.Department</p>
+            <p><strong>Position:</strong> @Model.Position</p>
+            <p><strong>Address:</strong> @Model.Address</p>
+            <p>
+                <strong>Emergency Contact:</strong><br />
+
+                <strong>Name:</strong> @(Model.Emergency_Contact_Name ?? "N/A") <br />
+                <strong>Relationship:</strong> @(Model.Relationship ?? "N/A") <br />
+                <strong>Phone:</strong> @(Model.Emergency_Contact_Phone ?? "N/A")
+            </p>
+
+            <p><strong>Status:</strong> @(Model.Employment_Status ?? "N/A")</p>
+
+            <p><strong>Hire Date:</strong> @(Model.Hire_Date?.ToShortDateString() ?? "N/A")</p>
+
+
+            <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-warning mt-3">
+                Edit Information
+            </a>
+        </div>
+    </div>
+</div>

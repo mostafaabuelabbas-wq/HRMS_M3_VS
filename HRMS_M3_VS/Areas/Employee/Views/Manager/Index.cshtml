@@ -1,0 +1,37 @@
+﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.EmployeeDto>
+
+<h2 class="fw-bold mb-4">My Team</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Position</th>
+            <th>Status</th>
+            <th>Profile</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var emp in Model)
+        {
+            <tr>
+                <td>@emp.Full_Name</td>
+                <td>@emp.Department_Name</td>
+                <td>@emp.Position_Title</td>
+                <td>@emp.Employment_Status</td>
+
+                <td>
+                    <a asp-area="Employee"
+                       asp-controller="Home"
+                       asp-action="Profile"
+                       asp-route-id="@emp.Employee_Id"
+                       class="btn btn-primary btn-sm">
+                        View Profile
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

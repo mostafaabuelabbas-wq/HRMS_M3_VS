@@ -1,0 +1,55 @@
+﻿@model HRMS_M3_VS.Areas.Employee.Models.EmployeeEditViewModel
+
+<h2 class="fw-bold mb-3">Edit Employee Information</h2>
+
+<div class="card shadow-sm p-4 w-75">
+    <form method="post" enctype="multipart/form-data">
+
+        <input type="hidden" asp-for="EmployeeId" />
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input asp-for="Email" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Phone</label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Address</label>
+            <input asp-for="Address" class="form-control" />
+        </div>
+        <div class="mb-3">
+    <label class="form-label">Emergency Contact Name</label>
+    <input asp-for="EmergencyContactName" class="form-control" />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Relationship</label>
+    <input asp-for="EmergencyRelationship" class="form-control" />
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Emergency Contact Phone</label>
+    <input asp-for="EmergencyContactPhone" class="form-control" />
+</div>
+        <div class="mb-3">
+            <label class="form-label">Profile Image</label>
+            <input asp-for="ProfileImage" type="file" class="form-control" />
+
+            @if (!string.IsNullOrEmpty(Model.ExistingImagePath))
+            {
+                <img src="@Model.ExistingImagePath" class="mt-3 rounded" width="150" />
+            }
+        </div>
+
+
+
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <a asp-action="Profile" asp-route-id="@Model.EmployeeId" class="btn btn-secondary ms-2">
+            Cancel
+        </a>
+    </form>
+</div>

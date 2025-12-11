@@ -1,0 +1,32 @@
+﻿@model List<HRMS_M3_VS.Areas.Employee.Models.AssignRoleViewModel>
+
+<h2 class="fw-bold mb-4">Roles Management</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>Full Name</th>
+            <th>Department</th>
+            <th>Current Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var emp in Model)
+        {
+            <tr>
+                <td>@emp.EmployeeId</td>
+                <td>@emp.FullName</td>
+                <td>@emp.Department</td>
+                <td>@(emp.CurrentRoleName ?? "Unassigned")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@emp.EmployeeId"
+                       class="btn btn-sm btn-primary">
+                        Change Role
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

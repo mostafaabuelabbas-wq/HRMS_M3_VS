@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2 class="fw-bold mb-2">Welcome back</h2>
+<p class="text-muted mb-4">Here are your key items requiring attention today.</p>
+
+<div class="row g-4">
+
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4">
+            <h5 class="text-muted">Pending Leave Requests</h5>
+            <h2 class="fw-bold mt-2">8</h2>
+            <a asp-area="Employee" asp-controller="Leave" asp-action="Index" class="small text-primary">Review requests →</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4">
+            <h5 class="text-muted">Expiring Contracts</h5>
+            <h2 class="fw-bold mt-2 text-warning">5</h2>
+            <a asp-area="Employee" asp-controller="Home" asp-action="Index" class="small text-primary">View contracts →</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm p-4">
+            <h5 class="text-muted">Pending Mission Requests</h5>
+            <h2 class="fw-bold mt-2">3</h2>
+            <a asp-area="Employee" asp-controller="Mission" asp-action="Index" class="small text-primary">Manage missions →</a>
+        </div>
+    </div>
+
+</div>

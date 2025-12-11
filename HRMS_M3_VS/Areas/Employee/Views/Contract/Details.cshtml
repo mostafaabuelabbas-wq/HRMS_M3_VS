@@ -1,0 +1,40 @@
+﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.ContractDto>
+@{
+    ViewData["Title"] = "Contracts";
+}
+<h2 class="mb-3">Contracts</h2>
+
+<table class="table table-hover">
+    <thead class="table-light">
+        <tr>
+            <th>Contract ID</th>
+            <th>Employee</th>
+            <th>Type</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.ContractId</td>
+                <td>@c.FullName</td>
+                <td>@c.Type</td>
+                <td>@(c.StartDate?.ToString("yyyy-MM-dd"))</td>
+                <td>@(c.EndDate?.ToString("yyyy-MM-dd"))</td>
+                <td>
+                    <span class="badge @(c.CurrentState == "Active" ? "bg-success" : "bg-secondary")">@c.CurrentState</span>
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@c.ContractId" class="btn btn-sm btn-outline-primary">Details</a>
+                    <a asp-action="Edit" asp-route-id="@c.ContractId" class="btn btn-sm btn-outline-warning">Edit</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Create" class="btn btn-primary">Create Contract</a>
