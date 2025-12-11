@@ -875,8 +875,13 @@ GO
 
 -- 15 CreateShiftType
 -- PROCEDURE: CreateShiftType
-CREATE PROCEDURE CreateShiftType
-    @ShiftID INT,
+
+
+USE HRMS;
+GO
+
+CREATE OR ALTER PROCEDURE CreateShiftType
+    @ShiftID INT OUTPUT,  -- <--- CRITICAL FIX: Added 'OUTPUT' keyword
     @Name VARCHAR(100),
     @Type VARCHAR(50),
     @Start_Time TIME,
@@ -891,15 +896,9 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- If ShiftID is provided (not null), check if it exists
-        IF EXISTS (SELECT 1 FROM ShiftSchedule WHERE shift_id = @ShiftID)
-        BEGIN
-            RAISERROR('Shift ID already exists. Use a new ID or an auto-generated ID.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
-        END;
+        -- We do NOT check IF EXISTS because shift_id is Identity (Auto-generated).
+        -- We simply insert the data.
 
-        -- Insert into ShiftSchedule
         INSERT INTO ShiftSchedule
         (
             name,
@@ -921,17 +920,15 @@ BEGIN
             @Status
         );
 
-        DECLARE @NewShiftID INT = SCOPE_IDENTITY();
+        -- CRITICAL FIX: Assign the new ID to the Output parameter so C# gets it
+        SET @ShiftID = SCOPE_IDENTITY();
 
         COMMIT TRANSACTION;
-
-        SELECT 
-            @NewShiftID AS ShiftID,
-            'Shift type created successfully.' AS Message;
 
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
+        -- Throw the error so the C# website knows something failed
         THROW;
     END CATCH
 END;

@@ -1,0 +1,45 @@
+﻿@model IEnumerable<HRMS_M3_VS.Areas.Attendance.Models.ShiftDto>
+
+@{
+    ViewData["Title"] = "Shift Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Shift Types</h2>
+    <a class="btn btn-primary" href="/Attendance/Shift/Create">
+        <i class="fa fa-plus"></i> Create Shift
+    </a>
+</div>
+
+<table class="table table-hover bg-white rounded shadow-sm">
+    <thead class="table-light">
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Break (min)</th>
+            <th>Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.name</td>
+                <td>@s.type</td>
+                <td>@s.start_time.ToString(@"hh\:mm")</td>
+                <td>@s.end_time.ToString(@"hh\:mm")</td>
+                <td>@s.break_duration</td>
+                <td>@(s.shift_date?.ToString("yyyy-MM-dd") ?? "-")</td>
+                <td>
+                    <span class="badge @(s.status == "Active" ? "bg-success" : "bg-secondary")">
+                        @s.status
+                    </span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

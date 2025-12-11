@@ -1444,5 +1444,43 @@ BEGIN
     LEFT JOIN Employee_Role er ON e.employee_id = er.employee_id
     LEFT JOIN Role r ON er.role_id = r.role_id
     ORDER BY e.full_name;
-END
+END;
+GO
+
+
+
+
+--extra procedures
+CREATE  OR ALTER PROCEDURE GetAllShiftTypes
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        shift_id,
+        name,
+        type,
+        start_time,
+        end_time,
+        break_duration,
+        shift_date,
+        status
+    FROM ShiftSchedule
+    ORDER BY shift_id DESC;
+END;
+GO
+CREATE OR ALTER PROCEDURE GetShiftTypes
+AS
+BEGIN
+    SELECT 
+        shift_id,
+        name,
+        type,
+        start_time,
+        end_time,
+        break_duration,
+        shift_date,
+        status
+    FROM ShiftSchedule;
+END;
 GO
