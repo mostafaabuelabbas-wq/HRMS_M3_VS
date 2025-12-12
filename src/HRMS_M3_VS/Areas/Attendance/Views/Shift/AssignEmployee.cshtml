@@ -1,0 +1,47 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.AssignToEmployeeDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Assign Shift to Employee</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post" class="card p-4 shadow-sm">
+
+    <!-- Employee Dropdown -->
+    <div class="mb-3">
+        <label class="form-label">Employee</label>
+        <select asp-for="employee_id" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Employees, "employee_id", "full_name"))" required>
+            <option value="">-- Select Employee --</option>
+        </select>
+    </div>
+
+    <!-- Shift Dropdown (Typo Fixed Here) -->
+    <div class="mb-3">
+        <label class="form-label">Shift</label>
+        <!-- Using lowercase "shift_id" and "name" to match your DTO -->
+        <select asp-for="shift_id" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
+            <option value="">-- Select Shift --</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Start Date</label>
+            <input asp-for="start_date" type="date" class="form-control" required />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">End Date</label>
+            <input asp-for="end_date" type="date" class="form-control" required />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Assign</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

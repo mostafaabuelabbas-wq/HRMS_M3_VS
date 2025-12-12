@@ -1,0 +1,45 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.AssignToDepartmentDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Assign Shift to Department</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post" class="card p-4 shadow-sm">
+    <div class="mb-3">
+        <label class="form-label">Department</label>
+        <select asp-for="department_id" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Departments, "department_id", "department_name"))" required>
+            <option value="">-- Select Department --</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Shift</label>
+
+        <!-- FIXED: changed "ShiftId" to "shift_id" and "Name" to "name" -->
+        <select asp-for="shift_id" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
+            <option value="">-- Select Shift --</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Start Date</label>
+            <input asp-for="start_date" type="date" class="form-control" required />
+        </div>
+        <div class="col-md-6 mb-3">
+            <label class="form-label">End Date</label>
+            <input asp-for="end_date" type="date" class="form-control" required />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-warning">Assign to All Active Employees</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

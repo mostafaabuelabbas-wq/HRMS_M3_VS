@@ -4,11 +4,11 @@ namespace HRMS_M3_VS.Areas.Attendance.Models
 {
     public class ShiftCycleDto
     {
-        public int CycleId { get; set; } // For display/linking
+        // Properties must match SQL Column names exactly
+        public int cycle_id { get; set; }
 
-        [Required]
-        public string CycleName { get; set; } = string.Empty;
+        public string cycle_name { get; set; } = string.Empty;
 
-        public string Description { get; set; } = string.Empty;
+        public string description { get; set; } = string.Empty;
     }
 }

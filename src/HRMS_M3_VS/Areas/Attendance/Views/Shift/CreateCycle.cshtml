@@ -8,11 +8,13 @@
 <form method="post" class="card p-4 shadow-sm">
     <div class="mb-3">
         <label class="form-label">Cycle Name</label>
-        <input asp-for="CycleName" class="form-control" placeholder="e.g. Monthly Rotation" required />
+        <!-- Matching snake_case model -->
+        <input asp-for="cycle_name" class="form-control" placeholder="e.g. Monthly Nurse Rotation" required />
     </div>
     <div class="mb-3">
         <label class="form-label">Description</label>
-        <textarea asp-for="Description" class="form-control"></textarea>
+        <textarea asp-for="description" class="form-control"></textarea>
     </div>
     <button type="submit" class="btn btn-primary">Create Cycle</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>
