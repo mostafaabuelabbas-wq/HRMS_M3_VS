@@ -15,6 +15,7 @@ builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<ContractService>();
 builder.Services.AddScoped<ShiftService>();
+//builder.Services.AddScoped<TrackingService>();
 // Optional: Test DB connection on startup
 try
 {
@@ -51,8 +52,13 @@ app.Use(async (context, next) =>
     context.User = new ClaimsPrincipal(
         new ClaimsIdentity(new[]
         {
-            new Claim(ClaimTypes.Name, "Admin User"),
-            new Claim(ClaimTypes.Role, "SystemAdmin") // Or HRAdmin, Manager, Employee
+             new Claim(ClaimTypes.Name, "Dev SuperUser"),
+            
+            // Grant ALL roles for development
+            new Claim(ClaimTypes.Role, "SystemAdmin"),
+            new Claim(ClaimTypes.Role, "HRAdmin"),
+            new Claim(ClaimTypes.Role, "Manager"),
+            new Claim(ClaimTypes.Role, "Employee")
         }, "mock"));
 
     await next.Invoke();

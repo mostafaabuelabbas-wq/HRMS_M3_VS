@@ -61,8 +61,62 @@ BEGIN
     WHERE e.employee_id = @EmployeeID;
 END;
 GO
+ALTER PROCEDURE GetAllEmployees
+AS
+BEGIN
+    SELECT 
+        e.employee_id,
+        e.full_name,
+        e.employment_status,
+        -- IMPORTANT: You must use AS Department and AS Position here too
+        -- so Dapper maps them to the new DTO properties.
+        d.department_name AS Department,
+        p.position_title AS Position
+    FROM Employee e
+    LEFT JOIN Department d ON e.department_id = d.department_id
+    LEFT JOIN Position p ON e.position_id = p.position_id;
+END;
+GO
+ALTER PROCEDURE ViewEmployeeInfo
+    @EmployeeID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
 
+    IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
+    BEGIN
+        -- Don't return a string in a dataset intended for an object mapping. 
+        -- Just return nothing, the service will handle null.
+        RETURN; 
+    END;
 
+    SELECT 
+        e.employee_id,
+        e.full_name,
+        e.email,
+        e.phone,
+        e.address,
+        e.employment_status,
+        e.hire_date,
+        -- FIX 1: Selecting Emergency Contact Info
+        e.emergency_contact_name, 
+        e.emergency_contact_phone,
+        e.relationship,
+        -- FIX 2: Selecting Profile Image
+        e.profile_image,
+        
+        -- FIX 3: Aliasing for Dapper Mapping
+        -- Dapper maps "Department_Name" in SQL to "Department_Name" in C#.
+        -- Your View uses "Department", so let's map it to that.
+        d.department_name AS Department, 
+        p.position_title AS Position
+
+    FROM Employee e
+    LEFT JOIN Department d ON e.department_id = d.department_id
+    LEFT JOIN Position p ON e.position_id = p.position_id
+    WHERE e.employee_id = @EmployeeID;
+END;
+GO
 
 -- 2 AddEmployee
 CREATE PROCEDURE AddEmployee
