@@ -15,7 +15,7 @@ builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<ContractService>();
 builder.Services.AddScoped<ShiftService>();
-//builder.Services.AddScoped<TrackingService>();
+builder.Services.AddScoped<TrackingService>();
 // Optional: Test DB connection on startup
 try
 {
