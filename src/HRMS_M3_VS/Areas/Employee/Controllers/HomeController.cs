@@ -22,9 +22,29 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
             return View(employees);
         }
 
+        // GET: /Employee/Home/MyProfile
+        public IActionResult MyProfile()
+        {
+            // -----------------------------------------------------------
+            // TODO: When you implement Login, get the ID from Session or User.Identity
+            // For now, we assume the logged-in user is Employee #1
+            // -----------------------------------------------------------
+            int loggedInUserId = 1;
+
+            // Redirect to the generic Profile viewer with MY ID
+            return RedirectToAction("Profile", new { id = loggedInUserId });
+        }
         public async Task<IActionResult> Profile(int id)
         {
             var emp = await _service.GetEmployeeByIdAsync(id);
+
+            if (emp == null)
+            {
+                // Bonus: Return a "User Not Found" view or redirect with a generic error
+                TempData["Error"] = "Employee not found.";
+                return RedirectToAction("Index", "Home");
+            }
+
             return View(emp);
         }
 

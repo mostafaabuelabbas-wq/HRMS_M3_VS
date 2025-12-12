@@ -99,29 +99,47 @@
 
         <nav class="nav flex-column px-3">
 
-            <!-- ALL USERS -->
+            <!-- 1. DASHBOARD (Everyone) -->
             <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
                 <i class="fas fa-home"></i> Dashboard
             </a>
 
-            <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Profile">
+            <!-- 2. MY PROFILE (Everyone) -->
+            <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="MyProfile">
                 <i class="fas fa-id-card"></i> My Profile
             </a>
 
-            <a class="nav-link" asp-area="Attendance" asp-controller="Shift" asp-action="Index">
-                <i class="fas fa-clock"></i> Attendance & Shifts
+            <!-- ============================================== -->
+            <!-- 3. ATTENDANCE SECTION (MERGED & SECURED) -->
+            <!-- ============================================== -->
+            <!-- My Attendance: Visible to Everyone -->
+            <a class="nav-link" asp-area="Attendance" asp-controller="Track" asp-action="Index">
+                <i class="fas fa-user-clock"></i> My Attendance
             </a>
 
+            <!-- Manage Shifts: HIDDEN from regular Employees -->
+            @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+            {
+                <a class="nav-link" asp-area="Attendance" asp-controller="Shift" asp-action="Index">
+                    <i class="fas fa-calendar-cog"></i> Manage Shifts
+                </a>
+            }
+            <!-- ============================================== -->
+            <!-- 4. LEAVES (Everyone) -->
             <a class="nav-link" asp-area="Employee" asp-controller="Leave" asp-action="Index">
                 <i class="fas fa-calendar-alt"></i> Leave Management
             </a>
 
+            <!-- 5. MISSIONS (Everyone) -->
             <a class="nav-link" asp-area="Employee" asp-controller="Mission" asp-action="Index">
                 <i class="fas fa-briefcase"></i> Missions
             </a>
 
+            <!-- ============================================== -->
+            <!-- ROLE SPECIFIC SECTIONS -->
+            <!-- ============================================== -->
             <!-- MANAGER ONLY -->
-            @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+            @if (User.IsInRole("Manager"))
             {
                 <a class="nav-link" asp-area="Employee" asp-controller="Manager" asp-action="Index">
                     <i class="fas fa-users-cog"></i> My Team
@@ -129,32 +147,33 @@
             }
 
             <!-- HR ADMIN ONLY -->
-            @if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+            @if (User.IsInRole("HRAdmin"))
             {
                 <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-users"></i> Employee Profiles
+                    <i class="fas fa-users"></i> All Employees
                 </a>
-
                 <a class="nav-link" asp-area="Employee" asp-controller="HRAdmin" asp-action="ProfileCompleteness">
                     <i class="fas fa-check-circle"></i> Profile Completeness
                 </a>
                 <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
                     <i class="fas fa-file-contract me-2"></i> Contracts
                 </a>
-
             }
 
             <!-- SYSTEM ADMIN ONLY -->
             @if (User.IsInRole("SystemAdmin"))
             {
+                <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-users"></i> Employee Directory
+                </a>
                 <a class="nav-link" asp-area="Employee" asp-controller="Role" asp-action="Index">
                     <i class="fas fa-user-shield"></i> Roles Management
                 </a>
-
                 <a class="nav-link" asp-controller="AdminSettings" asp-action="Index">
                     <i class="fas fa-cog"></i> System Settings
                 </a>
             }
+
         </nav>
     </div>
 

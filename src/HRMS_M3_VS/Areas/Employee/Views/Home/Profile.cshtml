@@ -4,7 +4,16 @@
 
 <div class="row mt-4">
     <div class="col-md-4">
-        <img src="@Model.Profile_Image" class="img-fluid rounded shadow-sm" alt="Profile Image" />
+        <!-- FIX: Fallback Image Logic -->
+        @if (!string.IsNullOrEmpty(Model.Profile_Image))
+        {
+            <img src="@Model.Profile_Image" class="img-fluid rounded shadow-sm" alt="Profile Image" />
+        }
+        else
+        {
+            <!-- You need a placeholder image in your wwwroot folder -->
+            <img src="/images/default-avatar.png" class="img-fluid rounded shadow-sm" alt="Default Profile" />
+        }
     </div>
 
     <div class="col-md-8">
@@ -13,22 +22,29 @@
 
             <p><strong>Email:</strong> @Model.Email</p>
             <p><strong>Phone:</strong> @Model.Phone</p>
-            <p><strong>Department:</strong> @Model.Department</p>
-            <p><strong>Position:</strong> @Model.Position</p>
-            <p><strong>Address:</strong> @Model.Address</p>
-            <p>
-                <strong>Emergency Contact:</strong><br />
 
+            <!-- These will now work because of the SQL Aliases -->
+            <p><strong>Department:</strong> @(Model.Department ?? "Not Assigned")</p>
+            <p><strong>Position:</strong> @(Model.Position ?? "Not Assigned")</p>
+
+            <p><strong>Address:</strong> @Model.Address</p>
+
+            <hr />
+            <h5 class="text-muted">Emergency Contact</h5>
+            <p>
                 <strong>Name:</strong> @(Model.Emergency_Contact_Name ?? "N/A") <br />
                 <strong>Relationship:</strong> @(Model.Relationship ?? "N/A") <br />
                 <strong>Phone:</strong> @(Model.Emergency_Contact_Phone ?? "N/A")
             </p>
 
+            <hr />
             <p><strong>Status:</strong> @(Model.Employment_Status ?? "N/A")</p>
-
             <p><strong>Hire Date:</strong> @(Model.Hire_Date?.ToShortDateString() ?? "N/A")</p>
 
-
+            <!-- FIX: Logic to hide Edit button if this is not ME -->
+            <!-- We will handle this logic fully in the next steps, but for now,
+                 ask yourself: How do you know who is logged in? -->
+            <!-- Assuming you have a way to check current user ID later -->
             <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-warning mt-3">
                 Edit Information
             </a>
