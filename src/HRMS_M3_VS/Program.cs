@@ -1,4 +1,5 @@
-﻿using HRMS_M3_VS.Areas.Employee.Services;
+﻿using HRMS_M3_VS.Areas.Attendance.Services;
+using HRMS_M3_VS.Areas.Employee.Services;
 using HRMS_M3_VS.Services;
 using Microsoft.Data.SqlClient;
 using System.Security.Claims;
@@ -13,7 +14,7 @@ builder.Services.AddScoped<DbService>();
 builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<ContractService>();
-
+builder.Services.AddScoped<ShiftService>();
 // Optional: Test DB connection on startup
 try
 {

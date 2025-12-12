@@ -1570,7 +1570,7 @@ GO
 
 -- GetAllContracts: returns all contracts with employee info + subtype details where available
 
-ALTER PROCEDURE GetAllContracts
+CREATE PROCEDURE GetAllContracts
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1599,11 +1599,12 @@ BEGIN
     INNER JOIN Employee e ON e.contract_id = c.contract_id
     ORDER BY c.end_date ASC;
 END;
+
 GO
 
 GO
 -- GetEmployeeContracts: all contracts for a given employee (history)
-ALTER PROCEDURE GetEmployeeContracts
+CREATE PROCEDURE GetEmployeeContracts
     @EmployeeID INT
 AS
 BEGIN

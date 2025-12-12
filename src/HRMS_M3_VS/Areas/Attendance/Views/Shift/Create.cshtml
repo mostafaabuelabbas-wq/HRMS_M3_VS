@@ -1,0 +1,58 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.CreateShiftDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="mb-4">Create New Shift</h2>
+
+<form method="post" class="card p-4 shadow-sm">
+
+    <!-- 1. Name -->
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <!-- WAS: asp-for="Name" -> FIXED: asp-for="name" -->
+        <input asp-for="name" class="form-control" required />
+    </div>
+
+    <!-- 2. Type -->
+    <div class="mb-3">
+        <label class="form-label">Type</label>
+        <input asp-for="type" class="form-control" required />
+    </div>
+
+    <!-- 3. Start Time -->
+    <div class="mb-3">
+        <label class="form-label">Start Time</label>
+        <input asp-for="start_time" type="time" class="form-control" required />
+    </div>
+
+    <!-- 4. End Time -->
+    <div class="mb-3">
+        <label class="form-label">End Time</label>
+        <input asp-for="end_time" type="time" class="form-control" required />
+    </div>
+
+    <!-- 5. Break Duration -->
+    <div class="mb-3">
+        <label class="form-label">Break Duration (mins)</label>
+        <input asp-for="break_duration" type="number" class="form-control" required />
+    </div>
+
+    <!-- 6. Date -->
+    <div class="mb-3">
+        <label class="form-label">Shift Date</label>
+        <input asp-for="shift_date" type="date" class="form-control" />
+    </div>
+
+    <!-- 7. Status (Hidden or Editable) -->
+    <div class="mb-3">
+        <label class="form-label">Status</label>
+        <select asp-for="status" class="form-control">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Shift</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

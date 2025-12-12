@@ -1444,5 +1444,88 @@ BEGIN
     LEFT JOIN Employee_Role er ON e.employee_id = er.employee_id
     LEFT JOIN Role r ON er.role_id = r.role_id
     ORDER BY e.full_name;
-END
+END;
+GO
+
+
+
+
+--extra procedures
+CREATE  OR ALTER PROCEDURE GetAllShiftTypes
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        shift_id,
+        name,
+        type,
+        start_time,
+        end_time,
+        break_duration,
+        shift_date,
+        status
+    FROM ShiftSchedule
+    ORDER BY shift_id DESC;
+END;
+GO
+CREATE OR ALTER PROCEDURE GetShiftTypes
+AS
+BEGIN
+    SELECT 
+        shift_id,
+        name,
+        type,
+        start_time,
+        end_time,
+        break_duration,
+        shift_date,
+        status
+    FROM ShiftSchedule;
+END;
+GO
+CREATE OR ALTER PROCEDURE CreateShiftCycle
+    @CycleID INT OUTPUT,
+    @CycleName VARCHAR(100),
+    @Description VARCHAR(255)
+AS
+BEGIN
+    INSERT INTO ShiftCycle (cycle_name, description)
+    VALUES (@CycleName, @Description);
+
+    SET @CycleID = SCOPE_IDENTITY();
+END;
+GO
+
+-- 2. Add a Shift to the Cycle (e.g., Shift 1 is first, Shift 2 is second)
+CREATE OR ALTER PROCEDURE AddShiftToCycle
+    @CycleID INT,
+    @ShiftID INT,
+    @OrderNumber INT
+AS
+BEGIN
+    IF EXISTS (SELECT 1 FROM ShiftCycleAssignment WHERE cycle_id = @CycleID AND shift_id = @ShiftID)
+    BEGIN
+        SELECT 'Error: This shift is already in the cycle.' AS Message;
+        RETURN;
+    END
+
+    INSERT INTO ShiftCycleAssignment (cycle_id, shift_id, order_number)
+    VALUES (@CycleID, @ShiftID, @OrderNumber);
+
+    SELECT 'Shift added to cycle successfully.' AS Message;
+END;
+GO
+USE HRMS;
+GO
+
+CREATE OR ALTER PROCEDURE GetShiftCycles
+AS
+BEGIN
+    SELECT 
+        cycle_id as CycleId, 
+        cycle_name as CycleName, 
+        description as Description 
+    FROM ShiftCycle;
+END;
 GO

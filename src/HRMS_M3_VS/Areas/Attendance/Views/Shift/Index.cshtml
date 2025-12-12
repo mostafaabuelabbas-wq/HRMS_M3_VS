@@ -1,0 +1,144 @@
+﻿@model IEnumerable<HRMS_M3_VS.Areas.Attendance.Models.ShiftDto>
+
+@{
+    ViewData["Title"] = "Shift Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid p-0">
+
+    <!-- Title -->
+    <h2 class="mb-4 text-primary">
+        <i class="fa fa-calendar-alt me-2"></i>Shift Management
+    </h2>
+
+    <!-- Action Buttons Toolbar -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body d-flex flex-wrap gap-2 justify-content-between align-items-center">
+
+            <!-- Group 1: Basic Shift Operations -->
+            <div class="d-flex gap-2">
+                <a class="btn btn-primary" asp-area="Attendance" asp-controller="Shift" asp-action="Create">
+                    <i class="fa fa-plus-circle"></i> Create Standard Shift
+                </a>
+
+                <a class="btn btn-info text-white" asp-area="Attendance" asp-controller="Shift" asp-action="ConfigureSplit">
+                    <i class="fa fa-columns"></i> Configure Split Shift
+                </a>
+            </div>
+
+            <!-- Group 2: Rotational Cycle Operations -->
+            <div class="d-flex gap-2">
+                <a class="btn btn-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="CreateCycle">
+                    <i class="fa fa-sync-alt"></i> Create Rotation Cycle
+                </a>
+
+                <a class="btn btn-outline-dark" asp-area="Attendance" asp-controller="Shift" asp-action="AddToCycle">
+                    <i class="fa fa-link"></i> Link Shift to Cycle
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Success Feedback Message -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fa fa-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Shifts Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0 text-muted">Available Shifts</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Start Time</th>
+                        <th scope="col">End Time</th>
+                        <th scope="col">Break (min)</th>
+                        <th scope="col">Specific Date</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa fa-inbox fa-3x mb-3 opacity-50"></i>
+                                <p class="mb-0">No shifts found in the database.</p>
+                                <small>Use the buttons above to create your first shift.</small>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var s in Model)
+                        {
+                            <tr>
+                                <!-- Name -->
+                                <td class="fw-bold text-dark">@s.name</td>
+
+                                <!-- Type Badge -->
+                                <td>
+                                    @if (s.type == "Standard")
+                                    {
+                                        <span class="badge bg-primary">Standard</span>
+                                    }
+                                    else if (s.type == "Split Shift")
+                                    {
+
+                                        <span class="badge bg-info text-dark">Split</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="badge bg-secondary">@s.type</span>
+                                    }
+                                </td>
+
+                                <!-- Times -->
+                                <td class="text-nowrap">@s.start_time.ToString(@"hh\:mm")</td>
+                                <td class="text-nowrap">@s.end_time.ToString(@"hh\:mm")</td>
+
+                                <!-- Break -->
+                                <td>
+                                    @if (s.break_duration > 0)
+                                    {
+                                        <span>@s.break_duration min</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="text-muted">-</span>
+                                    }
+                            </td>
+
+                            <!-- Date (Recurring vs Specific) -->
+                            <td>
+                                @(s.shift_date.HasValue ? s.shift_date.Value.ToString("yyyy-MM-dd") :
+                                                            Html.Raw("<span class='text-muted fst-italic'>Recurring</span>"))
+                                </td>
+
+                                <!-- Status -->
+                                <td>
+                                    <span class="badge rounded-pill @(s.status == "Active" ? "bg-success" : "bg-danger")">
+                                        @s.status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

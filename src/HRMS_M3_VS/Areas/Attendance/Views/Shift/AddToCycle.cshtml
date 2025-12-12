@@ -1,0 +1,39 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.AddToCycleDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Add Shift to Cycle</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post" class="card p-4 shadow-sm">
+
+    <div class="mb-3">
+        <label class="form-label">Select Cycle</label>
+        <!-- Dropdown for Cycles -->
+        <select asp-for="CycleId" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Cycles, "CycleId", "CycleName"))" required>
+            <option value="">-- Select Cycle --</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Select Shift to Add</label>
+        <!-- Dropdown for Shifts -->
+        <select asp-for="ShiftId" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Shifts, "ShiftId", "Name"))" required>
+            <option value="">-- Select Shift --</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Order Number</label>
+        <input asp-for="OrderNumber" type="number" class="form-control" placeholder="e.g. 1 for first shift" required />
+    </div>
+
+    <button type="submit" class="btn btn-success">Link Shift to Cycle</button>
+</form>
