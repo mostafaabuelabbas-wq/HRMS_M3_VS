@@ -1,0 +1,59 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.SplitShiftDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Configure Split Shift";
+}
+
+<h2 class="mb-4">Configure Split Shift</h2>
+
+<!-- Display Error Message from SQL if exists -->
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">
+        <i class="fa fa-exclamation-triangle"></i> @ViewBag.Error
+    </div>
+}
+
+<form method="post" class="card p-4 shadow-sm">
+
+    <!-- Shift Name -->
+    <div class="mb-3">
+        <label class="form-label">Base Shift Name</label>
+        <input asp-for="Name" class="form-control" placeholder="e.g. Security Split" required />
+    </div>
+
+    <div class="row">
+        <!-- Slot 1 -->
+        <div class="col-md-6">
+            <div class="card bg-light mb-3">
+                <div class="card-header fw-bold">First Slot</div>
+                <div class="card-body">
+                    <label>Start</label>
+                    <input asp-for="FirstSlotStart" type="time" class="form-control mb-2" required />
+
+                    <label>End</label>
+                    <input asp-for="FirstSlotEnd" type="time" class="form-control" required />
+                </div>
+            </div>
+        </div>
+
+        <!-- Slot 2 -->
+        <div class="col-md-6">
+            <div class="card bg-light mb-3">
+                <div class="card-header fw-bold">Second Slot</div>
+                <div class="card-body">
+                    <label>Start</label>
+                    <input asp-for="SecondSlotStart" type="time" class="form-control mb-2" required />
+
+                    <label>End</label>
+                    <input asp-for="SecondSlotEnd" type="time" class="form-control" required />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        <i class="fa fa-save"></i> Save Configuration
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

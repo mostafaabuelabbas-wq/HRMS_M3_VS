@@ -43,5 +43,53 @@ namespace HRMS_M3_VS.Areas.Attendance.Services
 
             await _db.ExecuteAsync("CreateShiftType", parameters);
         }
+        public async Task<string> ConfigureSplitShift(SplitShiftDto dto)
+        {
+            var parameters = new DynamicParameters();
+
+            parameters.Add("ShiftName", dto.Name);
+            parameters.Add("FirstSlotStart", dto.FirstSlotStart);
+            parameters.Add("FirstSlotEnd", dto.FirstSlotEnd);
+            parameters.Add("SecondSlotStart", dto.SecondSlotStart);
+            parameters.Add("SecondSlotEnd", dto.SecondSlotEnd);
+
+            // FIX: Use QueryAsync (which returns a list) and grab the first result
+            var result = await _db.QueryAsync<string>("ConfigureSplitShift", parameters);
+
+            return result.FirstOrDefault();
+        }
+        // Add these methods to ShiftService.cs
+
+        // 1. Get All Cycles (To show in dropdowns)
+        public async Task<IEnumerable<ShiftCycleDto>> GetAllCycles()
+        {
+            // Make sure your ShiftCycle table has columns: cycle_id, cycle_name, description
+            return await _db.QueryAsync<ShiftCycleDto>("GetShiftCycles", null);
+            // Note: Using Text query here for simplicity since we didn't make a proc for "ViewCycles"
+        }
+
+        // 2. Create a new Cycle
+        public async Task CreateShiftCycle(ShiftCycleDto dto)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("CycleID", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            parameters.Add("CycleName", dto.CycleName);
+            parameters.Add("Description", dto.Description);
+
+            await _db.ExecuteAsync("CreateShiftCycle", parameters);
+        }
+
+        // 3. Add Shift to Cycle
+        public async Task<string> AddShiftToCycle(AddToCycleDto dto)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("CycleID", dto.CycleId);
+            parameters.Add("ShiftID", dto.ShiftId);
+            parameters.Add("OrderNumber", dto.OrderNumber);
+
+            // This procedure returns a message string
+            var result = await _db.QueryAsync<string>("AddShiftToCycle", parameters);
+            return result.FirstOrDefault();
+        }
     }
 }

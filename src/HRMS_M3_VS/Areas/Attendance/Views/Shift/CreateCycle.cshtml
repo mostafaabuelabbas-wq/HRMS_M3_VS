@@ -1,0 +1,18 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.ShiftCycleDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Create Rotational Cycle</h2>
+
+<form method="post" class="card p-4 shadow-sm">
+    <div class="mb-3">
+        <label class="form-label">Cycle Name</label>
+        <input asp-for="CycleName" class="form-control" placeholder="e.g. Monthly Rotation" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Cycle</button>
+</form>
