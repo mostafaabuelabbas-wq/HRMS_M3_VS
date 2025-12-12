@@ -1,0 +1,32 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.RecordAttendanceDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Record Manual Attendance</h2>
+
+<form method="post" class="card p-4 shadow-sm">
+    <input type="hidden" asp-for="employee_id" />
+
+    <div class="mb-3">
+        <label class="form-label">Select Shift</label>
+        <select asp-for="shift_id" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
+            <option value="">-- Select Assigned Shift --</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <div class="col-6 mb-3">
+            <label>Clock In Time</label>
+            <input asp-for="entry_time" type="time" class="form-control" required />
+        </div>
+        <div class="col-6 mb-3">
+            <label>Clock Out Time</label>
+            <input asp-for="exit_time" type="time" class="form-control" required />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">Submit Record</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
