@@ -1,0 +1,38 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.AssignRotationalDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Assign Rotational Shift</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post" class="card p-4 shadow-sm">
+    <div class="mb-3">
+        <label class="form-label">Employee</label>
+        <select asp-for="employee_id" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Employees, "employee_id", "full_name"))" required>
+            <option value="">-- Select Employee --</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Rotation Cycle</label>
+        <!-- Using cycle_id and cycle_name (lowercase) -->
+        <select asp-for="cycle_id" class="form-control"
+                asp-items="@(new SelectList(ViewBag.Cycles, "cycle_id", "cycle_name"))" required>
+            <option value="">-- Select Cycle --</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <div class="col-6 mb-3"> <label>Start</label> <input asp-for="start_date" type="date" class="form-control" /> </div>
+        <div class="col-6 mb-3"> <label>End</label> <input asp-for="end_date" type="date" class="form-control" /> </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Assign Rotation</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

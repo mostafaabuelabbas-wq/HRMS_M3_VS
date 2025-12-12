@@ -5,12 +5,12 @@ namespace HRMS_M3_VS.Areas.Attendance.Models
     public class AddToCycleDto
     {
         [Required]
-        public int CycleId { get; set; }
+        public int cycle_id { get; set; }
 
         [Required]
-        public int ShiftId { get; set; }
+        public int shift_id { get; set; }
 
         [Required]
-        public int OrderNumber { get; set; }
+        public int order_number { get; set; }
     }
 }

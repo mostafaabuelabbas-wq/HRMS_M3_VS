@@ -7,65 +7,104 @@
 
 <div class="container-fluid p-0">
 
-    <!-- Title -->
-    <h2 class="mb-4 text-primary">
-        <i class="fa fa-calendar-alt me-2"></i>Shift Management
-    </h2>
-
-    <!-- Action Buttons Toolbar -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body d-flex flex-wrap gap-2 justify-content-between align-items-center">
-
-            <!-- Group 1: Basic Shift Operations -->
-            <div class="d-flex gap-2">
-                <a class="btn btn-primary" asp-area="Attendance" asp-controller="Shift" asp-action="Create">
-                    <i class="fa fa-plus-circle"></i> Create Standard Shift
-                </a>
-
-                <a class="btn btn-info text-white" asp-area="Attendance" asp-controller="Shift" asp-action="ConfigureSplit">
-                    <i class="fa fa-columns"></i> Configure Split Shift
-                </a>
-            </div>
-
-            <!-- Group 2: Rotational Cycle Operations -->
-            <div class="d-flex gap-2">
-                <a class="btn btn-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="CreateCycle">
-                    <i class="fa fa-sync-alt"></i> Create Rotation Cycle
-                </a>
-
-                <a class="btn btn-outline-dark" asp-area="Attendance" asp-controller="Shift" asp-action="AddToCycle">
-                    <i class="fa fa-link"></i> Link Shift to Cycle
-                </a>
-            </div>
-
-        </div>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold">
+            <i class="fa fa-calendar-check me-2"></i>Shift Management
+        </h2>
     </div>
 
-    <!-- Success Feedback Message -->
+    <!-- Feedback Messages -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
             <i class="fa fa-check-circle me-2"></i> @TempData["Success"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <!-- Shifts Table -->
+    <!-- TOOLBAR SECTION -->
+    <div class="row mb-4">
+
+        <!-- SECTION 1: CONFIGURATION (Defining Types) -->
+        <div class="col-xl-6 mb-3">
+            <div class="card h-100 shadow-sm border-0 bg-light">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                        <i class="fa fa-cogs me-1"></i> Shift Configuration
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <!-- Standard -->
+                        <a class="btn btn-primary" asp-area="Attendance" asp-controller="Shift" asp-action="Create">
+                            <i class="fa fa-plus"></i> Standard
+                        </a>
+                        <!-- Split -->
+                        <a class="btn btn-info text-white" asp-area="Attendance" asp-controller="Shift" asp-action="ConfigureSplit">
+                            <i class="fa fa-columns"></i> Split
+                        </a>
+                        <div class="vr mx-2"></div>
+                        <!-- Rotational Cycles -->
+                        <a class="btn btn-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="CreateCycle">
+                            <i class="fa fa-sync"></i> New Cycle
+                        </a>
+                        <a class="btn btn-outline-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="AddToCycle">
+                            <i class="fa fa-link"></i> Link to Cycle
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: ASSIGNMENT & UPDATES (Applying to Employees) -->
+        <div class="col-xl-6 mb-3">
+            <div class="card h-100 shadow-sm border-0 bg-white border-start border-primary border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                        <i class="fa fa-users me-1"></i> Assign & Update Employees
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2">
+
+                        <!-- 2c: Assign Normal (Update if exists) -->
+                        <a class="btn btn-success" asp-area="Attendance" asp-controller="Shift" asp-action="AssignEmployee">
+                            <i class="fa fa-user-clock"></i> Standard
+                        </a>
+
+                        <!-- 2d: Assign Rotational (Update if exists) -->
+                        <a class="btn btn-outline-success" asp-area="Attendance" asp-controller="Shift" asp-action="AssignRotational">
+                            <i class="fa fa-sync-alt"></i> Rotational
+                        </a>
+
+                        <!-- 2d: Assign Custom (Update if exists) -->
+                        <a class="btn btn-warning text-dark" asp-area="Attendance" asp-controller="Shift" asp-action="AssignCustom">
+                            <i class="fa fa-star"></i> Custom
+                        </a>
+
+                        <!-- 2c: Assign Department -->
+                        <a class="btn btn-dark" asp-area="Attendance" asp-controller="Shift" asp-action="AssignDepartment">
+                            <i class="fa fa-building"></i> Dept
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHIFT TYPES TABLE -->
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-bottom">
-            <h5 class="mb-0 text-muted">Available Shifts</h5>
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-muted">Configured Shift Types</h5>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0 align-middle">
+            <table class="table table-hover table-striped align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Type</th>
-                        <th scope="col">Start Time</th>
-                        <th scope="col">End Time</th>
-                        <th scope="col">Break (min)</th>
-                        <th scope="col">Specific Date</th>
-                        <th scope="col">Status</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Break</th>
+                        <th>Date</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,9 +112,9 @@
                     {
                         <tr>
                             <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="fa fa-inbox fa-3x mb-3 opacity-50"></i>
+                                <i class="fa fa-inbox fa-3x mb-3 opacity-25"></i>
                                 <p class="mb-0">No shifts found in the database.</p>
-                                <small>Use the buttons above to create your first shift.</small>
+                                <small>Use the configuration buttons above to start.</small>
                             </td>
                         </tr>
                     }
@@ -87,7 +126,7 @@
                                 <!-- Name -->
                                 <td class="fw-bold text-dark">@s.name</td>
 
-                                <!-- Type Badge -->
+                                <!-- Type -->
                                 <td>
                                     @if (s.type == "Standard")
                                     {
@@ -106,14 +145,14 @@
                                 </td>
 
                                 <!-- Times -->
-                                <td class="text-nowrap">@s.start_time.ToString(@"hh\:mm")</td>
-                                <td class="text-nowrap">@s.end_time.ToString(@"hh\:mm")</td>
+                                <td class="font-monospace">@s.start_time.ToString(@"hh\:mm")</td>
+                                <td class="font-monospace">@s.end_time.ToString(@"hh\:mm")</td>
 
                                 <!-- Break -->
                                 <td>
                                     @if (s.break_duration > 0)
                                     {
-                                        <span>@s.break_duration min</span>
+                                        <span>@s.break_duration m</span>
                                     }
                                     else
                                     {
@@ -122,15 +161,15 @@
                                     }
                             </td>
 
-                            <!-- Date (Recurring vs Specific) -->
+                            <!-- Date -->
                             <td>
                                 @(s.shift_date.HasValue ? s.shift_date.Value.ToString("yyyy-MM-dd") :
-                                                            Html.Raw("<span class='text-muted fst-italic'>Recurring</span>"))
+                                                            Html.Raw("<span class='badge bg-light text-dark border'>Recurring</span>"))
                                 </td>
 
                                 <!-- Status -->
                                 <td>
-                                    <span class="badge rounded-pill @(s.status == "Active" ? "bg-success" : "bg-danger")">
+                                    <span class="badge rounded-pill @(s.status == "Active" ? "bg-success" : "bg-secondary")">
                                         @s.status
                                     </span>
                                 </td>

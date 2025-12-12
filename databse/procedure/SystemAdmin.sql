@@ -551,7 +551,10 @@ GO
 
 
 -- 10. AssignShiftToEmployee
-CREATE PROCEDURE AssignShiftToEmployee
+USE HRMS;
+GO
+
+CREATE OR ALTER PROCEDURE AssignShiftToEmployee
     @EmployeeID INT,
     @ShiftID INT,
     @StartDate DATE,
@@ -561,7 +564,7 @@ BEGIN
     SET NOCOUNT ON;
 
     ---------------------------------------------------------
-    -- 1. Validate Employee Exists
+    -- 1. Validate Existance
     ---------------------------------------------------------
     IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
     BEGIN
@@ -569,21 +572,6 @@ BEGIN
         RETURN;
     END;
 
-    ---------------------------------------------------------
-    -- 2. Validate Employee Is Active
-    ---------------------------------------------------------
-    IF EXISTS (
-        SELECT 1 FROM Employee
-        WHERE employee_id = @EmployeeID AND is_active = 0
-    )
-    BEGIN
-        SELECT 'Error: Cannot assign a shift to an inactive employee.' AS Message;
-        RETURN;
-    END;
-
-    ---------------------------------------------------------
-    -- 3. Validate Shift Exists
-    ---------------------------------------------------------
     IF NOT EXISTS (SELECT 1 FROM ShiftSchedule WHERE shift_id = @ShiftID)
     BEGIN
         SELECT 'Error: Shift does not exist.' AS Message;
@@ -591,44 +579,35 @@ BEGIN
     END;
 
     ---------------------------------------------------------
-    -- 4. Validate Date Range
-    ---------------------------------------------------------
-    IF @StartDate > @EndDate
-    BEGIN
-        SELECT 'Error: Start date cannot be after end date.' AS Message;
-        RETURN;
-    END;
-
-    ---------------------------------------------------------
-    -- 5. Prevent overlapping assignments for the same employee
+    -- 2. THE FIX: Handle "Update" Logic
+    -- Instead of throwing an error, we CLOSE the old shift.
     ---------------------------------------------------------
     IF EXISTS (
         SELECT 1 
         FROM ShiftAssignment
         WHERE employee_id = @EmployeeID
-        AND status = 'Active'
-        AND (
-                (@StartDate BETWEEN start_date AND end_date)
-             OR (@EndDate BETWEEN start_date AND end_date)
-             OR (start_date BETWEEN @StartDate AND @EndDate)
-            )
+          AND status = 'Active'
+          AND end_date >= @StartDate -- The old shift overlaps into our new start date
     )
     BEGIN
-        SELECT 'Error: Employee already has an overlapping active shift assignment.' AS Message;
-        RETURN;
+        -- Close the old shift so it ends the day BEFORE the new one starts
+        UPDATE ShiftAssignment
+        SET end_date = DATEADD(day, -1, @StartDate)
+        WHERE employee_id = @EmployeeID
+          AND status = 'Active'
+          AND end_date >= @StartDate;
     END;
 
     ---------------------------------------------------------
-    -- 6. Insert new shift assignment
+    -- 3. Insert the New Shift
     ---------------------------------------------------------
     INSERT INTO ShiftAssignment (employee_id, shift_id, start_date, end_date, status)
     VALUES (@EmployeeID, @ShiftID, @StartDate, @EndDate, 'Active');
 
     ---------------------------------------------------------
-    -- 7. Confirmation
+    -- 4. Confirmation
     ---------------------------------------------------------
-    SELECT 'Shift assigned successfully to employee ' 
-           + CAST(@EmployeeID AS VARCHAR(10)) AS ConfirmationMessage;
+    SELECT 'Shift assigned successfully (Previous assignment updated).' AS ConfirmationMessage;
 END;
 GO
 
@@ -1516,16 +1495,47 @@ BEGIN
     SELECT 'Shift added to cycle successfully.' AS Message;
 END;
 GO
-USE HRMS;
-GO
+
+
+
+
 
 CREATE OR ALTER PROCEDURE GetShiftCycles
 AS
 BEGIN
     SELECT 
-        cycle_id as CycleId, 
-        cycle_name as CycleName, 
-        description as Description 
+        cycle_id,      -- Must match C# 'cycle_id'
+        cycle_name,    -- Must match C# 'cycle_name'
+        description 
     FROM ShiftCycle;
 END;
 GO
+-- 1. Helper for Department Dropdown
+CREATE OR ALTER PROCEDURE GetAllDepartments
+AS
+BEGIN
+    SELECT department_id, department_name FROM Department;
+END;
+GO
+
+-- 2. Helper for Employee Dropdown
+CREATE OR ALTER PROCEDURE GetAllEmployeesSimple
+AS
+BEGIN
+    SELECT employee_id, first_name + ' ' + last_name AS full_name 
+    FROM Employee 
+    WHERE is_active = 1; -- Only show active employees
+END;
+GO
+SELECT * FROM ShiftCycle;
+SELECT *
+FROM ShiftCycleAssignment
+ORDER BY cycle_id, order_number;
+
+SELECT *
+FROM ShiftAssignment
+ORDER BY assignment_id DESC;
+
+SELECT shift_id, name, type, start_time, end_time 
+FROM ShiftSchedule
+ORDER BY shift_id;
