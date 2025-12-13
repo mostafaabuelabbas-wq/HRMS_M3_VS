@@ -1,53 +1,129 @@
 ﻿@model HRMS_M3_VS.Areas.Employee.Models.EmployeeDto
 
-<h2 class="fw-bold">@Model.Full_Name</h2>
+<div class="container py-4">
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <!-- FIX: Fallback Image Logic -->
-        @if (!string.IsNullOrEmpty(Model.Profile_Image))
-        {
-            <img src="@Model.Profile_Image" class="img-fluid rounded shadow-sm" alt="Profile Image" />
-        }
-        else
-        {
-            <!-- You need a placeholder image in your wwwroot folder -->
-            <img src="/images/default-avatar.png" class="img-fluid rounded shadow-sm" alt="Default Profile" />
-        }
-    </div>
+    <!-- Main Profile Card -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="min-height: 80vh;">
 
-    <div class="col-md-8">
-        <div class="card p-4 shadow-sm">
-            <h4 class="mb-3">Employee Information</h4>
+        <!-- Cover Background -->
+        <div class="bg-dark" style="height: 200px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); position: relative;">
+            <div class="position-absolute top-0 end-0 p-4">
+                <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-light bg-white text-dark shadow fw-bold rounded-pill px-4">
+                    <i class="fas fa-pen me-2"></i> Edit Profile
+                </a>
+            </div>
+        </div>
 
-            <p><strong>Email:</strong> @Model.Email</p>
-            <p><strong>Phone:</strong> @Model.Phone</p>
+        <div class="card-body px-5 pb-5">
 
-            <!-- These will now work because of the SQL Aliases -->
-            <p><strong>Department:</strong> @(Model.Department ?? "Not Assigned")</p>
-            <p><strong>Position:</strong> @(Model.Position ?? "Not Assigned")</p>
+            <!-- Header Section -->
+            <div class="row mb-5">
+                <div class="col-lg-auto text-center text-lg-start" style="margin-top: -100px;">
+                    <div class="position-relative d-inline-block">
+                        <!-- FIX: Default Image Logic -->
+                        @if (!string.IsNullOrEmpty(Model.Profile_Image))
+                        {
+                            <img src="@Model.Profile_Image" class="rounded-circle shadow-lg bg-white"
+                                 style="width: 170px; height: 170px; object-fit: cover; border: 5px solid #fff;"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=@Model.Full_Name&background=random&size=170';"
+                                 alt="Profile" />
+                        }
+                        else
+                        {
+                            <!-- Fallback to an online generator if local file is missing -->
+                            <img src="https://ui-avatars.com/api/?name=@Model.Full_Name&background=random&size=170"
+                                 class="rounded-circle shadow-lg bg-white"
+                                 style="width: 170px; height: 170px; object-fit: cover; border: 5px solid #fff;"
+                                 alt="Default" />
+                        }
+                    </div>
+                </div>
 
-            <p><strong>Address:</strong> @Model.Address</p>
+                <div class="col-lg pt-3 ps-lg-4 text-center text-lg-start">
+                    <h1 class="fw-bold text-dark mb-1">@Model.Full_Name</h1>
+                    <p class="text-muted fs-5 mb-3">@Model.Position</p>
+                    <div class="d-flex justify-content-center justify-content-lg-start gap-2">
+                        <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
+                            <i class="fas fa-building me-2 text-primary"></i> @Model.Department
+                        </span>
+                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-3 py-2">
+                            <i class="fas fa-circle me-2 small"></i> @Model.Employment_Status
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-            <hr />
-            <h5 class="text-muted">Emergency Contact</h5>
-            <p>
-                <strong>Name:</strong> @(Model.Emergency_Contact_Name ?? "N/A") <br />
-                <strong>Relationship:</strong> @(Model.Relationship ?? "N/A") <br />
-                <strong>Phone:</strong> @(Model.Emergency_Contact_Phone ?? "N/A")
-            </p>
+            <!-- Detailed Info Grid -->
+            <!-- FIX: Added 'align-items-stretch' to make boxes equal height -->
+            <div class="row g-4 align-items-stretch">
 
-            <hr />
-            <p><strong>Status:</strong> @(Model.Employment_Status ?? "N/A")</p>
-            <p><strong>Hire Date:</strong> @(Model.Hire_Date?.ToShortDateString() ?? "N/A")</p>
+                <!-- Left: Personal Information -->
+                <div class="col-md-7 d-flex flex-column">
+                    <h5 class="text-uppercase text-primary fw-bold mb-3" style="font-size: 0.85rem; letter-spacing: 1px;">
+                        <i class="fas fa-user-circle me-2"></i> Personal Information
+                    </h5>
 
-            <!-- FIX: Logic to hide Edit button if this is not ME -->
-            <!-- We will handle this logic fully in the next steps, but for now,
-                 ask yourself: How do you know who is logged in? -->
-            <!-- Assuming you have a way to check current user ID later -->
-            <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-warning mt-3">
-                Edit Information
-            </a>
+                    <div class="row g-3 flex-grow-1">
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-3 bg-light bg-opacity-50 h-100">
+                                <label class="d-block text-uppercase text-muted fw-bold small mb-1" style="font-size: 0.7rem;">Email Address</label>
+                                <span class="fw-bold text-dark text-break">@Model.Email</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-3 bg-light bg-opacity-50 h-100">
+                                <label class="d-block text-uppercase text-muted fw-bold small mb-1" style="font-size: 0.7rem;">Phone Number</label>
+                                <span class="fw-bold text-dark">@Model.Phone</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-3 bg-light bg-opacity-50 h-100">
+                                <label class="d-block text-uppercase text-muted fw-bold small mb-1" style="font-size: 0.7rem;">Address</label>
+                                <span class="fw-bold text-dark">@Model.Address</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-3 bg-light bg-opacity-50 h-100">
+                                <label class="d-block text-uppercase text-muted fw-bold small mb-1" style="font-size: 0.7rem;">Hire Date</label>
+                                <span class="fw-bold text-dark">@(Model.Hire_Date?.ToShortDateString() ?? "N/A")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Emergency Contact -->
+                <div class="col-md-5 d-flex flex-column">
+                    <h5 class="text-uppercase text-danger fw-bold mb-3" style="font-size: 0.85rem; letter-spacing: 1px;">
+                        <i class="fas fa-heartbeat me-2"></i> Emergency Contact
+                    </h5>
+
+                    <!-- FIX: Added 'h-100' so this card fills the same height as the left side -->
+                    <div class="card bg-danger bg-opacity-10 border-0 rounded-4 h-100">
+                        <div class="card-body p-4 d-flex flex-column justify-content-center">
+
+                            <div class="mb-4">
+                                <label class="d-block text-uppercase text-danger fw-bold small mb-1 opacity-75" style="font-size: 0.7rem;">Contact Name</label>
+                                <!-- FIX: Standardized Font Size -->
+                                <span class="fw-bold text-dark">@(Model.Emergency_Contact_Name ?? "Not Provided")</span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="d-block text-uppercase text-danger fw-bold small mb-1 opacity-75" style="font-size: 0.7rem;">Relationship</label>
+                                <span class="fw-bold text-dark">@(Model.Relationship ?? "N/A")</span>
+                            </div>
+
+                            <div>
+                                <label class="d-block text-uppercase text-danger fw-bold small mb-1 opacity-75" style="font-size: 0.7rem;">Phone</label>
+                                <span class="fw-bold text-dark">
+                                    <i class="fas fa-phone-alt me-2 text-danger"></i>@(Model.Emergency_Contact_Phone ?? "N/A")
+                                </span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>

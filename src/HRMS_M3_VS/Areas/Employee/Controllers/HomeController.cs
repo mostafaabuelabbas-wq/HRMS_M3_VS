@@ -1,6 +1,7 @@
 ﻿using HRMS_M3_VS.Areas.Employee.Models;
 using HRMS_M3_VS.Areas.Employee.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HRMS_M3_VS.Areas.Employee.Controllers
 {
@@ -25,14 +26,19 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
         // GET: /Employee/Home/MyProfile
         public IActionResult MyProfile()
         {
-            // -----------------------------------------------------------
-            // TODO: When you implement Login, get the ID from Session or User.Identity
-            // For now, we assume the logged-in user is Employee #1
-            // -----------------------------------------------------------
-            int loggedInUserId = 1;
+            // 1. Get the logged-in User's ID from the Cookie
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Redirect to the generic Profile viewer with MY ID
-            return RedirectToAction("Profile", new { id = loggedInUserId });
+            // 2. Safety Check: If not logged in, kick them out
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                return RedirectToAction("Login", "Account", new { area = "" });
+            }
+
+            // 3. Parse the ID and redirect to THEIR specific profile
+            int userId = int.Parse(userIdString);
+
+            return RedirectToAction("Profile", new { id = userId });
         }
         public async Task<IActionResult> Profile(int id)
         {
@@ -48,9 +54,11 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
             return View(emp);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var emp = await _service.GetEmployeeByIdAsync(id);
+            if (emp == null) return NotFound();
 
             var vm = new EmployeeEditViewModel
             {
@@ -58,55 +66,62 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
                 Email = emp.Email,
                 Phone = emp.Phone,
                 Address = emp.Address,
-                
+                ExistingImagePath = emp.Profile_Image,
+
+                // --- ARE THESE LINES MISSING? ---
+                EmergencyContactName = emp.Emergency_Contact_Name,
+                EmergencyRelationship = emp.Relationship,
+                EmergencyContactPhone = emp.Emergency_Contact_Phone
+                // --------------------------------
             };
 
             return View(vm);
         }
 
+
         [HttpPost]
-        [HttpPost]
-        public async Task<IActionResult> Edit(EmployeeEditViewModel vm)
+        public async Task<IActionResult> Edit(EmployeeEditViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(vm);
+            // 1. SAFETY STEP: Fetch the current data from the DB to be sure
+            // This prevents accidental deletion if the hidden field fails
+            var currentEmp = await _service.GetEmployeeByIdAsync(model.EmployeeId);
+            string finalPath = currentEmp?.Profile_Image; // Start with what is currently in the DB
 
-            // ------------------------------
-            // 1) Handle Profile Image Upload
-            // ------------------------------
-            if (vm.ProfileImage != null && vm.ProfileImage.Length > 0)
+            // 2. Logic: Handle changes
+
+            // Case A: User checked "Remove Photo" -> Force Delete
+            if (model.RemoveImage)
             {
-                var uploadsFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "images", "employees");
+                finalPath = null;
+            }
 
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
+            // Case B: User uploaded a NEW photo -> Force Update (Overrides everything)
+            if (model.ProfileImage != null)
+            {
+                string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "profiles");
+                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
 
-                var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(vm.ProfileImage.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                string uniqueFileName = model.EmployeeId + "_" + model.ProfileImage.FileName;
+                string filePath = Path.Combine(folderPath, uniqueFileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await vm.ProfileImage.CopyToAsync(stream);
+                    await model.ProfileImage.CopyToAsync(stream);
                 }
 
-                // Save relative path to store in DB
-                vm.ExistingImagePath = $"/images/employees/{uniqueFileName}";
+                finalPath = "/images/profiles/" + uniqueFileName;
             }
 
-            // --------------------------------
-            // 2) Update Employee Basic Details
-            // --------------------------------
-            await _service.UpdateEmployeeAsync(vm);
+            // Update the model with the final decision
+            model.ExistingImagePath = finalPath;
 
-            // ------------------------------------
-            // 3) Update Emergency Contact Details
-            // ------------------------------------
-            await _service.UpdateEmergencyContactAsync(vm);
+            // 3. Save Personal Info
+            await _service.UpdateEmployeeAsync(model);
 
-            // ------------------------
-            // 4) Redirect to Profile
-            // ------------------------
-            return RedirectToAction("Profile", new { id = vm.EmployeeId });
+            // 4. Save Emergency Info
+            await _service.UpdateEmergencyContactAsync(model);
+
+            return RedirectToAction("Profile", new { id = model.EmployeeId });
         }
 
     }

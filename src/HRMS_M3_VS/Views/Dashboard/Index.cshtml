@@ -1,34 +1,148 @@
 ﻿@{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Home";
+    var userName = User.Identity?.Name ?? "Colleague";
+    var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Employee";
 }
 
-<h2 class="fw-bold mb-2">Welcome back</h2>
-<p class="text-muted mb-4">Here are your key items requiring attention today.</p>
+<!-- 1. The Modern Hero Banner -->
+<div class="position-relative overflow-hidden p-5 text-center text-white rounded-4 mb-5 shadow-lg"
+     style="background: linear-gradient(120deg, #2563eb, #1e40af); min-height: 250px; display: flex; flex-direction: column; justify-content: center;">
 
-<div class="row g-4">
+    <!-- Decorative background blobs -->
+    <div style="position: absolute; top: -50px; left: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+    <div style="position: absolute; bottom: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
 
-    <div class="col-md-4">
-        <div class="card shadow-sm p-4">
-            <h5 class="text-muted">Pending Leave Requests</h5>
-            <h2 class="fw-bold mt-2">8</h2>
-            <a asp-area="Employee" asp-controller="Leave" asp-action="Index" class="small text-primary">Review requests →</a>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card shadow-sm p-4">
-            <h5 class="text-muted">Expiring Contracts</h5>
-            <h2 class="fw-bold mt-2 text-warning">5</h2>
-            <a asp-area="Employee" asp-controller="Home" asp-action="Index" class="small text-primary">View contracts →</a>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card shadow-sm p-4">
-            <h5 class="text-muted">Pending Mission Requests</h5>
-            <h2 class="fw-bold mt-2">3</h2>
-            <a asp-area="Employee" asp-controller="Mission" asp-action="Index" class="small text-primary">Manage missions →</a>
-        </div>
-    </div>
-
+    <h1 class="display-5 fw-bold position-relative">Good Evening, @userName! 🚀</h1>
+    <p class="lead position-relative opacity-75">You are logged in as <span class="badge bg-white text-primary">@role</span></p>
 </div>
+
+<!-- 2. The Command Center (Quick Actions) -->
+<div class="container px-4">
+    <h4 class="fw-bold text-secondary mb-4"><i class="fas fa-th-large me-2"></i>What would you like to do?</h4>
+
+    <div class="row g-4">
+
+        <!-- CARD 1: My Profile (Everyone) -->
+        <div class="col-md-4 col-lg-3">
+            <a asp-area="Employee" asp-controller="Home" asp-action="MyProfile" class="card-link text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-scale bg-white">
+                    <div class="card-body text-center p-4">
+                        <div class="icon-circle bg-primary bg-opacity-10 text-primary mb-3">
+                            <i class="fas fa-user-circle fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">My Profile</h5>
+                        <p class="text-muted small">View and edit your personal information.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- CARD 2: Request Leave (Everyone) -->
+        <div class="col-md-4 col-lg-3">
+            <a asp-area="Employee" asp-controller="Leave" asp-action="Index" class="card-link text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-scale bg-white">
+                    <div class="card-body text-center p-4">
+                        <div class="icon-circle bg-warning bg-opacity-10 text-warning mb-3">
+                            <i class="fas fa-umbrella-beach fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">Request Leave</h5>
+                        <p class="text-muted small">Plan your vacation or sick days.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- CARD 3: Attendance (Everyone) -->
+        <div class="col-md-4 col-lg-3">
+            <a asp-area="Attendance" asp-controller="Track" asp-action="Index" class="card-link text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-scale bg-white">
+                    <div class="card-body text-center p-4">
+                        <div class="icon-circle bg-success bg-opacity-10 text-success mb-3">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">Attendance</h5>
+                        <p class="text-muted small">Check in/out and view your logs.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- MANAGER ONLY -->
+        @if (User.IsInRole("Manager"))
+        {
+            <div class="col-md-4 col-lg-3">
+                <a asp-area="Employee" asp-controller="Manager" asp-action="Index" class="card-link text-decoration-none">
+                    <div class="card h-100 border-0 shadow-sm hover-scale bg-white">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-info bg-opacity-10 text-info mb-3">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">My Team</h5>
+                            <p class="text-muted small">Manage your team members.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+
+        <!-- HR ADMIN ONLY -->
+        @if (User.IsInRole("HRAdmin"))
+        {
+            <div class="col-md-4 col-lg-3">
+                <a asp-area="Employee" asp-controller="Contract" asp-action="Index" class="card-link text-decoration-none">
+                    <div class="card h-100 border-0 shadow-sm hover-scale bg-white">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-danger bg-opacity-10 text-danger mb-3">
+                                <i class="fas fa-file-contract fa-2x"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">Contracts</h5>
+                            <p class="text-muted small">Manage employee contracts.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+
+        <!-- SYSTEM ADMIN ONLY -->
+        @if (User.IsInRole("SystemAdmin"))
+        {
+            <div class="col-md-4 col-lg-3">
+                <a asp-area="Employee" asp-controller="Role" asp-action="Index" class="card-link text-decoration-none">
+                    <div class="card h-100 border-0 shadow-sm hover-scale bg-white">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-circle bg-dark bg-opacity-10 text-dark mb-3">
+                                <i class="fas fa-shield-alt fa-2x"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">Roles</h5>
+                            <p class="text-muted small">Assign system access.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+
+    </div>
+</div>
+
+<style>
+    /* Makes the cards pop up when you hover */
+    .hover-scale {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .hover-scale:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+        }
+
+    /* Icon styling */
+    .icon-circle {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+</style>

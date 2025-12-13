@@ -719,56 +719,40 @@ GO
 
 
 -- 14. UpdateEmergencyContact
-CREATE PROCEDURE UpdateEmergencyContact
+CREATE PROCEDURE UpdateEmployeeInfo
     @EmployeeID INT,
-    @ContactName VARCHAR(100),
-    @Relation VARCHAR(50),
-    @Phone VARCHAR(20)
+    @Email VARCHAR(100),
+    @Phone VARCHAR(20),
+    @Address VARCHAR(150),
+    @ProfileImage VARCHAR(500) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -------------------------------------------------------
-    -- Validate employee exists
-    -------------------------------------------------------
+    -- Standard validations
     IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
     BEGIN
-        SELECT 'Invalid employee ID' AS ConfirmationMessage;
+        SELECT 'Error: Employee not found.' AS Message;
         RETURN;
     END;
 
-    -------------------------------------------------------
-    -- Validate contact fields
-    -------------------------------------------------------
-    IF (@ContactName IS NULL OR LTRIM(RTRIM(@ContactName)) = '')
+    IF EXISTS (SELECT 1 FROM Employee WHERE email = @Email AND employee_id <> @EmployeeID)
     BEGIN
-        SELECT 'Contact name cannot be empty' AS ConfirmationMessage;
+        SELECT 'Error: This email is already used by another employee.' AS Message;
         RETURN;
     END;
 
-    IF (@Relation IS NULL OR LTRIM(RTRIM(@Relation)) = '')
-    BEGIN
-        SELECT 'Relation cannot be empty' AS ConfirmationMessage;
-        RETURN;
-    END;
-
-    IF (@Phone IS NULL OR LTRIM(RTRIM(@Phone)) = '')
-    BEGIN
-        SELECT 'Phone number cannot be empty' AS ConfirmationMessage;
-        RETURN;
-    END;
-
-    -------------------------------------------------------
-    -- Update emergency contact
-    -------------------------------------------------------
+    -- UPDATE LOGIC:
+    -- We removed COALESCE. If @ProfileImage is passed as NULL, 
+    -- the database will overwrite the old image with NULL (Deleting it).
     UPDATE Employee
-    SET 
-        emergency_contact_name  = @ContactName,
-        relationship            = @Relation,
-        emergency_contact_phone = @Phone
+    SET email = @Email,
+        phone = @Phone,
+        address = @Address,
+        profile_image = @ProfileImage 
     WHERE employee_id = @EmployeeID;
 
-    SELECT 'Emergency contact updated successfully' AS ConfirmationMessage;
+    SELECT 'Employee information updated successfully' AS ConfirmationMessage;
 END;
 GO
 
@@ -1642,7 +1626,6 @@ BEGIN
 END;
 GO
 
--- GetContractDetails: full details for a single contract (admin/details page)
 CREATE OR ALTER PROCEDURE GetContractDetails
     @ContractID INT
 AS
@@ -1657,14 +1640,16 @@ BEGIN
         c.current_state AS CurrentState,
         
         e.employee_id AS EmployeeId,
-        e.full_name AS EmployeeName,
-        e.email AS EmployeeEmail,
-        e.phone AS EmployeePhone,
+        e.full_name AS EmployeeName,        -- ✅ FIXED: was FullName
+        e.email AS EmployeeEmail,            -- ✅ ADDED
+        e.phone AS EmployeePhone,            -- ✅ ADDED
         
-        p.position_title AS PositionTitle
+        d.department_name AS Department,     -- ✅ ADDED
+        p.position_title AS PositionTitle    -- ✅ ADDED
 
     FROM Contract c
     LEFT JOIN Employee e ON c.employee_id = e.employee_id
+    LEFT JOIN Department d ON e.department_id = d.department_id
     LEFT JOIN Position p ON e.position_id = p.position_id
     WHERE c.contract_id = @ContractID;
 END;
@@ -1720,5 +1705,52 @@ BEGIN
     LEFT JOIN ShiftSchedule ss ON a.shift_id = ss.shift_id
     WHERE a.employee_id = @EmployeeID
     ORDER BY a.entry_time DESC;
+END;
+GO
+
+
+--extra for login
+
+-- 1. Create a table strictly for Login Info (Good Design)
+CREATE TABLE UserAccount (
+    user_id INT IDENTITY(1,1) PRIMARY KEY,
+    employee_id INT UNIQUE, -- Link to Employee
+    email NVARCHAR(100) UNIQUE,
+    password_hash NVARCHAR(200), -- We will store junk here since we don't care
+    FOREIGN KEY (employee_id) REFERENCES Employee(employee_id)
+);
+GO
+
+-- 2. Populate it with your current employees (So they can log in)
+-- We set everyone's password to '123' just to fill the column, but we won't check it.
+INSERT INTO UserAccount (employee_id, email, password_hash)
+SELECT employee_id, email, '123' 
+FROM Employee 
+WHERE email IS NOT NULL AND NOT EXISTS (SELECT 1 FROM UserAccount WHERE UserAccount.employee_id = Employee.employee_id);
+GO
+
+-- 3. The "Lazy" Login Procedure
+CREATE OR ALTER PROCEDURE UserLogin
+    @Email NVARCHAR(100),
+    @Password NVARCHAR(100) -- We accept it, but we IGNORE it
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- WE ONLY CHECK IF EMAIL EXISTS. 
+    -- PASSWORD IS NOT CHECKED.
+    SELECT 
+        e.employee_id, 
+        e.full_name, 
+        er.role_id,
+        r.role_name
+    FROM Employee e
+    LEFT JOIN UserAccount u ON e.employee_id = u.employee_id
+    -- Join to get the Role Name
+    LEFT JOIN Employee_Role er ON e.employee_id = er.employee_id
+    LEFT JOIN Role r ON er.role_id = r.role_id
+    WHERE e.email = @Email; 
+    
+    -- If this returns a row, Login Success.
 END;
 GO
