@@ -86,6 +86,8 @@ CREATE TABLE Contract (
     end_date DATE,
     current_state VARCHAR(50)
 );
+ALTER TABLE Contract ADD employee_id INT;
+ALTER TABLE Contract ADD CONSTRAINT FK_Contract_Employee FOREIGN KEY (employee_id) REFERENCES Employee(employee_id);
 
 
 CREATE TABLE Insurance (

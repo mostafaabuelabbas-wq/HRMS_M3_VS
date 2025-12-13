@@ -1,5 +1,6 @@
-﻿using HRMS_M3_VS.Services;
-using HRMS_M3_VS.Areas.Employee.Models;
+﻿using HRMS_M3_VS.Areas.Employee.Models;
+using HRMS_M3_VS.Services;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace HRMS_M3_VS.Areas.Employee.Services
 {
@@ -43,18 +44,34 @@ namespace HRMS_M3_VS.Areas.Employee.Services
                 vm.CurrentState
             });
 
-        public async Task RenewContractAsync(ContractRenewViewModel vm)
+        public async Task<int> RenewContractAsync(ContractRenewViewModel vm)
         {
-            await _db.ExecuteAsync("RenewContract", new
+            // Call stored procedure and capture the new contract ID
+            var result = await _db.QueryAsync<int>("RenewContract", new
             {
-                vm.ContractId,
-                vm.NewEndDate
+                ContractID = vm.ContractId,
+                NewEndDate = vm.NewEndDate
             });
 
-            // Send notification
+            int newContractId = result.FirstOrDefault();
+
+            // Send notification using the NEW contract ID
             await _db.ExecuteAsync("SendContractRenewalNotification", new
             {
-                ContractID = vm.ContractId
+                ContractID = newContractId
+            });
+
+            return newContractId; // Return the new ID
+        }
+        public async Task<IEnumerable<SelectListItem>> GetEmployeeSelectListAsync()
+        {
+            // FIX: Use the Stored Procedure name, not raw SQL
+            var employees = await _db.QueryAsync<dynamic>("GetEmployeeSimpleList", null);
+
+            return employees.Select(e => new SelectListItem
+            {
+                Value = e.employee_id.ToString(),
+                Text = e.full_name
             });
         }
     }

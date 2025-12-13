@@ -1,40 +1,74 @@
-﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.ContractDto>
+﻿@model HRMS_M3_VS.Areas.Employee.Models.ContractDetailsDto
 @{
-    ViewData["Title"] = "Contracts";
+    ViewData["Title"] = "Contract Details";
 }
-<h2 class="mb-3">Contracts</h2>
 
-<table class="table table-hover">
-    <thead class="table-light">
-        <tr>
-            <th>Contract ID</th>
-            <th>Employee</th>
-            <th>Type</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Status</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var c in Model)
-        {
-            <tr>
-                <td>@c.ContractId</td>
-                <td>@c.FullName</td>
-                <td>@c.Type</td>
-                <td>@(c.StartDate?.ToString("yyyy-MM-dd"))</td>
-                <td>@(c.EndDate?.ToString("yyyy-MM-dd"))</td>
-                <td>
-                    <span class="badge @(c.CurrentState == "Active" ? "bg-success" : "bg-secondary")">@c.CurrentState</span>
-                </td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@c.ContractId" class="btn btn-sm btn-outline-primary">Details</a>
-                    <a asp-action="Edit" asp-route-id="@c.ContractId" class="btn btn-sm btn-outline-warning">Edit</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
-<a asp-action="Create" class="btn btn-primary">Create Contract</a>
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="container mt-4">
+    <div class="card shadow border-0 rounded-3">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">Contract #@Model.ContractId Details</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5 class="text-primary">Employee Information</h5>
+                    <p><strong>Name:</strong> @Model.EmployeeName</p>
+                    <p><strong>Email:</strong> @Model.EmployeeEmail</p>
+                    <p><strong>Phone:</strong> @Model.EmployeePhone</p>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-primary">Contract Information</h5>
+                    <p><strong>Type:</strong> @Model.Type</p>
+                    <p><strong>Start Date:</strong> @Model.StartDate?.ToString("dd MMM yyyy")</p>
+                    <p><strong>End Date:</strong> @Model.EndDate?.ToString("dd MMM yyyy")</p>
+                    <p>
+                        <strong>Status:</strong>
+                        <span class="badge @(Model.CurrentState == "Active" ? "bg-success" : "bg-secondary")">
+                            @Model.CurrentState
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.PositionTitle))
+            {
+                <div class="row">
+                    <div class="col-12">
+                        <h5 class="text-primary">Position</h5>
+                        <p>@Model.PositionTitle</p>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="card-footer bg-light">
+            <a asp-action="Edit" asp-route-id="@Model.ContractId" class="btn btn-warning">
+                <i class="fas fa-pen"></i> Edit
+            </a>
+            @if (Model.CurrentState == "Active" && Model.EndDate.HasValue && Model.EndDate.Value <= DateTime.Today.AddDays(30))
+            {
+                <a asp-action="Renew" asp-route-id="@Model.ContractId" class="btn btn-success">
+                    <i class="fas fa-sync-alt"></i> Renew
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>

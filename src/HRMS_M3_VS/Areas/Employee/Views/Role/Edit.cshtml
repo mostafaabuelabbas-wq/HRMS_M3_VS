@@ -1,38 +1,64 @@
 ﻿@model HRMS_M3_VS.Areas.Employee.Models.AssignRoleViewModel
 
-<h2 class="fw-bold mb-4">Assign Role</h2>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-dark text-white py-3">
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-user-tag me-2"></i>Assign Role</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="post">
 
-<div class="card p-4 shadow-sm">
-    <form method="post">
+                        <!-- CRITICAL FIX: Keep the ID -->
+                        <input type="hidden" asp-for="EmployeeId" />
 
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Employee</label>
-            <input class="form-control" value="@Model.FullName" disabled />
+                        <!-- Read-Only Info -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Employee Name</label>
+                            <input class="form-control bg-light" value="@Model.FullName" disabled />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Department</label>
+                                <input class="form-control bg-light" value="@Model.Department" disabled />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Current Role</label>
+                                <input class="form-control bg-light" value="@Model.CurrentRoleName" disabled />
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- Role Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark">Select New Role</label>
+                            <select asp-for="NewRoleId" class="form-select form-select-lg shadow-sm">
+                                <option value="">-- Click to Select Role --</option>
+                                @foreach (var role in Model.Roles)
+                                {
+                                    <option value="@role.RoleId">@role.RoleName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="NewRoleId" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                            <button type="submit" class="btn btn-success px-4 shadow-sm">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
         </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Department</label>
-            <input class="form-control" value="@Model.Department" disabled />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Current Role</label>
-            <input class="form-control" value="@Model.CurrentRoleName" disabled />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Assign New Role</label>
-            <select asp-for="NewRoleId" class="form-select">
-                <option value="">-- Select --</option>
-                @foreach (var role in Model.Roles)
-                {
-                    <option value="@role.RoleId">@role.RoleName</option>
-                }
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-success">Save</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-
-    </form>
+    </div>
 </div>
