@@ -44,5 +44,22 @@ namespace HRMS_M3_VS.Areas.Attendance.Services
             // This maps to the columns returned by ViewAssignedShifts
             return await _db.QueryAsync<ShiftDto>("ViewAssignedShifts", parameters);
         }
+        // Add this inside TrackingService class
+
+        public async Task<string> SubmitCorrection(CorrectionRequestDto dto)
+        {
+            var parameters = new DynamicParameters();
+
+            // MAPPING: SQL Parameter Name (Left) = C# Value (Right)
+            parameters.Add("EmployeeID", dto.employee_id);
+            parameters.Add("Date", dto.date);
+            parameters.Add("CorrectionType", dto.correction_type);
+            parameters.Add("Reason", dto.reason);
+
+            // Your procedure returns a SELECT 'Message', so we use QueryAsync to get that string
+            var result = await _db.QueryAsync<string>("SubmitCorrectionRequest", parameters);
+
+            return result.FirstOrDefault();
+        }
     }
 }

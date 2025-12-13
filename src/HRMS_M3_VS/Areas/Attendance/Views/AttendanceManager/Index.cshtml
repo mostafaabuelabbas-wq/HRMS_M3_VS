@@ -1,0 +1,70 @@
+﻿@{
+    ViewData["Title"] = "Attendance Ops";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container p-0">
+    <h2 class="mb-4 text-primary fw-bold">
+        <i class="fa fa-tasks me-2"></i>Attendance Operations
+    </h2>
+
+    <div class="row g-4">
+
+        <!-- 1. SYNC LEAVES (Requirement 2c) -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 bg-white border-top border-4 border-info">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3 text-info">
+                        <i class="fa fa-sync-alt fa-3x"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Sync Leaves</h5>
+                    <p class="card-text text-muted small">
+                        Convert approved leave requests into official attendance exceptions.
+                    </p>
+                    <a asp-action="SyncLeaves" class="btn btn-outline-info w-75 rounded-pill">
+                        Start Sync
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. OFFLINE SYNC (Requirement 2d) -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 bg-white border-top border-4 border-primary">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3 text-primary">
+                        <i class="fa fa-wifi fa-3x"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Offline Sync</h5>
+                    <p class="card-text text-muted small">
+                        Simulate data upload from disconnected biometric devices.
+                    </p>
+                    <a asp-action="OfflineSync" class="btn btn-outline-primary w-75 rounded-pill">
+                        Simulate Device
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. TIME RULES & PENALTIES (Requirement 2e) - NEW! -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 bg-white border-top border-4 border-danger">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3 text-danger">
+                        <i class="fa fa-gavel fa-3x"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Time Rules</h5>
+                    <p class="card-text text-muted small">
+                        View daily short-time penalties and grace period application.
+                    </p>
+                    <a asp-action="TimeRules" class="btn btn-outline-danger w-75 rounded-pill">
+                        View Penalties
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        
+
+    </div>
+</div>

@@ -1,0 +1,64 @@
+﻿@model HRMS_M3_VS.Areas.Attendance.Models.OfflineSyncDto
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="mb-4 text-primary"><i class="fa fa-wifi me-2"></i>Simulate Offline Device Sync</h2>
+
+<div class="alert alert-info">
+    Use this form to manually push attendance records that were captured while a device was offline.
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="fa fa-check-circle"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow-sm" style="max-width: 600px;">
+    <div class="card-body">
+        <form method="post">
+
+            <!-- Employee Selection -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Employee</label>
+                <select asp-for="employee_id" class="form-control"
+                        asp-items="@(new SelectList(ViewBag.Employees, "employee_id", "full_name"))" required>
+                    <option value="">-- Select Employee --</option>
+                </select>
+            </div>
+
+            <!-- Device ID -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Terminal / Device ID</label>
+                <input asp-for="device_id" type="number" class="form-control" placeholder="e.g. 101" required />
+            </div>
+
+            <!-- Time -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Time Recorded (Offline)</label>
+                <input asp-for="clock_time"
+                       type="datetime-local"
+                       class="form-control"
+                       asp-format="{0:yyyy-MM-ddTHH:mm:ss}"
+                       step="1"
+                       required />
+            </div>
+
+            <!-- IN or OUT -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Punch Type</label>
+                <select asp-for="type" class="form-control">
+                    <option value="IN">Check In</option>
+                    <option value="OUT">Check Out</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fa fa-sync-alt"></i> Sync Record
+            </button>
+        </form>
+    </div>
+</div>
