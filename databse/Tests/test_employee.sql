@@ -230,3 +230,8 @@ EXEC NotifyLeaveStatusChange
     @EmployeeID = 2,
     @RequestID = 1,
     @Status = 'Returned';
+*/
+SELECT employee_id, full_name FROM Employee WHERE full_name LIKE '%Sara%';
+UPDATE Contract
+SET employee_id = 2
+WHERE contract_id = 6;

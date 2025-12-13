@@ -6,5 +6,6 @@
         public string? EmployeePhone { get; set; }
         public int? PositionId { get; set; }
         public string? PositionTitle { get; set; }
+        public string? EmployeeName { get; set; }
     }
 }

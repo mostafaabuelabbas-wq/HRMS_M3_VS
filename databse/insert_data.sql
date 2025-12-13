@@ -487,18 +487,918 @@ VALUES
 
 
 
+------------------------------------------------------------
+-- 0. ADDITIONAL ROLES (Option 1 confirmed)
+------------------------------------------------------------
+INSERT INTO Role (role_name, purpose) VALUES
+('Manager','Manages teams and approves workflows'),
+('SystemAdmin','System-wide administration');
+
+------------------------------------------------------------
+-- 0. ADDITIONAL POSITIONS (12 positions)
+------------------------------------------------------------
+INSERT INTO Position (position_title, responsibilities, status) VALUES
+('Project Manager','Lead projects, coordinate teams','Active'),
+('HR Specialist','Employee relations, HR operations','Active'),
+('Team Lead','Oversee team tasks and performance','Active'),
+('Payroll Specialist','Manage payroll processing','Active'),
+('Junior Software Engineer','Assist development, testing, maintenance','Active'),
+('Senior Software Engineer','Advanced development, system architecture','Active'),
+('QA Engineer','Test software quality and stability','Active'),
+('IT Support Engineer','Provide IT support and troubleshooting','Active'),
+('Data Analyst','Analyze datasets and generate reports','Active'),
+('HR Coordinator','Support HR operations and admin tasks','Active'),
+('Finance Officer','Manage financial transactions and reports','Active'),
+('Administrative Assistant','Provide clerical and admin support','Active');
+
+------------------------------------------------------------
+-- SECTION 1 — INSERT 4 SPECIAL EMPLOYEES (FULL DETAILS)
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- FETCH REQUIRED IDS (SAFE LOOKUPS)
+------------------------------------------------------------
+DECLARE @pos_PM INT  = (SELECT TOP 1 position_id FROM Position WHERE position_title='Project Manager');
+DECLARE @pos_HRS INT = (SELECT TOP 1 position_id FROM Position WHERE position_title='HR Specialist');
+DECLARE @pos_TL INT  = (SELECT TOP 1 position_id FROM Position WHERE position_title='Team Lead');
+DECLARE @pos_PS INT  = (SELECT TOP 1 position_id FROM Position WHERE position_title='Payroll Specialist');
+
+DECLARE @role_HRAdmin INT     = (SELECT TOP 1 role_id FROM Role WHERE role_name='HRAdmin');
+DECLARE @role_Payroll INT     = (SELECT TOP 1 role_id FROM Role WHERE role_name='PayrollOfficer');
+DECLARE @role_Employee INT    = (SELECT TOP 1 role_id FROM Role WHERE role_name='Employee');
+DECLARE @role_Manager INT     = (SELECT TOP 1 role_id FROM Role WHERE role_name='Manager');
+DECLARE @role_SystemAdmin INT = (SELECT TOP 1 role_id FROM Role WHERE role_name='SystemAdmin');
+
+DECLARE @dHR INT  = (SELECT TOP 1 department_id FROM Department WHERE department_name='HR');
+DECLARE @dIT INT  = (SELECT TOP 1 department_id FROM Department WHERE department_name='IT');
+DECLARE @dFIN INT = (SELECT TOP 1 department_id FROM Department WHERE department_name='Finance');
+
+DECLARE @tfEgypt INT = (SELECT TOP 1 tax_form_id FROM TaxForm WHERE jurisdiction='Egypt');
+
+DECLARE @stypeMonthly INT = (SELECT TOP 1 salary_type_id FROM SalaryType WHERE [type]='Monthly');
+DECLARE @cFull INT = (SELECT TOP 1 contract_id FROM Contract WHERE [type]='FullTime');
+
+------------------------------------------------------------
+-- 1. SPECIAL EMPLOYEE — MOSTAFA MOHAMED (SYSTEM ADMIN)
+------------------------------------------------------------
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth, country_of_birth,
+    phone, email, address, employment_progress, account_status,
+    employment_status, hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES (
+    'Mostafa','Mohamed','29001011230001','1990-01-01','Egypt',
+    '01050000001','mostafa.mohamed@company.com','Nasr City',
+    'Active','Active','Full-time','2023-01-15',1,
+    100,@dIT,@pos_PM,NULL,
+    @cFull,@tfEgypt,@stypeMonthly,3
+);
+
+DECLARE @e4 INT = SCOPE_IDENTITY();
+
+-- Role
+INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
+VALUES (@e4, @role_SystemAdmin, GETDATE());
+
+-- Skill
+INSERT INTO Employee_Skill (employee_id, skill_id, proficiency_level)
+VALUES (@e4, 1, 'Expert');
+
+-- Verification
+INSERT INTO Employee_Verification (employee_id, verification_id)
+VALUES (@e4, 1);
+
+------------------------------------------------------------
+-- 2. SPECIAL EMPLOYEE — HASAN MAHMOUD (HR ADMIN)
+------------------------------------------------------------
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth, country_of_birth,
+    phone, email, address, employment_progress, account_status,
+    employment_status, hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES (
+    'Hasan','Mahmoud','29102021230002','1991-02-05','Egypt',
+    '01050000002','hasan.mahmoud@company.com','Heliopolis',
+    'Active','Active','Full-time','2023-02-10',1,
+    95,@dHR,@pos_HRS,@e4,
+    @cFull,@tfEgypt,@stypeMonthly,2
+);
+
+DECLARE @e5 INT = SCOPE_IDENTITY();
+
+-- Role
+INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
+VALUES (@e5, @role_HRAdmin, GETDATE());
+
+-- Skill
+INSERT INTO Employee_Skill (employee_id, skill_id, proficiency_level)
+VALUES (@e5, 3, 'Advanced');
+
+-- Verification
+INSERT INTO Employee_Verification (employee_id, verification_id)
+VALUES (@e5, 2);
+
+------------------------------------------------------------
+-- 3. SPECIAL EMPLOYEE — MOHAMED AMR (MANAGER)
+------------------------------------------------------------
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth, country_of_birth,
+    phone, email, address, employment_progress, account_status,
+    employment_status, hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES (
+    'Mohamed','Amr','28903031230003','1989-03-10','Egypt',
+    '01050000003','mohamed.amr@company.com','Maadi',
+    'Active','Active','Full-time','2023-03-01',1,
+    93,@dIT,@pos_TL,@e4,
+    @cFull,@tfEgypt,@stypeMonthly,3
+);
+
+DECLARE @e6 INT = SCOPE_IDENTITY();
+
+-- Role
+INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
+VALUES (@e6, @role_Manager, GETDATE());
+
+-- Skill
+INSERT INTO Employee_Skill (employee_id, skill_id, proficiency_level)
+VALUES (@e6, 2, 'Advanced');
+
+-- Verification
+INSERT INTO Employee_Verification (employee_id, verification_id)
+VALUES (@e6, 3);
+
+------------------------------------------------------------
+-- 4. SPECIAL EMPLOYEE — YOUSSEF AHMED (PAYROLL OFFICER)
+------------------------------------------------------------
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth, country_of_birth,
+    phone, email, address, employment_progress, account_status,
+    employment_status, hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES (
+    'Youssef','Ahmed','29504041230004','1995-04-12','Egypt',
+    '01050000004','youssef.ahmed@company.com','Giza',
+    'Active','Active','Full-time','2023-04-01',1,
+    90,@dFIN,@pos_PS,@e6,
+    @cFull,@tfEgypt,@stypeMonthly,2
+);
+
+DECLARE @e7 INT = SCOPE_IDENTITY();
+
+-- Role
+INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
+VALUES (@e7, @role_Payroll, GETDATE());
+
+-- Skill
+INSERT INTO Employee_Skill (employee_id, skill_id, proficiency_level)
+VALUES (@e7, 3, 'Intermediate');
+
+-- Verification
+INSERT INTO Employee_Verification (employee_id, verification_id)
+VALUES (@e7, 1);
+
+------------------------------------------------------------
+-- SPECIAL EMPLOYEES — HIERARCHY
+------------------------------------------------------------
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+VALUES
+(@e4, NULL, 1),   -- Mostafa top-level
+(@e5, @e4, 2),     -- Hasan → Mostafa
+(@e6, @e4, 2),     -- Amr → Mostafa
+(@e7, @e6, 3);     -- Youssef → Amr
+
+------------------------------------------------------------
+-- SIMPLE MISSIONS (LIKE YOUR BASE FORMAT)
+------------------------------------------------------------
+INSERT INTO Mission (destination, start_date, end_date, status, employee_id, manager_id)
+VALUES
+('Dubai','2024-01-10','2024-01-12','Completed',@e4,NULL),
+('Cairo','2024-02-05','2024-02-06','Planned',@e5,@e4),
+('Alexandria','2024-03-01','2024-03-03','Completed',@e6,@e4),
+('Giza','2024-03-10','2024-03-11','Planned',@e7,@e6);
+
+GO
+------------------------------------------------------------
+-- SECTION 2 — INSERT 50 REALISTIC EMPLOYEES
+------------------------------------------------------------
+
+------------------------------------------------------------
+-- SAFE LOOKUPS FOR EMPLOYEE INSERTS
+------------------------------------------------------------
+-- SAFE LOOKUPS FOR EMPLOYEE INSERTS
+DECLARE @dIT INT  = (SELECT TOP 1 department_id FROM Department WHERE department_name='IT');
+DECLARE @dHR INT  = (SELECT TOP 1 department_id FROM Department WHERE department_name='HR');
+DECLARE @dFIN INT = (SELECT TOP 1 department_id FROM Department WHERE department_name='Finance');
+
+DECLARE @pos_JuniorSE INT  = (SELECT TOP 1 position_id FROM Position WHERE position_title='Junior Software Engineer');
+DECLARE @pos_SeniorSE INT  = (SELECT TOP 1 position_id FROM Position WHERE position_title='Senior Software Engineer');
+DECLARE @pos_QA INT        = (SELECT TOP 1 position_id FROM Position WHERE position_title='QA Engineer');
+DECLARE @pos_ITSupport INT = (SELECT TOP 1 position_id FROM Position WHERE position_title='IT Support Engineer');
+DECLARE @pos_Analyst INT   = (SELECT TOP 1 position_id FROM Position WHERE position_title='Data Analyst');
+
+DECLARE @pos_HRS INT     = (SELECT TOP 1 position_id FROM Position WHERE position_title='HR Specialist');
+DECLARE @pos_HRCoord INT = (SELECT TOP 1 position_id FROM Position WHERE position_title='HR Coordinator');
+
+DECLARE @pos_Finance INT = (SELECT TOP 1 position_id FROM Position WHERE position_title='Finance Officer');
+DECLARE @pos_Admin INT   = (SELECT TOP 1 position_id FROM Position WHERE position_title='Administrative Assistant');
+
+DECLARE @tfEgypt INT      = (SELECT TOP 1 tax_form_id FROM TaxForm WHERE jurisdiction='Egypt');
+DECLARE @stypeMonthly INT = (SELECT TOP 1 salary_type_id FROM SalaryType WHERE type='Monthly');
+DECLARE @cFull INT        = (SELECT TOP 1 contract_id FROM Contract WHERE type='FullTime');
+
+------------------------------------------------------------
+-- INSERT IT EMPLOYEES (FIRST 10 OF 30)
+------------------------------------------------------------
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth,
+    country_of_birth, phone, email, address,
+    employment_progress, account_status, employment_status,
+    hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES
+('Omar','Hussein','29501011234521','1995-01-10','Egypt',
+ '01060000001','omar.hussein@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-05-10',1,92,
+ @dIT,@pos_JuniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Kareem','Nasser','29402021234522','1994-02-15','Egypt',
+ '01060000002','kareem.nasser@company.com','Maadi',
+ 'Active','Active','Full-time','2023-04-03',1,90,
+ @dIT,@pos_SeniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,3),
+
+('Aly','Sami','29603031234523','1996-03-20','Egypt',
+ '01060000003','aly.sami@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-06-01',1,89,
+ @dIT,@pos_QA,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Yara','Khaled','29704041234524','1997-04-22','Egypt',
+ '01060000004','yara.khaled@company.com','Giza',
+ 'Active','Active','Full-time','2023-07-11',1,94,
+ @dIT,@pos_Analyst,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Hana','Maged','29805051234525','1998-05-05','Egypt',
+ '01060000005','hana.maged@company.com','New Cairo',
+ 'Active','Active','Full-time','2023-03-15',1,91,
+ @dIT,@pos_JuniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Adham','Fouad','29506061234526','1995-06-17','Egypt',
+ '01060000006','adham.fouad@company.com','6th October',
+ 'Active','Active','Full-time','2023-02-12',1,93,
+ @dIT,@pos_ITSupport,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Ziad','Maher','29507071234527','1995-07-02','Egypt',
+ '01060000007','ziad.maher@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-08-10',1,95,
+ @dIT,@pos_SeniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,3),
+
+('Layla','Yassin','29708081234528','1997-08-11','Egypt',
+ '01060000008','layla.yassin@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-09-12',1,96,
+ @dIT,@pos_Analyst,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Tarek','Gamal','29409091234529','1994-09-05','Egypt',
+ '01060000009','tarek.gamal@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-01-19',1,88,
+ @dIT,@pos_QA,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Nour','Samir','29610101234530','1996-10-27','Egypt',
+ '01060000010','nour.samir@company.com','Maadi',
+ 'Active','Active','Full-time','2023-06-22',1,90,
+ @dIT,@pos_JuniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,1);
+
+------------------------------------------------------------
+-- SECTION 2 — INSERT IT EMPLOYEES (11–20 of 30)
+------------------------------------------------------------
+
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth,
+    country_of_birth, phone, email, address,
+    employment_progress, account_status, employment_status,
+    hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES
+('Rana','Fathy','29711111234531','1997-11-12','Egypt',
+ '01060000011','rana.fathy@company.com','Giza',
+ 'Active','Active','Full-time','2023-08-14',1,92,
+ @dIT,@pos_JuniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Salma','Yousef','29812121234532','1998-12-21','Egypt',
+ '01060000012','salma.yousef@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-05-14',1,93,
+ @dIT,@pos_QA,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Hossam','Reda','29402221234533','1994-02-15','Egypt',
+ '01060000013','hossam.reda@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-02-17',1,94,
+ @dIT,@pos_ITSupport,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Eman','Sabry','29603331234534','1996-03-22','Egypt',
+ '01060000014','eman.sabry@company.com','New Cairo',
+ 'Active','Active','Full-time','2023-09-09',1,95,
+ @dIT,@pos_SeniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,3),
+
+('Farah','Ayman','29704441234535','1997-04-03','Egypt',
+ '01060000015','farah.ayman@company.com','Maadi',
+ 'Active','Active','Full-time','2023-01-30',1,88,
+ @dIT,@pos_Analyst,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Samy','Lotfy','29305551234536','1993-05-10','Egypt',
+ '01060000016','samy.lotfy@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-04-11',1,92,
+ @dIT,@pos_JuniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Nada','Adel','29906661234537','1999-06-19','Egypt',
+ '01060000017','nada.adel@company.com','Giza',
+ 'Active','Active','Full-time','2023-03-21',1,93,
+ @dIT,@pos_QA,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Mina','Karam','29507771234538','1995-07-18','Egypt',
+ '01060000018','mina.karam@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-07-07',1,91,
+ @dIT,@pos_ITSupport,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Ramy','Ashraf','29408881234539','1994-08-08','Egypt',
+ '01060000019','ramy.ashraf@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-05-13',1,92,
+ @dIT,@pos_SeniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,3),
+
+('Sahar','Tarek','29709991234540','1997-09-09','Egypt',
+ '01060000020','sahar.tarek@company.com','Giza',
+ 'Active','Active','Full-time','2023-10-05',1,94,
+ @dIT,@pos_Analyst,NULL,@cFull,@tfEgypt,@stypeMonthly,2);
+
+------------------------------------------------------------
+-- SECTION 2 — INSERT IT EMPLOYEES (21–30 of 30)
+------------------------------------------------------------
+
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth,
+    country_of_birth, phone, email, address,
+    employment_progress, account_status, employment_status,
+    hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES
+('Islam','Fathi','29510101234541','1995-10-21','Egypt',
+ '01060000021','islam.fathi@company.com','New Cairo',
+ 'Active','Active','Full-time','2023-11-01',1,93,
+ @dIT,@pos_QA,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Sherif','Gad','29311211234542','1993-11-22','Egypt',
+ '01060000022','sherif.gad@company.com','6th October',
+ 'Active','Active','Full-time','2023-06-26',1,95,
+ @dIT,@pos_SeniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,3),
+
+('Dalia','Hany','29802021234543','1998-02-14','Egypt',
+ '01060000023','dalia.hany@company.com','Maadi',
+ 'Active','Active','Full-time','2023-04-17',1,93,
+ @dIT,@pos_JuniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Mariam','Saleh','29703031234544','1997-03-15','Egypt',
+ '01060000024','mariam.saleh@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-03-18',1,96,
+ @dIT,@pos_Analyst,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Bassem','Shawky','29504041234545','1995-04-07','Egypt',
+ '01060000025','bassem.shawky@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-10-11',1,95,
+ @dIT,@pos_SeniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,3),
+
+('Rashed','Omar','29605051234546','1996-05-09','Egypt',
+ '01060000026','rashed.omar@company.com','Giza',
+ 'Active','Active','Full-time','2023-02-19',1,91,
+ @dIT,@pos_JuniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Noha','Emad','29806061234547','1998-06-03','Egypt',
+ '01060000027','noha.emad@company.com','New Cairo',
+ 'Active','Active','Full-time','2023-07-15',1,94,
+ @dIT,@pos_QA,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Mustafa','Sharaf','29707071234548','1997-07-08','Egypt',
+ '01060000028','mustafa.sharaf@company.com','6th October',
+ 'Active','Active','Full-time','2023-08-22',1,97,
+ @dIT,@pos_SeniorSE,NULL,@cFull,@tfEgypt,@stypeMonthly,3),
+
+('Rita','Boulos','29908081234549','1999-08-21','Egypt',
+ '01060000029','rita.boulos@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-09-30',1,92,
+ @dIT,@pos_Analyst,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Youssef','Adel','29809091234550','1998-09-25','Egypt',
+ '01060000030','youssef.adel@company.com','Giza',
+ 'Active','Active','Full-time','2023-10-14',1,91,
+ @dIT,@pos_ITSupport,NULL,@cFull,@tfEgypt,@stypeMonthly,1);
+
+------------------------------------------------------------
+-- SECTION 2 — INSERT HR EMPLOYEES (10 Employees)
+------------------------------------------------------------
+
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth,
+    country_of_birth, phone, email, address,
+    employment_progress, account_status, employment_status,
+    hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES
+('Rania','Mostafa','29601111234551','1996-01-10','Egypt',
+ '01070000001','rania.mostafa@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-05-10',1,94,
+ @dHR,@pos_HRS,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Menna','Hassan','29702221234552','1997-02-17','Egypt',
+ '01070000002','menna.hassan@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-03-01',1,92,
+ @dHR,@pos_HRCoord,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Huda','Farouk','29803331234553','1998-03-19','Egypt',
+ '01070000003','huda.farouk@company.com','Maadi',
+ 'Active','Active','Full-time','2023-07-22',1,95,
+ @dHR,@pos_HRS,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Nadine','Ossama','29904441234554','1999-04-18','Egypt',
+ '01070000004','nadine.ossama@company.com','Giza',
+ 'Active','Active','Full-time','2023-04-05',1,90,
+ @dHR,@pos_HRCoord,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Reem','Shaker','29705551234555','1997-05-21','Egypt',
+ '01070000005','reem.shaker@company.com','New Cairo',
+ 'Active','Active','Full-time','2023-06-19',1,93,
+ @dHR,@pos_HRS,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Aya','Nabil','29806661234556','1998-06-09','Egypt',
+ '01070000006','aya.nabil@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-05-25',1,91,
+ @dHR,@pos_HRCoord,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Jana','Khalifa','29907771234557','1999-07-07','Egypt',
+ '01070000007','jana.khalifa@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-10-01',1,92,
+ @dHR,@pos_HRS,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Fares','Lotfy','29608881234558','1996-08-18','Egypt',
+ '01070000008','fares.lotfy@company.com','New Cairo',
+ 'Active','Active','Full-time','2023-03-30',1,94,
+ @dHR,@pos_HRCoord,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('May','Gaber','29809991234559','1998-09-12','Egypt',
+ '01070000009','may.gaber@company.com','Giza',
+ 'Active','Active','Full-time','2023-02-22',1,96,
+ @dHR,@pos_HRS,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Nourhan','Ehab','29710101234560','1997-10-20','Egypt',
+ '01070000010','nourhan.ehab@company.com','Maadi',
+ 'Active','Active','Full-time','2023-01-10',1,93,
+ @dHR,@pos_HRCoord,NULL,@cFull,@tfEgypt,@stypeMonthly,1);
+
+------------------------------------------------------------
+-- SECTION 2 — INSERT FINANCE EMPLOYEES (10 Employees)
+------------------------------------------------------------
+
+INSERT INTO Employee (
+    first_name, last_name, national_id, date_of_birth,
+    country_of_birth, phone, email, address,
+    employment_progress, account_status, employment_status,
+    hire_date, is_active, profile_completion,
+    department_id, position_id, manager_id,
+    contract_id, tax_form_id, salary_type_id, pay_grade
+)
+VALUES
+('Ayman','Fekry','29601111234561','1996-01-11','Egypt',
+ '01080000001','ayman.fekry@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-04-10',1,94,
+ @dFIN,@pos_Finance,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Dina','Saad','29702221234562','1997-02-21','Egypt',
+ '01080000002','dina.saad@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-03-22',1,93,
+ @dFIN,@pos_Admin,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Hesham','Badawy','29503331234563','1995-03-30','Egypt',
+ '01080000003','hesham.badawy@company.com','Giza',
+ 'Active','Active','Full-time','2023-05-02',1,92,
+ @dFIN,@pos_Finance,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Lama','Gad','29804441234564','1998-04-05','Egypt',
+ '01080000004','lama.gad@company.com','New Cairo',
+ 'Active','Active','Full-time','2023-06-12',1,91,
+ @dFIN,@pos_Admin,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Shadi','Raouf','29405551234565','1994-05-16','Egypt',
+ '01080000005','shadi.raouf@company.com','Maadi',
+ 'Active','Active','Full-time','2023-01-10',1,93,
+ @dFIN,@pos_Finance,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Rana','Halim','29806661234566','1998-06-13','Egypt',
+ '01080000006','rana.halim@company.com','Heliopolis',
+ 'Active','Active','Full-time','2023-02-18',1,90,
+ @dFIN,@pos_Admin,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Omar','Khalaf','29507771234567','1995-07-08','Egypt',
+ '01080000007','omar.khalaf@company.com','Nasr City',
+ 'Active','Active','Full-time','2023-07-20',1,95,
+ @dFIN,@pos_Finance,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Marina','Sami','29608881234568','1996-08-29','Egypt',
+ '01080000008','marina.sami@company.com','New Cairo',
+ 'Active','Active','Full-time','2023-03-09',1,93,
+ @dFIN,@pos_Admin,NULL,@cFull,@tfEgypt,@stypeMonthly,1),
+
+('Tamer','Zakaria','29709991234569','1997-09-07','Egypt',
+ '01080000009','tamer.zakaria@company.com','Giza',
+ 'Active','Active','Full-time','2023-10-18',1,95,
+ @dFIN,@pos_Finance,NULL,@cFull,@tfEgypt,@stypeMonthly,2),
+
+('Rita','Shenouda','29810101234570','1998-10-01','Egypt',
+ '01080000010','rita.shenouda@company.com','Maadi',
+ 'Active','Active','Full-time','2023-02-07',1,92,
+ @dFIN,@pos_Admin,NULL,@cFull,@tfEgypt,@stypeMonthly,1);
+GO
+
+GO
+------------------------------------------------------------
+-- SECTION 3 — PART A
+-- Assign Role + Skills + Verification to 50 new employees
+------------------------------------------------------------
+
+-- Fetch Employee role (Standard)
+DECLARE @roleEmployee INT = (SELECT TOP 1 role_id FROM Role WHERE role_name='Employee');
+
+------------------------------------------------------------
+-- Assign "Employee" role to all new employees (IDs >= 8)
+------------------------------------------------------------
+INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
+SELECT employee_id, @roleEmployee, GETDATE()
+FROM Employee
+WHERE employee_id >= 8;
+
+------------------------------------------------------------
+-- Assign rotating SKILLS to all employees >= 8
+-- 1 = SQL, 2 = Java, 3 = Excel
+------------------------------------------------------------
+INSERT INTO Employee_Skill (employee_id, skill_id, proficiency_level)
+SELECT employee_id,
+       CASE 
+           WHEN employee_id % 3 = 1 THEN 1  -- SQL
+           WHEN employee_id % 3 = 2 THEN 2  -- Java
+           ELSE 3                           -- Excel
+       END,
+       CASE 
+           WHEN employee_id % 3 = 1 THEN 'Intermediate'
+           WHEN employee_id % 3 = 2 THEN 'Advanced'
+           ELSE 'Beginner'
+       END
+FROM Employee
+WHERE employee_id >= 8;
+
+------------------------------------------------------------
+-- Assign rotating VERIFICATIONS to all new employees
+-- 1 = ID Check, 2 = Degree Check, 3 = Background Check
+------------------------------------------------------------
+INSERT INTO Employee_Verification (employee_id, verification_id)
+SELECT employee_id,
+       CASE 
+           WHEN employee_id % 3 = 1 THEN 1
+           WHEN employee_id % 3 = 2 THEN 2
+           ELSE 3
+       END
+FROM Employee
+WHERE employee_id >= 8;
+------------------------------------------------------------
+-- SECTION 3 — PART B: EmployeeHierarchy
+------------------------------------------------------------
+DECLARE @Mostafa INT = (SELECT employee_id FROM Employee WHERE email='mostafa.mohamed@company.com');
+DECLARE @Hasan   INT = (SELECT employee_id FROM Employee WHERE email='hasan.mahmoud@company.com');
+DECLARE @Amr     INT = (SELECT employee_id FROM Employee WHERE email='mohamed.amr@company.com');
+DECLARE @Youssef INT = (SELECT employee_id FROM Employee WHERE email='youssef.ahmed@company.com');
+
+-- IT → Manager Amr
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Amr, 3
+FROM Employee
+WHERE employee_id BETWEEN 8 AND 37;
+
+-- HR → Hasan
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Hasan, 3
+FROM Employee
+WHERE employee_id BETWEEN 38 AND 47;
+
+-- Finance → Youssef
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Youssef, 3
+FROM Employee
+WHERE employee_id BETWEEN 48 AND 57;
+
+------------------------------------------------------------
+-- SECTION 3 — PART C: ShiftAssignment
+------------------------------------------------------------
+DECLARE @sMorning INT = (SELECT TOP 1 shift_id FROM ShiftSchedule WHERE name='Morning');
+DECLARE @sEvening INT = (SELECT TOP 1 shift_id FROM ShiftSchedule WHERE name='Evening');
+
+-- IT employees (8–37)
+INSERT INTO ShiftAssignment (employee_id, shift_id, start_date, end_date, status)
+SELECT employee_id,
+       CASE WHEN employee_id % 2 = 0 THEN @sMorning ELSE @sEvening END,
+       '2024-01-01','2024-12-31','Active'
+FROM Employee
+WHERE employee_id BETWEEN 8 AND 37;
+
+-- HR employees
+INSERT INTO ShiftAssignment (employee_id, shift_id, start_date, end_date, status)
+SELECT employee_id, @sMorning,
+       '2024-01-01','2024-12-31','Active'
+FROM Employee
+WHERE employee_id BETWEEN 38 AND 47;
+
+-- Finance employees
+INSERT INTO ShiftAssignment (employee_id, shift_id, start_date, end_date, status)
+SELECT employee_id, @sMorning,
+       '2024-01-01','2024-12-31','Active'
+FROM Employee
+WHERE employee_id BETWEEN 48 AND 57;
+
+------------------------------------------------------------
+-- SECTION 3 — PART D: Attendance & Logs
+------------------------------------------------------------
+
+INSERT INTO Attendance (employee_id, shift_id, entry_time, exit_time, login_method, logout_method, exception_id)
+SELECT employee_id,
+       CASE WHEN employee_id % 2 = 0 THEN @sMorning ELSE @sEvening END,
+       DATEADD(MINUTE, employee_id % 5, '2024-02-05 09:00'),
+       DATEADD(MINUTE, employee_id % 7, '2024-02-05 17:00'),
+       'Device','Device',NULL
+FROM Employee
+WHERE employee_id >= 8;
+
+-- Attendance Logs
+INSERT INTO AttendanceLog (attendance_id, actor, timestamp, reason)
+SELECT attendance_id, employee_id, GETDATE(), 'Auto log'
+FROM Attendance
+WHERE employee_id >= 8;
+
+------------------------------------------------------------
+-- SECTION 3 — PART E: Leave Requests + Entitlement
+------------------------------------------------------------
+
+DECLARE @lvVacation INT = (SELECT TOP 1 leave_id FROM [Leave] WHERE leave_type='Vacation');
+DECLARE @lvSick INT     = (SELECT TOP 1 leave_id FROM [Leave] WHERE leave_type='Sick');
+
+INSERT INTO LeaveRequest (employee_id, leave_id, justification, duration, approval_timing, status)
+SELECT employee_id,
+       CASE WHEN employee_id % 2 = 0 THEN @lvVacation ELSE @lvSick END,
+       'Auto generated request',
+       CASE WHEN employee_id % 2 = 0 THEN 3 ELSE 1 END,
+       '2024-04-10',
+       CASE WHEN employee_id % 2 = 0 THEN 'Approved' ELSE 'Pending' END
+FROM Employee
+WHERE employee_id >= 8;
+
+INSERT INTO LeaveEntitlement (employee_id, leave_type_id, entitlement)
+SELECT employee_id, @lvVacation, 21 FROM Employee WHERE employee_id >= 8;
+
+INSERT INTO LeaveEntitlement (employee_id, leave_type_id, entitlement)
+SELECT employee_id, @lvSick, 10 FROM Employee WHERE employee_id >= 8;
+
+------------------------------------------------------------
+-- SECTION 3 — PART F: Payroll + Allowances
+------------------------------------------------------------
+
+INSERT INTO Payroll (employee_id, taxes, period_start, period_end, base_amount, adjustments,
+                     contributions, actual_pay, net_salary, payment_date)
+SELECT employee_id,
+       1000 + (employee_id % 7) * 100,
+       '2024-02-01','2024-02-28',
+       12000 + (employee_id % 5) * 2000,
+       (employee_id % 3) * 200,
+       (employee_id % 4) * 100,
+       12000 + (employee_id % 5) * 2000,
+       12000 + (employee_id % 5) * 2000 - 500,
+       '2024-03-01'
+FROM Employee
+WHERE employee_id >= 8;
+
+-- Allowances
+INSERT INTO AllowanceDeduction (payroll_id, employee_id, type, amount, currency_code, duration, timezone)
+SELECT p.payroll_id, e.employee_id,
+       CASE 
+           WHEN e.employee_id % 3 = 0 THEN 'Transport'
+           WHEN e.employee_id % 3 = 1 THEN 'Phone'
+           ELSE 'Housing'
+       END,
+       CASE 
+           WHEN e.employee_id % 3 = 0 THEN 300
+           WHEN e.employee_id % 3 = 1 THEN 100
+           ELSE 1500
+       END,
+       'EGP','Monthly','EET'
+FROM Payroll p
+JOIN Employee e ON p.employee_id = e.employee_id
+WHERE e.employee_id >= 8;
+
+------------------------------------------------------------
+-- SECTION 3 — PART G: Devices + AttendanceSource
+------------------------------------------------------------
+INSERT INTO Device (device_type, terminal_id, latitude, longitude, employee_id)
+SELECT 'Biometric', CONCAT('TERM-', employee_id), 30.0 + (employee_id % 10), 31.0 + (employee_id % 10), employee_id
+FROM Employee
+WHERE employee_id >= 8;
+
+INSERT INTO AttendanceSource (attendance_id, device_id, source_type, latitude, longitude)
+SELECT A.attendance_id, D.device_id, 'Biometric', D.latitude, D.longitude
+FROM Attendance A
+JOIN Device D ON D.employee_id = A.employee_id
+WHERE A.employee_id >= 8;
+GO
+------------------------------------------------------------
+-- CUSTOM MANAGER ASSIGNMENTS (UPGRADED)
+-- Ensures proper variable declarations & hierarchy expansion
+------------------------------------------------------------
+
+-- Re-fetch special employees (variables lost after GO)
+DECLARE @e4 INT = (SELECT employee_id FROM Employee WHERE email='mostafa.mohamed@company.com');
+DECLARE @e5 INT = (SELECT employee_id FROM Employee WHERE email='hasan.mahmoud@company.com');
+DECLARE @e6 INT = (SELECT employee_id FROM Employee WHERE email='mohamed.amr@company.com');
+DECLARE @e7 INT = (SELECT employee_id FROM Employee WHERE email='youssef.ahmed@company.com');
+
+DECLARE @Mostafa INT = @e4;
+DECLARE @Hasan   INT = @e5;
+DECLARE @Amr     INT = @e6;
+DECLARE @Youssef INT = @e7;
+
+------------------------------------------------------------
+-- 1. Mohamed Amr (Manager) → Assign 15 IT Employees
+------------------------------------------------------------
+;WITH Top15IT AS (
+    SELECT TOP 15 employee_id
+    FROM Employee
+    WHERE department_id = (SELECT department_id FROM Department WHERE department_name='IT')
+      AND employee_id >= 8
+    ORDER BY employee_id
+)
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Amr, 3
+FROM Top15IT
+WHERE NOT EXISTS (
+    SELECT 1 FROM EmployeeHierarchy h WHERE h.employee_id = Top15IT.employee_id
+);
+
+------------------------------------------------------------
+-- 2. Hasan manages ALL HR employees, except special employees
+------------------------------------------------------------
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Hasan, 3
+FROM Employee
+WHERE department_id = (SELECT department_id FROM Department WHERE department_name='HR')
+  AND employee_id NOT IN (@e4, @e5, @e6, @e7)  -- exclude special people
+  AND NOT EXISTS (
+      SELECT 1 FROM EmployeeHierarchy h WHERE h.employee_id = Employee.employee_id
+  );
+
+------------------------------------------------------------
+-- 3. Youssef manages ALL Finance employees except himself
+------------------------------------------------------------
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Youssef, 3
+FROM Employee
+WHERE department_id = (SELECT department_id FROM Department WHERE department_name='Finance')
+  AND employee_id NOT IN (@e4, @e5, @e6, @e7)
+  AND NOT EXISTS (
+      SELECT 1 FROM EmployeeHierarchy h WHERE h.employee_id = Employee.employee_id
+  );
+
+------------------------------------------------------------
+-- 4. Mostafa manages ALL special managers (only if missing)
+------------------------------------------------------------
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT @e5, @Mostafa, 2
+WHERE NOT EXISTS (SELECT 1 FROM EmployeeHierarchy WHERE employee_id = @e5);
+
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT @e6, @Mostafa, 2
+WHERE NOT EXISTS (SELECT 1 FROM EmployeeHierarchy WHERE employee_id = @e6);
+
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT @e7, @Mostafa, 2
+WHERE NOT EXISTS (SELECT 1 FROM EmployeeHierarchy WHERE employee_id = @e7);
 
 
+GO
+------------------------------------------------------------
+-- SECTION 4 — FINAL VALIDATION & INDEXES
+------------------------------------------------------------
+
+PRINT 'Starting final validation...';
 
 
+------------------------------------------------------------
+-- VALIDATION 1: Ensure all employees have a role
+------------------------------------------------------------
+DECLARE @roleEmployee INT = (SELECT TOP 1 role_id FROM Role WHERE role_name='Employee');
+
+INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
+SELECT e.employee_id, @roleEmployee, GETDATE()
+FROM Employee e
+WHERE NOT EXISTS (
+    SELECT 1 FROM Employee_Role er WHERE er.employee_id = e.employee_id
+);
+
+PRINT '✓ Role validation complete';
 
 
+------------------------------------------------------------
+-- VALIDATION 2: Ensure all employees have at least 1 skill
+------------------------------------------------------------
+INSERT INTO Employee_Skill (employee_id, skill_id, proficiency_level)
+SELECT e.employee_id, 3, 'Beginner'
+FROM Employee e
+WHERE NOT EXISTS (
+    SELECT 1 FROM Employee_Skill es WHERE es.employee_id = e.employee_id
+);
+
+PRINT '✓ Skill validation complete';
 
 
+------------------------------------------------------------
+-- VALIDATION 3: Ensure all employees have at least 1 verification
+------------------------------------------------------------
+INSERT INTO Employee_Verification (employee_id, verification_id)
+SELECT e.employee_id, 1
+FROM Employee e
+WHERE NOT EXISTS (
+    SELECT 1 FROM Employee_Verification ev WHERE ev.employee_id = e.employee_id
+);
+
+PRINT '✓ Verification validation complete';
 
 
+------------------------------------------------------------
+-- VALIDATION 4: Ensure all employees have a hierarchy row
+------------------------------------------------------------
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT e.employee_id, NULL, 1
+FROM Employee e
+WHERE NOT EXISTS (
+    SELECT 1 FROM EmployeeHierarchy h WHERE h.employee_id = e.employee_id
+);
+
+PRINT '✓ Hierarchy validation complete';
 
 
+------------------------------------------------------------
+-- PERFORMANCE INDEXES
+-- These help your Milestone 3 UI run MUCH faster
+------------------------------------------------------------
+
+-- Lookup / login / filtering
+CREATE INDEX idx_employee_email ON Employee(email);
+CREATE INDEX idx_employee_department ON Employee(department_id);
+CREATE INDEX idx_employee_position ON Employee(position_id);
+
+-- Payroll performance
+CREATE INDEX idx_payroll_employee ON Payroll(employee_id);
+
+-- Attendance performance
+CREATE INDEX idx_attendance_employee ON Attendance(employee_id);
+CREATE INDEX idx_attendance_shift ON Attendance(shift_id);
+
+-- Leave performance
+CREATE INDEX idx_leave_employee ON LeaveRequest(employee_id);
+CREATE INDEX idx_leave_leaveid ON LeaveRequest(leave_id);
+
+PRINT '✓ Performance indexes created';
 
 
+------------------------------------------------------------
+-- OPTIONAL: Add system notifications for testing UI
+------------------------------------------------------------
+INSERT INTO Notification (message_content, urgency, read_status, notification_type)
+VALUES
+('System initialized successfully', 'Low', 0, 'System'),
+('New employees imported', 'Normal', 0, 'System');
 
+PRINT '✓ Final notifications inserted';
+
+
+------------------------------------------------------------
+-- DONE
+------------------------------------------------------------
+PRINT '------------------------------------------------------------';
+PRINT ' ALL DATA INSERTED + VALIDATED SUCCESSFULLY ';
+PRINT ' HRMS DATABASE IS NOW FULLY READY FOR MILESTONE 3 ';
+PRINT '------------------------------------------------------------';
