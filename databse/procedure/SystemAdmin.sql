@@ -61,7 +61,7 @@ BEGIN
     WHERE e.employee_id = @EmployeeID;
 END;
 GO
-ALTER PROCEDURE GetAllEmployees
+CREATE PROCEDURE GetAllEmployees
 AS
 BEGIN
     SELECT 
