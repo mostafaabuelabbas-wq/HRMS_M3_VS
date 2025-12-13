@@ -1621,3 +1621,23 @@ BEGIN
       );
 END;
 GO
+
+CREATE OR ALTER PROCEDURE GetApprovedLeavesForSync
+AS
+BEGIN
+    SELECT 
+        lr.request_id,
+        lr.employee_id,
+        e.first_name + ' ' + e.last_name AS employee_name,
+        l.leave_type,
+        lr.approval_timing AS start_date,
+        DATEADD(DAY, lr.duration, lr.approval_timing) AS end_date,
+        lr.status
+    FROM LeaveRequest lr
+    INNER JOIN Employee e ON lr.employee_id = e.employee_id
+    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
+    -- Only show Approved ones. 'Synced' ones will now disappear.
+    WHERE lr.status IN ('Approved', 'Finalized', 'Approved - Balance Updated')
+    ORDER BY lr.approval_timing DESC;
+END;
+GO
