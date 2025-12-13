@@ -16,9 +16,10 @@ builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<ContractService>();
 builder.Services.AddScoped<ShiftService>();
+
 //builder.Services.AddScoped<AttendanceAdminService>();
 //builder.Services.AddScoped<TeamAttendanceService>();
-//builder.Services.AddScoped<TrackingService>();
+builder.Services.AddScoped<TrackingService>();
 
 
 // ==================================================================
@@ -33,6 +34,10 @@ options.LogoutPath = "/Account/Logout";
 options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Auto logout after 1 hour
 });
 // ==================================================================
+
+
+builder.Services.AddScoped<TrackingService>();
+// Optional: Test DB connection on startup
 
 try
 {
