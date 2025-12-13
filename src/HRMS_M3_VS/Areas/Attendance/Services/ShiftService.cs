@@ -147,5 +147,6 @@ namespace HRMS_M3_VS.Areas.Attendance.Services
             var result = await _db.QueryAsync<string>("AssignCustomShift", parameters);
             return result.FirstOrDefault();
         }
+
     }
 }

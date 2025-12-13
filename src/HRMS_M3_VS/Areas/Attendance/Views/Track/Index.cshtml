@@ -5,9 +5,16 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>My Attendance History</h2>
-    <a class="btn btn-primary" asp-area="Attendance" asp-controller="Track" asp-action="Record">
-        <i class="fa fa-clock"></i> Record Attendance
-    </a>
+    <div>
+        <a class="btn btn-primary" asp-action="Record">
+            <i class="fa fa-clock"></i> Record Attendance
+        </a>
+
+        <!-- NEW BUTTON -->
+        <a class="btn btn-outline-warning ms-2" asp-action="Correction">
+            <i class="fa fa-tools"></i> Fix Issue
+        </a>
+    </div>
 </div>
 
 @if (TempData["Success"] != null)
