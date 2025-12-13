@@ -377,7 +377,7 @@ GO
 
 
 --6 ViewAssignedShifts
-CREATE PROCEDURE ViewAssignedShifts
+CREATE OR ALTER PROCEDURE ViewAssignedShifts
     @EmployeeID INT
 AS
 BEGIN
@@ -401,7 +401,7 @@ BEGIN
         sa.end_date,
         sa.status AS assignment_status,
         ss.shift_id,
-        ss.name AS shift_name,
+        ss.name, 
         ss.type AS shift_type,
         ss.start_time,
         ss.end_time,
@@ -411,6 +411,8 @@ BEGIN
     FROM ShiftAssignment sa
     INNER JOIN ShiftSchedule ss ON sa.shift_id = ss.shift_id
     WHERE sa.employee_id = @EmployeeID
+    AND sa.status = 'Active' -- Only show active shifts
+
     ORDER BY sa.start_date DESC, ss.start_time;
 END;
 GO
@@ -1063,6 +1065,7 @@ BEGIN
     END;
 END;
 GO
+
 
 
 -- 20. SubmitCorrectionRequest

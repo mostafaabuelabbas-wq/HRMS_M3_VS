@@ -8,7 +8,7 @@ namespace HRMS_M3_VS.Areas.Attendance.Controllers
     public class TrackController : Controller
     {
         private readonly TrackingService _track;
-        private const int CurrentUser = 1; // MOCK ID
+        private const int CurrentUser = 2; // MOCK ID
 
         public TrackController(TrackingService track)
         {
@@ -42,6 +42,38 @@ namespace HRMS_M3_VS.Areas.Attendance.Controllers
 
             string message = await _track.RecordAttendance(dto);
             TempData["Success"] = message ?? "Attendance Recorded.";
+            return RedirectToAction("Index");
+        }
+        // --- ADD THESE METHODS ---
+
+        // 1. GET: Show the form
+        public IActionResult Correction()
+        {
+            return View(new CorrectionRequestDto
+            {
+                employee_id = CurrentUser, // (Remember, this is ID 1 for now)
+                date = DateTime.Today.AddDays(-1) // Default to yesterday
+            });
+        }
+
+        // 2. POST: Submit the data
+        [HttpPost]
+        public async Task<IActionResult> Correction(CorrectionRequestDto dto)
+        {
+            if (!ModelState.IsValid)
+                return View(dto);
+
+            // Call the service
+            string message = await _track.SubmitCorrection(dto);
+
+            // Handle Errors (Your SQL might return 'Invalid employee ID' or success message)
+            if (!string.IsNullOrEmpty(message) && (message.StartsWith("Error") || message.Contains("Invalid")))
+            {
+                ViewBag.Error = message;
+                return View(dto);
+            }
+
+            TempData["Success"] = message;
             return RedirectToAction("Index");
         }
     }
