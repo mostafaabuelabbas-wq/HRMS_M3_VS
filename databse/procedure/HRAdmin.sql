@@ -412,7 +412,7 @@ GO
 
 -- 7 GetTeamByManager
 -- PROCEDURE: GetTeamByManager
-CREATE OR ALTER PROCEDURE GetTeamByManager
+CREATE PROCEDURE GetTeamByManager
     @ManagerID INT
 AS
 BEGIN
@@ -2659,7 +2659,7 @@ GO
 
 -- 43 SyncLeaveToAttendance
 -- PROCEDURE: SyncLeaveToAttendance
-CREATE PROCEDURE SyncLeaveToAttendance
+CREATE OR ALTER PROCEDURE SyncLeaveToAttendance
     @LeaveRequestID INT
 AS
 BEGIN
@@ -2668,84 +2668,139 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        ----------------------------------------------------------
-        -- 1. Read request details
-        ----------------------------------------------------------
-        DECLARE @EmployeeID INT;
-        DECLARE @LeaveType VARCHAR(50);
-        DECLARE @Duration INT;
-        DECLARE @Status VARCHAR(50);
-        DECLARE @StartDate DATE;
-        DECLARE @EndDate DATE;
+        -- 1. Read Request Details
+        DECLARE @EmployeeID INT, @LeaveType VARCHAR(50), @Duration INT, 
+                @Status VARCHAR(50), @StartDate DATE, @EndDate DATE;
 
         SELECT 
             @EmployeeID = lr.employee_id,
             @LeaveType = l.leave_type,
             @Duration = lr.duration,
             @Status = lr.status,
-            @StartDate = lr.approval_timing,
+            @StartDate = lr.approval_timing, 
             @EndDate = DATEADD(DAY, lr.duration - 1, lr.approval_timing)
         FROM LeaveRequest lr
         JOIN [Leave] l ON lr.leave_id = l.leave_id
         WHERE lr.request_id = @LeaveRequestID;
 
-        ----------------------------------------------------------
-        -- 2. Validate leave exists
-        ----------------------------------------------------------
+        -- 2. Validations
         IF @EmployeeID IS NULL
         BEGIN
             RAISERROR('Leave request does not exist.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
-        END;
+        END
 
-        ----------------------------------------------------------
-        -- 3. Only approved/finalized leave syncs to attendance
-        ----------------------------------------------------------
-        IF @Status NOT IN ('Approved', 'Finalized', 'Approved - Balance Updated', 'Approved - Document Verified')
+        IF @Status NOT IN ('Approved', 'Finalized', 'Approved - Balance Updated')
         BEGIN
-            RAISERROR('Only approved or finalized leave can sync to attendance.', 16, 1);
+            RAISERROR('Only approved leaves can be synced.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
-        END;
+        END
 
-        ----------------------------------------------------------
-        -- 4. Loop through each leave day and insert exception
-        ----------------------------------------------------------
+        -- 3. LOOP: Process Each Day
         DECLARE @i INT = 0;
         DECLARE @CurrentDate DATE;
+        DECLARE @ShiftID INT;
+        DECLARE @ShiftStart TIME;
+        DECLARE @ShiftEnd TIME;
+        DECLARE @ExceptionID INT;
 
         WHILE @i < @Duration
         BEGIN
             SET @CurrentDate = DATEADD(DAY, @i, @StartDate);
 
+            --------------------------------------------------------
+            -- STEP 1: Create the Exception (The Reason)
+            --------------------------------------------------------
             INSERT INTO [Exception] ([name], category, [date], status)
             VALUES (
-                @LeaveType + ' Leave',
-                'Leave',
-                @CurrentDate,
-                'Active'
+                @LeaveType + ' Leave', 
+                'Leave', 
+                @CurrentDate, 
+                'Approved'
             );
 
-            DECLARE @ExceptionID INT = SCOPE_IDENTITY();
+            -- Capture the ID of the new Exception
+            SET @ExceptionID = SCOPE_IDENTITY();
 
+            --------------------------------------------------------
+            -- STEP 2: Find Shift Details (To fill Attendance times)
+            --------------------------------------------------------
+            SELECT TOP 1 
+                @ShiftID = s.shift_id,
+                @ShiftStart = s.start_time,
+                @ShiftEnd = s.end_time
+            FROM ShiftAssignment sa
+            JOIN ShiftSchedule s ON sa.shift_id = s.shift_id
+            WHERE sa.employee_id = @EmployeeID
+              AND sa.status = 'Active'
+              AND @CurrentDate BETWEEN sa.start_date AND sa.end_date;
+
+            --------------------------------------------------------
+            -- STEP 3: Create Attendance Record (The Daily Truth)
+            -- AND Link it to the Exception (Step 4)
+            --------------------------------------------------------
+            IF @ShiftID IS NOT NULL
+            BEGIN
+                INSERT INTO Attendance (
+                    employee_id, 
+                    shift_id, 
+                    entry_time, 
+                    exit_time, 
+                    login_method, 
+                    logout_method,
+                    exception_id -- <--- LINKING HERE
+                )
+                VALUES (
+                    @EmployeeID,
+                    @ShiftID,
+                    CAST(@CurrentDate AS DATETIME) + CAST(@ShiftStart AS DATETIME), 
+                    CAST(@CurrentDate AS DATETIME) + CAST(@ShiftEnd AS DATETIME),
+                    'LeaveSync', 
+                    'LeaveSync',
+                    @ExceptionID -- The ID from Step 1
+                );
+            END
+            ELSE
+            BEGIN
+                -- Fallback if no shift assigned (still record the leave)
+                INSERT INTO Attendance (
+                    employee_id, 
+                    entry_time, 
+                    login_method,
+                    exception_id
+                )
+                VALUES (
+                    @EmployeeID, 
+                    CAST(@CurrentDate AS DATETIME), 
+                    'LeaveSync',
+                    @ExceptionID
+                );
+            END
+
+            -- Also link via Employee_Exception table for redundancy/history
             INSERT INTO Employee_Exception (employee_id, exception_id)
             VALUES (@EmployeeID, @ExceptionID);
 
             SET @i = @i + 1;
         END;
 
-        ----------------------------------------------------------
-        -- 5. Return success
-        ----------------------------------------------------------
+        --------------------------------------------------------
+        -- STEP 5: Finalize Status
+        --------------------------------------------------------
+        UPDATE LeaveRequest
+        SET status = 'Synced'
+        WHERE request_id = @LeaveRequestID;
+
         COMMIT TRANSACTION;
 
-        SELECT 'Leave synced to attendance successfully' AS ConfirmationMessage;
+        SELECT 'Leave successfully synced to Attendance with Exceptions.' AS ConfirmationMessage;
 
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
-        THROW;
+        SELECT 'Error: ' + ERROR_MESSAGE() AS Message;
     END CATCH
 END;
 GO
