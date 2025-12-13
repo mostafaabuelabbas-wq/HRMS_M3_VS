@@ -860,3 +860,32 @@ FROM Employee_Notification
 WHERE employee_id = 1
 ORDER BY delivered_at DESC;
 */
+/*
+EXEC CreateContract 
+    @EmployeeID = 1, 
+    @Type = 'FullTime', 
+    @StartDate = '2025-01-01', 
+    @EndDate = '2026-01-01';
+
+EXEC UpdateContract 
+    @ContractID = 16, 
+    @Type = 'PartTime', 
+    @StartDate = '2025-01-01', 
+    @EndDate = '2026-12-31',
+    @CurrentState = 'Active';
+
+SELECT * FROM Contract ORDER BY contract_id DESC;
+*/
+-- Before update
+SELECT * FROM Contract WHERE contract_id = 16;
+
+-- Try to update
+EXEC UpdateContract 
+    @ContractID = 16,
+    @Type = 'FullTime',
+    @StartDate = '2025-01-01',
+    @EndDate = '2027-12-31',
+    @CurrentState = 'Active';
+
+-- After update
+SELECT * FROM Contract WHERE contract_id = 16;

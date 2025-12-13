@@ -1,38 +1,166 @@
 ﻿@model HRMS_M3_VS.Areas.Employee.Models.AssignRoleViewModel
+@{
+    ViewData["Title"] = "Change Employee Role";
+}
 
-<h2 class="fw-bold mb-4">Assign Role</h2>
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
-<div class="card p-4 shadow-sm">
-    <form method="post">
+<div class="container py-4" style="max-width: 800px;">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Roles Management</a></li>
+            <li class="breadcrumb-item active">Change Role</li>
+        </ol>
+    </nav>
 
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Employee</label>
-            <input class="form-control" value="@Model.FullName" disabled />
+    <div class="card border-0 shadow">
+
+        <div class="card-header bg-gradient text-dark py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="d-flex align-items-center">
+                <div class="bg-dark bg-opacity-25 rounded p-2 me-3">
+                    <i class="fas fa-user-cog fa-2x text-white"></i>
+                </div>
+                <div>
+                    <h4 class="mb-1 fw-bold">Change Employee Role</h4>
+                    <p class="mb-0 opacity-75">Assign system role and permissions</p>
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Department</label>
-            <input class="form-control" value="@Model.Department" disabled />
+
+        <div class="card-body p-4">
+
+            <div class="alert alert-light border mb-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="text-muted small mb-1">Employee</label>
+                        <div class="fw-semibold text-dark">@Model.FullName</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small mb-1">Department</label>
+                        <div class="fw-semibold text-dark">@Model.Department</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small mb-1">Current Role</label>
+                        <div>
+                            @* Role Badges (Improved to use more icons) *@
+                            @if (Model.CurrentRoleName == "SystemAdmin")
+                            {
+                                <span class="badge bg-danger"><i class="fas fa-shield-alt me-1"></i>System Admin</span>
+                            }
+                            else if (Model.CurrentRoleName == "HRAdmin")
+                            {
+                                <span class="badge bg-warning text-dark"><i class="fas fa-user-tie me-1"></i>HR Admin</span>
+                            }
+                            else if (Model.CurrentRoleName == "Manager")
+                            {
+                                <span class="badge bg-info"><i class="fas fa-users-cog me-1"></i>Manager</span>
+                            }
+                            else if (Model.CurrentRoleName == "PayrollOfficer")
+                            {
+                                <span class="badge bg-primary"><i class="fas fa-calculator me-1"></i>Payroll Officer</span>
+                            }
+                            else if (Model.CurrentRoleName == "Employee")
+                            {
+                                <span class="badge bg-success"><i class="fas fa-user me-1"></i>Employee</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Unassigned</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post">
+                <input type="hidden" asp-for="EmployeeId" />
+
+                <div class="mb-4">
+                    <label asp-for="NewRoleId" class="form-label fw-semibold">
+                        <i class="fas fa-user-tag text-primary me-2"></i>Select New Role
+                    </label>
+                    <select asp-for="NewRoleId" class="form-select form-select-lg">
+                        <option value="">-- Select a Role --</option>
+                        @foreach (var role in Model.Roles)
+                        {
+                            <option value="@role.RoleId">
+                                @role.RoleName
+                            </option>
+                        }
+                    </select>
+                    <span asp-validation-for="NewRoleId" class="text-danger"></span>
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This will update the employee's system permissions immediately
+                    </div>
+                </div>
+
+                <div class="card bg-light border-0 mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-semibold mb-3">Role Descriptions</h6>
+
+                        <div class="row gy-2 gx-3 small">
+                            @* Adjusted gy-1 to gy-2 for better vertical spacing *@
+
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-shield-alt text-danger me-2"></i>
+                                    <div><strong>System Admin:</strong> Full system access</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-tie text-warning me-2"></i>
+                                    <div><strong>HR Admin:</strong> Employee management</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-users-cog text-info me-2"></i>
+                                    <div><strong>Manager:</strong> Team management</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-calculator text-primary me-2"></i>
+                                    <div><strong>Payroll Officer:</strong> Manages payroll calculations and salary processing</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user text-success me-2"></i>
+                                    <div><strong>Employee:</strong> Basic system access</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg px-4 shadow-sm">
+                        <i class="fas fa-check me-2"></i>Save Changes
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-4 shadow-sm">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
         </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Current Role</label>
-            <input class="form-control" value="@Model.CurrentRoleName" disabled />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Assign New Role</label>
-            <select asp-for="NewRoleId" class="form-select">
-                <option value="">-- Select --</option>
-                @foreach (var role in Model.Roles)
-                {
-                    <option value="@role.RoleId">@role.RoleName</option>
-                }
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-success">Save</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-
-    </form>
+    </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,29 +1,69 @@
 ﻿@model HRMS_M3_VS.Areas.Employee.Models.ContractCreateViewModel
 @{
-    ViewData["Title"] = "Create Contract";
+    ViewData["Title"] = "Create New Contract";
 }
 
-<h2>Create Contract</h2>
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
-<form asp-action="Create" method="post" class="row g-3">
-    <div class="col-md-4">
-        <label asp-for="EmployeeId" class="form-label">Employee ID</label>
-        <input asp-for="EmployeeId" class="form-control" />
+<div class="container mt-4">
+    <div class="card shadow border-0 rounded-3">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-file-contract"></i> Create New Contract</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="EmployeeId" class="form-label fw-bold">Select Employee</label>
+                        <select asp-for="EmployeeId" asp-items="Model.Employees" class="form-select">
+                            <option value="">-- Choose Employee --</option>
+                        </select>
+                        <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Type" class="form-label fw-bold">Contract Type</label>
+                        <select asp-for="Type" class="form-select">
+                            <option value="FullTime">Full Time</option>
+                            <option value="PartTime">Part Time</option>
+                            <option value="Consultant">Consultant</option>
+                            <option value="Internship">Internship</option>
+                        </select>
+                        <span asp-validation-for="Type" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="StartDate" class="form-label fw-bold">Start Date</label>
+                        <input asp-for="StartDate" type="date" class="form-control" />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="EndDate" class="form-label fw-bold">End Date</label>
+                        <input asp-for="EndDate" type="date" class="form-control" />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary shadow-sm px-4">
+                        <i class="fas fa-check"></i> Create Contract
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary shadow-sm px-4">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="col-md-4">
-        <label asp-for="Type" class="form-label">Type</label>
-        <input asp-for="Type" class="form-control" />
-    </div>
-    <div class="col-md-4">
-        <label asp-for="StartDate" class="form-label">Start Date</label>
-        <input asp-for="StartDate" class="form-control" type="date" />
-    </div>
-    <div class="col-md-4">
-        <label asp-for="EndDate" class="form-label">End Date</label>
-        <input asp-for="EndDate" class="form-control" type="date" />
-    </div>
-    <div class="col-12">
-        <button class="btn btn-primary">Create</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
