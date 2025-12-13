@@ -210,7 +210,10 @@ BEGIN
 
 END;
 GO
-
+-- Fix profile_image column size
+ALTER TABLE Employee
+ALTER COLUMN profile_image VARCHAR(500);
+GO
 
 -- 3. UpdateEmployeeInfo
 CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
@@ -218,8 +221,7 @@ CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
     @Email VARCHAR(100),
     @Phone VARCHAR(20),
     @Address VARCHAR(150),
-    -- We removed @EmergencyContact because it is redundant
-    @ProfileImage VARCHAR(300) = NULL
+    @ProfileImage VARCHAR(500) = NULL -- Now this matches the table!
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -230,13 +232,13 @@ BEGIN
         RETURN;
     END;
 
+    -- Check for duplicate email (excluding current user)
     IF EXISTS (SELECT 1 FROM Employee WHERE email = @Email AND employee_id <> @EmployeeID)
     BEGIN
         SELECT 'Error: This email is already used by another employee.' AS Message;
         RETURN;
     END;
 
-    -- Update ONLY personal info (and the image)
     UPDATE Employee
     SET email = @Email,
         phone = @Phone,
@@ -1541,40 +1543,15 @@ BEGIN
     WHERE is_active = 1; -- Only show active employees
 END;
 GO
+SELECT * FROM ShiftCycle;
+SELECT *
+FROM ShiftCycleAssignment
+ORDER BY cycle_id, order_number;
 
-USE HRMS;
-GO
+SELECT *
+FROM ShiftAssignment
+ORDER BY assignment_id DESC;
 
--- 1. View All Employees (To list them in the table)
-CREATE OR ALTER PROCEDURE ViewAllEmployees
-AS
-BEGIN
-    SELECT 
-        e.employee_id,
-        e.first_name + ' ' + e.last_name AS full_name,
-        e.email,
-        d.department_name,
-        p.position_title,
-        -- Get current role (if any), otherwise 'No Role'
-        ISNULL(r.role_name, 'Employee') as current_role
-    FROM Employee e
-    LEFT JOIN Department d ON e.department_id = d.department_id
-    LEFT JOIN Position p ON e.position_id = p.position_id
-    -- Get the most recently assigned role
-    LEFT JOIN (
-        SELECT TOP 1 WITH TIES employee_id, role_id 
-        FROM Employee_Role 
-        ORDER BY ROW_NUMBER() OVER (PARTITION BY employee_id ORDER BY assigned_date DESC)
-    ) er ON e.employee_id = er.employee_id
-    LEFT JOIN Role r ON er.role_id = r.role_id
-    WHERE e.is_active = 1;
-END;
-GO
-
--- 2. Get All Roles (For the Dropdown list)
-CREATE OR ALTER PROCEDURE GetAllRoles
-AS
-BEGIN
-    SELECT role_id, role_name FROM Role;
-END;
-GO
+SELECT shift_id, name, type, start_time, end_time 
+FROM ShiftSchedule
+ORDER BY shift_id;

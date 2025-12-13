@@ -1,55 +1,87 @@
 ﻿@model HRMS_M3_VS.Areas.Employee.Models.EmployeeEditViewModel
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-dark text-white py-3">
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-user-edit me-2"></i>Edit Profile</h4>
+                </div>
+                <div class="card-body p-5">
+                    code
+                    Code
+                    <!-- IMPORTANT: enctype is required for file uploads -->
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
 
-<h2 class="fw-bold mb-3">Edit Employee Information</h2>
+    <!-- Hidden Fields to keep IDs -->
+    <input type="hidden" asp-for="EmployeeId" />
+    <input type="hidden" asp-for="ExistingImagePath" />
 
-<div class="card shadow-sm p-4 w-75">
-    <form method="post" enctype="multipart/form-data">
 
-        <input type="hidden" asp-for="EmployeeId" />
+    <!-- 1. Profile Image Upload -->
+    <div class="mb-4 text-center">
+        <label class="form-label fw-bold">Profile Picture</label>
 
-        <div class="mb-3">
-            <label class="form-label">Email</label>
+        <!-- Show current image preview -->
+        @if (!string.IsNullOrEmpty(Model.ExistingImagePath))
+        {
+            <div class="mb-2">
+                <img src="@Model.ExistingImagePath" class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover;" />
+            </div>
+
+            <!-- THE REMOVE CHECKBOX -->
+            <div class="form-check d-inline-block mb-2">
+                <input asp-for="RemoveImage" class="form-check-input" type="checkbox" id="removeCheck" />
+                <label class="form-check-label text-danger small fw-bold" for="removeCheck">
+                    Remove current photo
+                </label>
+            </div>
+        }
+
+        <input asp-for="ProfileImage" type="file" class="form-control" accept="image/*" />
+        <small class="text-muted">Upload a JPG or PNG file.</small>
+    </div>
+
+    <h5 class="text-primary fw-bold mb-3 border-bottom pb-2">Personal Details</h5>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label asp-for="Email" class="form-label fw-bold">Email</label>
             <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
         </div>
-
-        <div class="mb-3">
-            <label class="form-label">Phone</label>
+        <div class="col-md-6">
+            <label asp-for="Phone" class="form-label fw-bold">Phone</label>
             <input asp-for="Phone" class="form-control" />
         </div>
-
-        <div class="mb-3">
-            <label class="form-label">Address</label>
+        <div class="col-12">
+            <label asp-for="Address" class="form-label fw-bold">Address</label>
             <input asp-for="Address" class="form-control" />
         </div>
-        <div class="mb-3">
-    <label class="form-label">Emergency Contact Name</label>
-    <input asp-for="EmergencyContactName" class="form-control" />
-</div>
+    </div>
 
-<div class="mb-3">
-    <label class="form-label">Relationship</label>
-    <input asp-for="EmergencyRelationship" class="form-control" />
-</div>
-
-<div class="mb-3">
-    <label class="form-label">Emergency Contact Phone</label>
-    <input asp-for="EmergencyContactPhone" class="form-control" />
-</div>
-        <div class="mb-3">
-            <label class="form-label">Profile Image</label>
-            <input asp-for="ProfileImage" type="file" class="form-control" />
-
-            @if (!string.IsNullOrEmpty(Model.ExistingImagePath))
-            {
-                <img src="@Model.ExistingImagePath" class="mt-3 rounded" width="150" />
-            }
+    <!-- 2. EMERGENCY CONTACT SECTION (This was likely missing or broken) -->
+    <h5 class="text-danger fw-bold mb-3 border-bottom pb-2">Emergency Contact</h5>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label asp-for="EmergencyContactName" class="form-label fw-bold">Contact Name</label>
+            <input asp-for="EmergencyContactName" class="form-control" placeholder="e.g. Father, Spouse" />
         </div>
+        <div class="col-md-6">
+            <label asp-for="EmergencyRelationship" class="form-label fw-bold">Relationship</label>
+            <input asp-for="EmergencyRelationship" class="form-control" placeholder="e.g. Brother, Friend" />
+        </div>
+        <div class="col-12">
+            <label asp-for="EmergencyContactPhone" class="form-label fw-bold">Emergency Phone</label>
+            <input asp-for="EmergencyContactPhone" class="form-control" />
+        </div>
+    </div>
 
+    <div class="d-flex justify-content-end gap-2">
+        <a asp-action="Profile" asp-route-id="@Model.EmployeeId" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-success px-4">Save Changes</button>
+    </div>
 
-
-        <button type="submit" class="btn btn-success">Save Changes</button>
-        <a asp-action="Profile" asp-route-id="@Model.EmployeeId" class="btn btn-secondary ms-2">
-            Cancel
-        </a>
-    </form>
+</form>
+</div>
+</div>
+</div>
 </div>
