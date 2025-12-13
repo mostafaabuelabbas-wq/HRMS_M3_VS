@@ -1,7 +1,7 @@
 
  --Employee
 --1 SubmitLeaveRequest
-CREATE PROCEDURE SubmitLeaveRequest
+CREATE OR ALTER PROCEDURE SubmitLeaveRequest
     @EmployeeID INT,
     @LeaveTypeID INT,
     @StartDate DATE,
@@ -18,7 +18,7 @@ BEGIN
     DECLARE @LeaveType VARCHAR(50);
 
     --------------------------------------------------------
-    -- Validate Employee
+    -- 1. Validate Employee
     --------------------------------------------------------
     SELECT 
         @EmployeeName = full_name,
@@ -28,12 +28,12 @@ BEGIN
 
     IF @EmployeeName IS NULL
     BEGIN
-        SELECT 'Invalid employee' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'Invalid employee' AS ConfirmationMessage;
         RETURN;
     END;
 
     --------------------------------------------------------
-    -- Validate Leave Type
+    -- 2. Validate Leave Type
     --------------------------------------------------------
     SELECT @LeaveType = leave_type
     FROM [Leave]
@@ -41,81 +41,66 @@ BEGIN
 
     IF @LeaveType IS NULL
     BEGIN
-        SELECT 'Invalid leave type' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'Invalid leave type' AS ConfirmationMessage;
         RETURN;
     END;
 
     --------------------------------------------------------
-    -- Validate Date Range
+    -- 3. Validate Date Range
     --------------------------------------------------------
     SET @Duration = DATEDIFF(DAY, @StartDate, @EndDate) + 1;
 
     IF @Duration <= 0
     BEGIN
-        SELECT 'Invalid date range' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'Invalid date range' AS ConfirmationMessage;
         RETURN;
     END;
 
     --------------------------------------------------------
-    -- Check for overlapping leave requests
-    --------------------------------------------------------
-    IF EXISTS (
-        SELECT 1 
-        FROM LeaveRequest
-        WHERE employee_id = @EmployeeID
-          AND status IN ('Pending', 'Approved')
-          AND (
-                @StartDate BETWEEN approval_timing 
-                       AND DATEADD(DAY, duration - 1, approval_timing)
-                OR
-                @EndDate BETWEEN approval_timing 
-                       AND DATEADD(DAY, duration - 1, approval_timing)
-              )
-    )
-    BEGIN
-        SELECT 'Overlapping leave request detected' AS ConfirmationMessage;
-        RETURN;
-    END;
-
-    --------------------------------------------------------
-    -- Validate Entitlement
+    -- 4. Validate Entitlement
     --------------------------------------------------------
     SELECT @Entitlement = entitlement
     FROM LeaveEntitlement
     WHERE employee_id = @EmployeeID 
       AND leave_type_id = @LeaveTypeID;
 
+    -- If no specific entitlement exists, we assume 0 or handle logic. 
+    -- For now, we block if NULL to match your teammate's logic.
     IF @Entitlement IS NULL
     BEGIN
-        SELECT 'No leave entitlement found for this leave type' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'No leave entitlement found for this leave type' AS ConfirmationMessage;
         RETURN;
     END;
 
     IF @Duration > @Entitlement
     BEGIN
-        SELECT 'Insufficient leave balance. Requested: ' 
+        SELECT 0 AS NewRequestId, 'Insufficient leave balance. Requested: ' 
                + CAST(@Duration AS VARCHAR(10)) 
                + ', Available: ' + CAST(@Entitlement AS VARCHAR(10)) AS ConfirmationMessage;
         RETURN;
     END;
 
     --------------------------------------------------------
-    -- Insert Leave Request
+    -- 5. Insert Leave Request (FIXED)
     --------------------------------------------------------
+    -- We append the dates to the justification so the Manager can see them
+    DECLARE @FinalReason VARCHAR(255);
+    SET @FinalReason = @Reason + ' (From: ' + CONVERT(VARCHAR, @StartDate, 23) + ' To: ' + CONVERT(VARCHAR, @EndDate, 23) + ')';
+
     INSERT INTO LeaveRequest (employee_id, leave_id, justification, duration, approval_timing, status)
-    VALUES (@EmployeeID, @LeaveTypeID, @Reason, @Duration, NULL, 'Pending');
+    VALUES (@EmployeeID, @LeaveTypeID, @FinalReason, @Duration, NULL, 'Pending');
+
+    DECLARE @NewID INT = SCOPE_IDENTITY();
 
     --------------------------------------------------------
-    -- Notify Manager
+    -- 6. Notify Manager
     --------------------------------------------------------
     IF @ManagerID IS NOT NULL
     BEGIN
         INSERT INTO Notification (message_content, urgency, read_status, notification_type)
         VALUES (
             'Employee ' + @EmployeeName + ' (ID ' + CAST(@EmployeeID AS VARCHAR(10)) 
-            + ') submitted a ' + @LeaveType + ' leave request from ' 
-            + CONVERT(VARCHAR(10), @StartDate, 120) + ' to ' 
-            + CONVERT(VARCHAR(10), @EndDate, 120),
+            + ') submitted a ' + @LeaveType + ' leave request.',
             'Normal',
             0,
             'Leave Request'
@@ -128,9 +113,10 @@ BEGIN
     END;
 
     --------------------------------------------------------
-    -- Success Message
+    -- 7. Success Return (FIXED)
     --------------------------------------------------------
-    SELECT 'Leave request submitted successfully' AS ConfirmationMessage;
+    -- Returns the ID so C# can upload the file
+    SELECT @NewID AS NewRequestId, 'Leave request submitted successfully' AS ConfirmationMessage;
 END;
 GO
 
