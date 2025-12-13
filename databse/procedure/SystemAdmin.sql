@@ -61,7 +61,7 @@ BEGIN
     WHERE e.employee_id = @EmployeeID;
 END;
 GO
-ALTER PROCEDURE GetAllEmployees
+CREATE PROCEDURE GetAllEmployees
 AS
 BEGIN
     SELECT 
@@ -213,58 +213,41 @@ GO
 
 
 -- 3. UpdateEmployeeInfo
-CREATE PROCEDURE UpdateEmployeeInfo
+CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
     @EmployeeID INT,
     @Email VARCHAR(100),
     @Phone VARCHAR(20),
     @Address VARCHAR(150),
-    @EmergencyContact VARCHAR(100),
+    -- We removed @EmergencyContact because it is redundant
     @ProfileImage VARCHAR(300) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    ---------------------------------------------------------
-    -- 1. Check employee exists
-    ---------------------------------------------------------
     IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
     BEGIN
         SELECT 'Error: Employee not found.' AS Message;
         RETURN;
     END;
 
-    ---------------------------------------------------------
-    -- 2. Prevent duplicate email
-    ---------------------------------------------------------
-    IF EXISTS (
-        SELECT 1
-        FROM Employee
-        WHERE email = @Email AND employee_id <> @EmployeeID
-    )
+    IF EXISTS (SELECT 1 FROM Employee WHERE email = @Email AND employee_id <> @EmployeeID)
     BEGIN
         SELECT 'Error: This email is already used by another employee.' AS Message;
         RETURN;
     END;
 
-    ---------------------------------------------------------
-    -- 3. Update employee info
-    ---------------------------------------------------------
+    -- Update ONLY personal info (and the image)
     UPDATE Employee
     SET email = @Email,
         phone = @Phone,
         address = @Address,
-        emergency_contact = @EmergencyContact,
         profile_image = @ProfileImage
     WHERE employee_id = @EmployeeID;
 
-    ---------------------------------------------------------
-    -- 4. Confirmation
-    ---------------------------------------------------------
     SELECT 'Employee information updated successfully' AS ConfirmationMessage;
 END;
 GO
-
-CREATE PROCEDURE AssignRole
+CREATE OR ALTER PROCEDURE AssignRole
     @EmployeeID INT,
     @RoleID INT
 AS
@@ -272,7 +255,7 @@ BEGIN
     SET NOCOUNT ON;
 
     ---------------------------------------------------------
-    -- 1. Validate employee exists
+    -- 1. Validate inputs
     ---------------------------------------------------------
     IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
     BEGIN
@@ -280,9 +263,6 @@ BEGIN
         RETURN;
     END;
 
-    ---------------------------------------------------------
-    -- 2. Validate role exists
-    ---------------------------------------------------------
     IF NOT EXISTS (SELECT 1 FROM Role WHERE role_id = @RoleID)
     BEGIN
         SELECT 'Error: Role does not exist.' AS Message;
@@ -290,42 +270,22 @@ BEGIN
     END;
 
     ---------------------------------------------------------
-    -- 3. Prevent assigning role to inactive employees
+    -- 2. THE FIX: Remove OLD roles first
     ---------------------------------------------------------
-    IF EXISTS (
-        SELECT 1 
-        FROM Employee 
-        WHERE employee_id = @EmployeeID AND is_active = 0
-    )
-    BEGIN
-        SELECT 'Error: Cannot assign roles to inactive employees.' AS Message;
-        RETURN;
-    END;
+    -- This ensures the user only has ONE role at a time.
+    DELETE FROM Employee_Role 
+    WHERE employee_id = @EmployeeID;
 
     ---------------------------------------------------------
-    -- 4. Check if the employee already has the role
-    ---------------------------------------------------------
-    IF EXISTS (
-        SELECT 1 
-        FROM Employee_Role
-        WHERE employee_id = @EmployeeID
-          AND role_id = @RoleID
-    )
-    BEGIN
-        SELECT 'Role already assigned to this employee.' AS Message;
-        RETURN;
-    END;
-
-    ---------------------------------------------------------
-    -- 5. Assign the new role
+    -- 3. Assign the NEW role
     ---------------------------------------------------------
     INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
     VALUES (@EmployeeID, @RoleID, GETDATE());
 
     ---------------------------------------------------------
-    -- 6. Confirmation message
+    -- 4. Confirmation
     ---------------------------------------------------------
-    SELECT 'Role assigned successfully.' AS Message;
+    SELECT 'Role updated successfully.' AS Message;
 END;
 GO
 

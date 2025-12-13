@@ -31,18 +31,20 @@ namespace HRMS_M3_VS.Areas.Employee.Services
         }
 
         // Update employee info
+        // 1. Updates Email, Address, Phone, Image
         public async Task UpdateEmployeeAsync(EmployeeEditViewModel vm)
         {
             await _db.ExecuteAsync("UpdateEmployeeInfo", new
             {
-                EmployeeID = vm.EmployeeId,              // FIXED
+                EmployeeID = vm.EmployeeId,
                 Email = vm.Email,
                 Phone = vm.Phone,
                 Address = vm.Address,
-               
                 ProfileImage = vm.ExistingImagePath
             });
         }
+
+        // 2. Updates Emergency Name, Relation, Phone
         public async Task UpdateEmergencyContactAsync(EmployeeEditViewModel vm)
         {
             await _db.ExecuteAsync("UpdateEmergencyContact", new

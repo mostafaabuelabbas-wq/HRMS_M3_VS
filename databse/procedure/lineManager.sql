@@ -1343,3 +1343,38 @@ BEGIN
         ' assigned to manager successfully.' AS NotificationMessage;
 END;
 GO
+
+-- extyra 
+--SendContractRenewalNotification
+CREATE PROCEDURE SendContractRenewalNotification
+    @ContractID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @EmployeeID INT;
+
+    -- Get employee from contract
+    SELECT @EmployeeID = employee_id
+    FROM Contract
+    WHERE contract_id = @ContractID;
+
+    IF @EmployeeID IS NULL
+        RETURN;
+
+    -- Create notification
+    INSERT INTO Notification (message_content, urgency, read_status, notification_type)
+    VALUES (
+        'Your employment contract has been renewed.',
+        'Normal',
+        0,
+        'Contract Renewal'
+    );
+
+    DECLARE @NotifID INT = SCOPE_IDENTITY();
+
+    -- Link to employee
+    INSERT INTO Employee_Notification (employee_id, notification_id, delivery_status, delivered_at)
+    VALUES (@EmployeeID, @NotifID, 'Pending', GETDATE());
+END;
+GO

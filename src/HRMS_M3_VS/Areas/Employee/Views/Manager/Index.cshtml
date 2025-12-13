@@ -1,37 +1,62 @@
 ﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.EmployeeDto>
 
-<h2 class="fw-bold mb-4">My Team</h2>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">My Team</h2>
+    </div>
 
-<table class="table table-bordered table-hover">
-    <thead class="table-light">
-        <tr>
-            <th>Name</th>
-            <th>Department</th>
-            <th>Position</th>
-            <th>Status</th>
-            <th>Profile</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        @foreach (var emp in Model)
-        {
-            <tr>
-                <td>@emp.Full_Name</td>
-                <td>@emp.Department</td>
-                <td>@emp.Position</td>
-                <td>@emp.Employment_Status</td>
-
-                <td>
-                    <a asp-area="Employee"
-                       asp-controller="Home"
-                       asp-action="Profile"
-                       asp-route-id="@emp.Employee_Id"
-                       class="btn btn-primary btn-sm">
-                        View Profile
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <div class="card shadow border-0 rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="bg-dark text-white">
+                    <tr>
+                        <th class="py-3 ps-4">Name</th>
+                        <th class="py-3">Department</th>
+                        <th class="py-3">Position</th>
+                        <th class="py-3">Status</th>
+                        <th class="py-3 text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="fas fa-users-slash fa-2x mb-2"></i><br />
+                                You do not have any team members assigned yet.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-semibold text-primary">
+                                    @item.Full_Name
+                                </td>
+                                <td>@(item.Department ?? "Not Assigned")</td>
+                                <td>@(item.Position ?? "Not Assigned")</td>
+                                <td>
+                                    <span class="badge bg-info text-dark">
+                                        @(item.Employment_Status ?? "Unknown")
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <!-- Using Home/Profile because the View page is shared -->
+                                    <a asp-area="Employee"
+                                       asp-controller="Home"
+                                       asp-action="Profile"
+                                       asp-route-id="@item.Employee_Id"
+                                       class="btn btn-sm btn-primary shadow-sm">
+                                        View Profile
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

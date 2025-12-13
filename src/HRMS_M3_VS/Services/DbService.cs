@@ -33,5 +33,32 @@ namespace HRMS_M3_VS.Services
             using var conn = new SqlConnection(_config.GetConnectionString("HRMS"));
             await conn.ExecuteAsync(storedProcedure, parameters, commandType: CommandType.StoredProcedure);
         }
+
+        // ============================================================
+        // NEW: Transaction Support
+        // ============================================================
+
+        /// <summary>
+        /// Execute multiple operations within a single transaction.
+        /// If any operation fails, ALL are rolled back.
+        /// </summary>
+        public async Task ExecuteInTransactionAsync(Func<SqlConnection, SqlTransaction, Task> operations)
+        {
+            using var conn = new SqlConnection(_config.GetConnectionString("HRMS"));
+            await conn.OpenAsync();
+
+            using var transaction = conn.BeginTransaction();
+
+            try
+            {
+                await operations(conn, transaction);
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw; // Re-throw the exception so the caller knows it failed
+            }
+        }
     }
 }

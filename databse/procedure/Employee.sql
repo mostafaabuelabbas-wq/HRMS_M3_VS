@@ -1643,45 +1643,29 @@ END;
 GO
 
 -- GetContractDetails: full details for a single contract (admin/details page)
-CREATE PROCEDURE GetContractDetails
+CREATE OR ALTER PROCEDURE GetContractDetails
     @ContractID INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        c.contract_id,
-        c.type,
-        c.start_date,
-        c.end_date,
-        c.current_state,
-        e.employee_id,
-        e.full_name,
-        e.email,
-        e.phone,
-        e.position_id,
-        p.position_title,
-        e.department_id,
-        d.department_name,
-        ft.leave_entitlement AS ft_leave_entitlement,
-        ft.insurance_eligibility AS ft_insurance_eligibility,
-        ft.weekly_working_hours AS ft_weekly_hours,
-        pt.working_hours AS pt_working_hours,
-        pt.hourly_rate AS pt_hourly_rate,
-        con.project_scope AS consultant_project_scope,
-        con.fees AS consultant_fees,
-        con.payment_schedule AS consultant_payment_schedule,
-        it.mentoring AS internship_mentoring,
-        it.evaluation AS internship_evaluation,
-        it.stipend_related AS internship_stipend
+        c.contract_id AS ContractId,
+        c.type AS Type,
+        c.start_date AS StartDate,
+        c.end_date AS EndDate,
+        c.current_state AS CurrentState,
+        
+        e.employee_id AS EmployeeId,
+        e.full_name AS EmployeeName,
+        e.email AS EmployeeEmail,
+        e.phone AS EmployeePhone,
+        
+        p.position_title AS PositionTitle
+
     FROM Contract c
-    LEFT JOIN Employee e ON e.contract_id = c.contract_id
-    LEFT JOIN Department d ON e.department_id = d.department_id
+    LEFT JOIN Employee e ON c.employee_id = e.employee_id
     LEFT JOIN Position p ON e.position_id = p.position_id
-    LEFT JOIN FullTimeContract ft ON ft.contract_id = c.contract_id
-    LEFT JOIN PartTimeContract pt ON pt.contract_id = c.contract_id
-    LEFT JOIN ConsultantContract con ON con.contract_id = c.contract_id
-    LEFT JOIN InternshipContract it ON it.contract_id = c.contract_id
     WHERE c.contract_id = @ContractID;
 END;
 GO

@@ -2,13 +2,40 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-dark">Employee Profiles</h2>
+        <!-- Optional: Dynamic Title to match the Sidebar -->
+        <h2 class="fw-bold text-dark">
+            @if (User.IsInRole("HRAdmin"))
+            {
+                <text>All Employees</text>
+            }
+            else
+            {
+
+                <text>Employee Directory</text>
+            }
+        </h2>
     </div>
+
+    <!-- SEARCH BAR: Only visible for HR Admins (The "All Employees" Tab) -->
+    @if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+    {
+        <div class="input-group mb-3 shadow-sm">
+            <span class="input-group-text bg-white border-end-0">
+                <i class="fas fa-search text-muted"></i>
+            </span>
+            <input type="text"
+                   id="searchInput"
+                   class="form-control border-start-0"
+                   placeholder="Search by Name, Department, or Position..."
+                   onkeyup="filterTable()">
+        </div>
+    }
 
     <!-- The Card Container for the Table -->
     <div class="card shadow border-0 rounded-3 overflow-hidden">
         <div class="card-body p-0">
-            <table class="table table-hover table-striped align-middle mb-0">
+            <!-- IMPORTANT: I added id="employeeTable" so the JS can find this table -->
+            <table class="table table-hover table-striped align-middle mb-0" id="employeeTable">
                 <thead class="bg-dark text-white">
                     <tr>
                         <th class="py-3 ps-4">Full Name</th>
@@ -53,3 +80,35 @@
         </div>
     </div>
 </div>
+
+<!-- JAVASCRIPT: Makes the search work without reloading the page -->
+<script>
+    function filterTable() {
+        // 1. Get the search term
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toUpperCase();
+
+        // 2. Get the table and rows
+        var table = document.getElementById("employeeTable");
+        var tr = table.getElementsByTagName("tr");
+
+        // 3. Loop through all rows (Start at 1 to skip Header)
+        for (var i = 1; i < tr.length; i++) {
+            var tdName = tr[i].getElementsByTagName("td")[0]; // Full Name
+            var tdDept = tr[i].getElementsByTagName("td")[1]; // Department
+            var tdPos  = tr[i].getElementsByTagName("td")[2]; // Position
+
+            if (tdName || tdDept || tdPos) {
+                var txtValue = (tdName.textContent || tdName.innerText) + " " +
+                               (tdDept.textContent || tdDept.innerText) + " " +
+                               (tdPos.textContent  || tdPos.innerText);
+
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>

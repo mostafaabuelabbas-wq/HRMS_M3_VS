@@ -81,12 +81,7 @@ BEGIN
     END CATCH
 END;
 GO
-
-
-
-
-
--- 2 RenewContract
+--RenewContract
 CREATE OR ALTER PROCEDURE RenewContract
     @ContractID INT,
     @NewEndDate DATE
@@ -101,11 +96,13 @@ BEGIN
         DECLARE @Type VARCHAR(50);
         DECLARE @StartDate DATE;
 
-        -- 1. Load the old contract
+        -- 1. Load data from the OLD contract
         SELECT 
             @EmployeeID = employee_id,
             @Type = type,
-            @StartDate = start_date
+            @StartDate = start_date -- Keep original start date? Or use Today?
+                                    -- Usually a renewal starts when the old one ends.
+                                    -- For now, we keep your logic (extending the specific contract).
         FROM Contract
         WHERE contract_id = @ContractID;
 
@@ -116,7 +113,7 @@ BEGIN
             RETURN;
         END;
 
-        -- 2. Validate new end date
+        -- 2. Validate dates
         IF (@NewEndDate <= @StartDate)
         BEGIN
             RAISERROR('New end date must be after the start date.', 16, 1);
@@ -124,50 +121,33 @@ BEGIN
             RETURN;
         END;
 
-        -- 3. Mark old contract as INACTIVE
+        -- 3. Mark OLD contract as INACTIVE (History)
         UPDATE Contract
         SET current_state = 'Inactive'
         WHERE contract_id = @ContractID;
 
-        -- 4. Create the renewed contract (new version)
+        -- 4. Create NEW contract (Active)
         INSERT INTO Contract (employee_id, type, start_date, end_date, current_state)
         VALUES (@EmployeeID, @Type, @StartDate, @NewEndDate, 'Active');
 
         DECLARE @NewContractID INT = SCOPE_IDENTITY();
 
-        -- 5. Copy subtype data (for contract type)
-        INSERT INTO FullTimeContract (contract_id, leave_entitlement, insurance_eligibility, weekly_working_hours)
-        SELECT @NewContractID, leave_entitlement, insurance_eligibility, weekly_working_hours
-        FROM FullTimeContract WHERE contract_id = @ContractID;
-
-        INSERT INTO PartTimeContract (contract_id, working_hours, hourly_rate)
-        SELECT @NewContractID, working_hours, hourly_rate
-        FROM PartTimeContract WHERE contract_id = @ContractID;
-
-        INSERT INTO ConsultantContract (contract_id, project_scope, fees, payment_schedule)
-        SELECT @NewContractID, project_scope, fees, payment_schedule
-        FROM ConsultantContract WHERE contract_id = @ContractID;
-
-        INSERT INTO InternshipContract (contract_id, mentoring, evaluation, stipend_related)
-        SELECT @NewContractID, mentoring, evaluation, stipend_related
-        FROM InternshipContract WHERE contract_id = @ContractID;
-
-        -- 6. Update employee's current contract pointer
+        -- 5. Update employee to point to the NEW contract
         UPDATE Employee
         SET contract_id = @NewContractID
         WHERE employee_id = @EmployeeID;
 
         COMMIT TRANSACTION;
 
+        -- Return the new ID so C# can redirect to the new details page
         SELECT @NewContractID AS NewContractID;
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         THROW;
     END CATCH
 END;
 GO
-
 
 
 -- 3  ApproveLeaveRequest
@@ -432,26 +412,30 @@ GO
 
 -- 7 GetTeamByManager
 -- PROCEDURE: GetTeamByManager
-CREATE PROCEDURE GetTeamByManager
+CREATE OR ALTER PROCEDURE GetTeamByManager
     @ManagerID INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Return all active employees reporting to a specific manager
     SELECT 
         e.employee_id,
-        e.full_name,  -- use computed column instead of manual concat
-        e.position_id,
-        p.position_title,
-        e.department_id,
-        d.department_name,
-        e.employment_status
+        e.full_name,
+        e.employment_status,
+        
+        -- FIX: Alias these to match EmployeeDto.cs
+        d.department_name AS Department, 
+        p.position_title AS Position,
+
+        -- Optional: Include these if your view needs them later
+        e.email,
+        e.phone
+
     FROM Employee e
     LEFT JOIN Position p ON e.position_id = p.position_id
     LEFT JOIN Department d ON e.department_id = d.department_id
     WHERE e.manager_id = @ManagerID 
-      AND e.is_active = 1
+      AND e.is_active = 1 -- Good check to keep
     ORDER BY e.full_name;
 END;
 GO
@@ -2968,3 +2952,15 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE GetEmployeeSimpleList
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT employee_id, full_name 
+    FROM Employee
+    -- Optional: Only show active employees who can actually have contracts
+    -- WHERE is_active = 1 
+    ORDER BY full_name;
+END;
+GO
