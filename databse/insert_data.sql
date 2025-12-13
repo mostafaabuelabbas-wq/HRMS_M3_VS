@@ -1296,7 +1296,90 @@ WHERE NOT EXISTS (SELECT 1 FROM EmployeeHierarchy WHERE employee_id = @e6);
 INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
 SELECT @e7, @Mostafa, 2
 WHERE NOT EXISTS (SELECT 1 FROM EmployeeHierarchy WHERE employee_id = @e7);
+GO
 
+------------------------------------------------------------
+-- REBUILD DEPARTMENT MANAGERS HIERARCHY (CLEAN + SAFE)
+------------------------------------------------------------
+
+-- Re-fetch special employees (lost after GO)
+DECLARE @Mostafa INT = (SELECT employee_id FROM Employee WHERE email='mostafa.mohamed@company.com');
+DECLARE @Amr INT     = (SELECT employee_id FROM Employee WHERE email='mohamed.amr@company.com');
+
+-- NEW HR Manager
+DECLARE @HRMgr INT = (SELECT employee_id FROM Employee WHERE email='aya.nabil@company.com');
+
+-- NEW Finance Manager
+DECLARE @FinMgr INT = (SELECT employee_id FROM Employee WHERE email='omar.khalaf@company.com');
+
+-- Existing Managers
+DECLARE @Hasan INT = (SELECT employee_id FROM Employee WHERE email='hasan.mahmoud@company.com');
+DECLARE @Youssef INT = (SELECT employee_id FROM Employee WHERE email='youssef.ahmed@company.com');
+
+------------------------------------------------------------
+-- 1️⃣ CLEAN: REMOVE hierarchy rows for HR and Finance employees
+--    (We will rebuild them cleanly)
+------------------------------------------------------------
+DELETE FROM EmployeeHierarchy
+WHERE employee_id IN (
+    SELECT employee_id FROM Employee
+    WHERE department_id IN (
+        SELECT department_id FROM Department WHERE department_name IN ('HR','Finance')
+    )
+)
+AND employee_id NOT IN (@Mostafa, @Amr); -- keep special top-level
+
+------------------------------------------------------------
+-- 2️⃣ HR DEPARTMENT → AyaNabil is the Manager
+------------------------------------------------------------
+-- Assign Aya under Mostafa
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT @HRMgr, @Mostafa, 2
+WHERE NOT EXISTS (SELECT 1 FROM EmployeeHierarchy WHERE employee_id = @HRMgr);
+
+-- Assign all HR employees under Aya
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @HRMgr, 3
+FROM Employee
+WHERE department_id = (SELECT department_id FROM Department WHERE department_name='HR')
+  AND employee_id <> @HRMgr;
+
+------------------------------------------------------------
+-- 3️⃣ Finance DEPARTMENT → Omar Khalaf is the Manager
+------------------------------------------------------------
+-- Assign Omar under Mostafa
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT @FinMgr, @Mostafa, 2
+WHERE NOT EXISTS (SELECT 1 FROM EmployeeHierarchy WHERE employee_id = @FinMgr);
+
+-- Assign all Finance employees under Omar
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @FinMgr, 3
+FROM Employee
+WHERE department_id = (SELECT department_id FROM Department WHERE department_name='Finance')
+  AND employee_id <> @FinMgr;
+
+------------------------------------------------------------
+-- 4️⃣ IT DEPARTMENT → Amr remains the Manager
+------------------------------------------------------------
+-- Ensure Amr is under Mostafa
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT @Amr, @Mostafa, 2
+WHERE NOT EXISTS (SELECT 1 FROM EmployeeHierarchy WHERE employee_id = @Amr);
+
+-- Reassign ALL IT employees properly under Amr
+DELETE FROM EmployeeHierarchy
+WHERE employee_id IN (
+    SELECT employee_id FROM Employee
+    WHERE department_id = (SELECT department_id FROM Department WHERE department_name='IT')
+)
+AND employee_id <> @Amr;
+
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Amr, 3
+FROM Employee
+WHERE department_id = (SELECT department_id FROM Department WHERE department_name='IT')
+  AND employee_id <> @Amr;
 
 GO
 ------------------------------------------------------------

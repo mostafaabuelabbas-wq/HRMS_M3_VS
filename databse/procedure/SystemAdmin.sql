@@ -210,7 +210,10 @@ BEGIN
 
 END;
 GO
-
+-- Fix profile_image column size
+ALTER TABLE Employee
+ALTER COLUMN profile_image VARCHAR(500);
+GO
 
 -- 3. UpdateEmployeeInfo
 CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
@@ -218,8 +221,7 @@ CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
     @Email VARCHAR(100),
     @Phone VARCHAR(20),
     @Address VARCHAR(150),
-    -- We removed @EmergencyContact because it is redundant
-    @ProfileImage VARCHAR(300) = NULL
+    @ProfileImage VARCHAR(500) = NULL -- Now this matches the table!
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -230,13 +232,13 @@ BEGIN
         RETURN;
     END;
 
+    -- Check for duplicate email (excluding current user)
     IF EXISTS (SELECT 1 FROM Employee WHERE email = @Email AND employee_id <> @EmployeeID)
     BEGIN
         SELECT 'Error: This email is already used by another employee.' AS Message;
         RETURN;
     END;
 
-    -- Update ONLY personal info (and the image)
     UPDATE Employee
     SET email = @Email,
         phone = @Phone,
@@ -1553,3 +1555,94 @@ ORDER BY assignment_id DESC;
 SELECT shift_id, name, type, start_time, end_time 
 FROM ShiftSchedule
 ORDER BY shift_id;
+
+
+GO
+CREATE OR ALTER PROCEDURE GetApprovedLeavesForSync
+AS
+BEGIN
+    SELECT 
+        lr.request_id,
+        lr.employee_id,
+        e.first_name + ' ' + e.last_name AS employee_name,
+        l.leave_type,
+        lr.approval_timing AS start_date,
+        DATEADD(DAY, lr.duration, lr.approval_timing) AS end_date,
+        lr.status
+    FROM LeaveRequest lr
+    INNER JOIN Employee e ON lr.employee_id = e.employee_id
+    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
+    -- Only show Approved ones. 'Synced' ones will now disappear.
+    WHERE lr.status IN ('Approved', 'Finalized', 'Approved - Balance Updated')
+    ORDER BY lr.approval_timing DESC;
+END;
+GO
+
+GO
+CREATE OR ALTER PROCEDURE GetAttendanceBreaches
+    @DepartmentID INT = NULL,
+    @Date DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Get Policy
+    DECLARE @GracePeriod INT;
+    SELECT TOP 1 @GracePeriod = lp.grace_period_mins
+    FROM LatenessPolicy lp JOIN PayrollPolicy pp ON lp.policy_id = pp.policy_id
+    ORDER BY pp.effective_date DESC;
+
+    SET @GracePeriod = ISNULL(@GracePeriod, 0);
+
+    -- 2. Calculate Breaches
+    SELECT 
+        e.employee_id,
+        e.first_name + ' ' + e.last_name AS employee_name,
+        d.department_name,
+        
+        ss.start_time AS shift_start,
+        ss.end_time AS shift_end,
+        CAST(a.entry_time AS TIME) AS actual_in,
+        CAST(a.exit_time AS TIME) AS actual_out,
+
+        -- Raw Late
+        CASE 
+            WHEN CAST(a.entry_time AS TIME) > ss.start_time 
+            THEN DATEDIFF(MINUTE, ss.start_time, CAST(a.entry_time AS TIME)) 
+            ELSE 0 
+        END AS raw_late_minutes,
+
+        -- Penalized Late (0 if within grace)
+        CASE 
+            WHEN CAST(a.entry_time AS TIME) > ss.start_time 
+                 AND DATEDIFF(MINUTE, ss.start_time, CAST(a.entry_time AS TIME)) > @GracePeriod
+            THEN DATEDIFF(MINUTE, ss.start_time, CAST(a.entry_time AS TIME)) 
+            ELSE 0 
+        END AS penalized_late_minutes,
+
+        -- Early Leave
+        CASE 
+            WHEN a.exit_time IS NOT NULL AND CAST(a.exit_time AS TIME) < ss.end_time
+            THEN DATEDIFF(MINUTE, CAST(a.exit_time AS TIME), ss.end_time)
+            ELSE 0 
+        END AS early_leave_minutes,
+
+        @GracePeriod AS grace_period_used
+
+    FROM Attendance a
+    JOIN Employee e ON a.employee_id = e.employee_id
+    LEFT JOIN Department d ON e.department_id = d.department_id
+    JOIN ShiftSchedule ss ON a.shift_id = ss.shift_id
+    WHERE CAST(a.entry_time AS DATE) = @Date
+      AND (@DepartmentID IS NULL OR e.department_id = @DepartmentID)
+      
+      -- ==========================================================
+      -- THE FIX: Show anyone who is LATE, not just Penalized
+      -- ==========================================================
+      AND (
+          (CAST(a.entry_time AS TIME) > ss.start_time) -- Simply Late (Raw)
+          OR 
+          (a.exit_time IS NOT NULL AND CAST(a.exit_time AS TIME) < ss.end_time) -- Early Out
+      );
+END;
+GO

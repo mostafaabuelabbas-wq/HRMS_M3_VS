@@ -17,8 +17,8 @@
         }
 
         /* ------------------------------
-                   SIDEBAR (Upgraded)
-                ------------------------------ */
+                    SIDEBAR (Merged Styles)
+                   ------------------------------ */
         .sidebar {
             position: fixed;
             left: 0;
@@ -27,12 +27,19 @@
             height: 100vh;
             background-color: #1E293B;
             color: white;
-            padding-top: 10px;
             border-right: 1px solid #0F172A;
-            overflow-y: auto;
-            transition: all 0.3s ease;
             box-shadow: 3px 0 8px rgba(0,0,0,0.15);
+            /* Flexbox to push Logout to bottom */
+            display: flex;
+            flex-direction: column;
         }
+
+            /* This makes the nav scrollable and takes available space */
+            .sidebar .nav {
+                flex-grow: 1;
+                overflow-y: auto;
+                padding-top: 10px;
+            }
 
         /* Sidebar header */
         .sidebar-header {
@@ -100,7 +107,9 @@
         <nav class="nav flex-column px-3">
 
             <!-- 1. DASHBOARD (Everyone) -->
-            <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
+            <!-- CRITICAL FIX: asp-area="" (Empty Quotes) -->
+            <!-- This forces the link to go to the Main Controllers folder, not the Area -->
+            <a class="nav-link" asp-area="" asp-controller="Dashboard" asp-action="Index">
                 <i class="fas fa-home"></i> Dashboard
             </a>
 
@@ -110,18 +119,24 @@
             </a>
 
             <!-- ============================================== -->
-            <!-- 3. ATTENDANCE SECTION (MERGED & SECURED) -->
+            <!-- 3. ATTENDANCE SECTION (UPDATED) -->
             <!-- ============================================== -->
             <!-- My Attendance: Visible to Everyone -->
             <a class="nav-link" asp-area="Attendance" asp-controller="Track" asp-action="Index">
                 <i class="fas fa-user-clock"></i> My Attendance
             </a>
 
-            <!-- Manage Shifts: HIDDEN from regular Employees -->
+            <!-- Admin/Manager Only Features -->
             @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
             {
+                <!-- Shift Planning (Configuration) -->
                 <a class="nav-link" asp-area="Attendance" asp-controller="Shift" asp-action="Index">
-                    <i class="fas fa-calendar-cog"></i> Manage Shifts
+                    <i class="fas fa-calendar-alt"></i> Shift Planning
+                </a>
+
+                <!-- Attendance Ops (Sync Leaves, Corrections) - NEW LINK -->
+                <a class="nav-link" asp-area="Attendance" asp-controller="AttendanceManager" asp-action="Index">
+                    <i class="fas fa-tasks"></i> Attendance Ops
                 </a>
             }
             <!-- ============================================== -->
@@ -139,10 +154,15 @@
             <!-- ROLE SPECIFIC SECTIONS -->
             <!-- ============================================== -->
             <!-- MANAGER ONLY -->
-            @if (User.IsInRole("Manager"))
+            @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
             {
                 <a class="nav-link" asp-area="Employee" asp-controller="Manager" asp-action="Index">
                     <i class="fas fa-users-cog"></i> My Team
+                </a>
+
+                <!-- UPDATED: Pointing to Attendance Area now -->
+                <a class="nav-link" asp-area="Attendance" asp-controller="TeamAttendance" asp-action="Index">
+                    <i class="fas fa-user-clock"></i> Team Attendance
                 </a>
             }
 
@@ -175,6 +195,27 @@
             }
 
         </nav>
+
+        <!-- LOGOUT SECTION (Pinned to Bottom) -->
+        <div class="p-3 border-top border-secondary" style="background-color: rgba(0,0,0,0.2);">
+            @if (User.Identity!.IsAuthenticated)
+            {
+                <div class="d-flex align-items-center mb-3 text-white-50 small">
+                    <div class="me-2">
+                        <i class="fas fa-user-circle fa-2x"></i>
+                    </div>
+                    <div>
+                        <span class="d-block text-white fw-bold">@User.Identity.Name</span>
+                        <span class="d-block" style="font-size: 0.8em;">Logged In</span>
+                    </div>
+                </div>
+            }
+
+            <a asp-area="" asp-controller="Account" asp-action="Logout" class="btn btn-danger w-100 btn-sm shadow-sm">
+                <i class="fas fa-sign-out-alt me-2"></i> Logout
+            </a>
+        </div>
+
     </div>
 
     <!-- MAIN CONTENT -->

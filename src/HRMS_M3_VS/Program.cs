@@ -1,6 +1,7 @@
 ﻿using HRMS_M3_VS.Areas.Attendance.Services;
 using HRMS_M3_VS.Areas.Employee.Services;
 using HRMS_M3_VS.Services;
+using Microsoft.AspNetCore.Authentication.Cookies; // <--- 1. ADD THIS NAMESPACE
 using Microsoft.Data.SqlClient;
 using System.Security.Claims;
 
@@ -15,8 +16,24 @@ builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<ContractService>();
 builder.Services.AddScoped<ShiftService>();
+//builder.Services.AddScoped<AttendanceAdminService>();
+//builder.Services.AddScoped<TeamAttendanceService>();
 //builder.Services.AddScoped<TrackingService>();
-// Optional: Test DB connection on startup
+
+
+// ==================================================================
+// 2. ADD THIS BLOCK BEFORE 'builder.Build()'
+// This tells the app how to handle logins (using Cookies)
+// ==================================================================
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+{
+options.LoginPath = "/Account/Login";  // If not logged in, go here
+options.LogoutPath = "/Account/Logout";
+options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Auto logout after 1 hour
+});
+// ==================================================================
+
 try
 {
     using var conn = new SqlConnection(builder.Configuration.GetConnectionString("HRMS"));
@@ -42,11 +59,14 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseAuthentication(); // <--- Checks "Who are you?" (Reads the Cookie)
+app.UseAuthorization();  // <--- Checks "Are you allowed?" (Reads the Role)
 
 
 // -----------------------------------------------------------
 // TEMPORARY MOCK LOGIN - MUST BE BEFORE UseAuthorization()
 // -----------------------------------------------------------
+/*
 app.Use(async (context, next) =>
 {
     context.User = new ClaimsPrincipal(
@@ -63,9 +83,9 @@ app.Use(async (context, next) =>
 
     await next.Invoke();
 });
-
+*/
 // Authorization checks happen AFTER the mock user
-app.UseAuthorization();
+
 
 
 // -----------------------------------------------------------
@@ -77,10 +97,11 @@ app.MapControllerRoute(
 
 
 // -----------------------------------------------------------
-// DEFAULT ROUTE
+// DEFAULT ROUTE (This determines the landing page)
 // -----------------------------------------------------------
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
+// ^^^ CHANGE THIS: It used to be Home/Index or Dashboard/Index
 
 app.Run();
