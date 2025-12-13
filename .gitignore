@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# macOS junk
+.DS_Store
+
+# VS Code temp files
+file_paths.txt
+
+# VS Code settings
+.vscode/

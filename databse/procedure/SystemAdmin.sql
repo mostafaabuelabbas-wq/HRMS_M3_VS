@@ -1543,15 +1543,81 @@ BEGIN
     WHERE is_active = 1; -- Only show active employees
 END;
 GO
-SELECT * FROM ShiftCycle;
-SELECT *
-FROM ShiftCycleAssignment
-ORDER BY cycle_id, order_number;
 
-SELECT *
-FROM ShiftAssignment
-ORDER BY assignment_id DESC;
+USE HRMS;
+GO
 
-SELECT shift_id, name, type, start_time, end_time 
-FROM ShiftSchedule
-ORDER BY shift_id;
+CREATE OR ALTER PROCEDURE GetAttendanceBreaches
+    @DepartmentID INT = NULL, -- Optional Filter
+    @Date DATE -- The specific day to check
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Get the Active Lateness Policy (Assuming 1 active policy for simplicity)
+    DECLARE @GracePeriod INT;
+    DECLARE @DeductionRate DECIMAL(5,2);
+
+    -- Fetch the most recent active policy
+    SELECT TOP 1 
+        @GracePeriod = lp.grace_period_mins,
+        @DeductionRate = lp.deduction_rate
+    FROM LatenessPolicy lp
+    JOIN PayrollPolicy pp ON lp.policy_id = pp.policy_id
+    ORDER BY pp.effective_date DESC;
+
+    -- Fallback if no policy exists
+    SET @GracePeriod = ISNULL(@GracePeriod, 0);
+    SET @DeductionRate = ISNULL(@DeductionRate, 0);
+
+    -- 2. Calculate Breaches
+    SELECT 
+        e.employee_id,
+        e.first_name + ' ' + e.last_name AS employee_name,
+        d.department_name,
+        
+        -- Times
+        ss.start_time AS shift_start,
+        ss.end_time AS shift_end,
+        CAST(a.entry_time AS TIME) AS actual_in,
+        CAST(a.exit_time AS TIME) AS actual_out,
+
+        -- 1. Calculate Raw Lateness (In Minutes)
+        CASE 
+            WHEN CAST(a.entry_time AS TIME) > ss.start_time 
+            THEN DATEDIFF(MINUTE, ss.start_time, CAST(a.entry_time AS TIME)) 
+            ELSE 0 
+        END AS raw_late_minutes,
+
+        -- 2. Apply Grace Period Logic
+        -- If Late <= Grace, then Late = 0. Otherwise, count full lateness.
+        CASE 
+            WHEN CAST(a.entry_time AS TIME) > ss.start_time 
+                 AND DATEDIFF(MINUTE, ss.start_time, CAST(a.entry_time AS TIME)) > @GracePeriod
+            THEN DATEDIFF(MINUTE, ss.start_time, CAST(a.entry_time AS TIME)) 
+            ELSE 0 
+        END AS penalized_late_minutes,
+
+        -- 3. Calculate Early Leave (No grace period usually applies to leaving early)
+        CASE 
+            WHEN a.exit_time IS NOT NULL AND CAST(a.exit_time AS TIME) < ss.end_time
+            THEN DATEDIFF(MINUTE, CAST(a.exit_time AS TIME), ss.end_time)
+            ELSE 0 
+        END AS early_leave_minutes,
+
+        @GracePeriod AS grace_period_used
+
+    FROM Attendance a
+    JOIN Employee e ON a.employee_id = e.employee_id
+    LEFT JOIN Department d ON e.department_id = d.department_id
+    JOIN ShiftSchedule ss ON a.shift_id = ss.shift_id
+    WHERE CAST(a.entry_time AS DATE) = @Date
+      AND (@DepartmentID IS NULL OR e.department_id = @DepartmentID)
+      -- Only show records where there is a violation
+      AND (
+          (CAST(a.entry_time AS TIME) > DATEADD(MINUTE, @GracePeriod, ss.start_time)) -- Late > Grace
+          OR 
+          (a.exit_time IS NOT NULL AND CAST(a.exit_time AS TIME) < ss.end_time) -- Early Out
+      );
+END;
+GO
