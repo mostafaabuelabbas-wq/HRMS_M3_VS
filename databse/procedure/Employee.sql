@@ -1,12 +1,14 @@
 
  --Employee
---1 SubmitLeaveRequest
+USE HRMS;
+GO
+
 CREATE OR ALTER PROCEDURE SubmitLeaveRequest
     @EmployeeID INT,
     @LeaveTypeID INT,
     @StartDate DATE,
     @EndDate DATE,
-    @Reason VARCHAR(100)
+    @Reason VARCHAR(255) -- Increased size to match UI
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -28,7 +30,7 @@ BEGIN
 
     IF @EmployeeName IS NULL
     BEGIN
-        SELECT 0 AS NewRequestId, 'Invalid employee' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'Invalid employee ID' AS ConfirmationMessage;
         RETURN;
     END;
 
@@ -52,7 +54,7 @@ BEGIN
 
     IF @Duration <= 0
     BEGIN
-        SELECT 0 AS NewRequestId, 'Invalid date range' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'End date must be after start date' AS ConfirmationMessage;
         RETURN;
     END;
 
@@ -64,32 +66,30 @@ BEGIN
     WHERE employee_id = @EmployeeID 
       AND leave_type_id = @LeaveTypeID;
 
-    -- If no specific entitlement exists, we assume 0 or handle logic. 
-    -- For now, we block if NULL to match your teammate's logic.
+    -- Note: If this fails, you need to INSERT into LeaveEntitlement table for this user
     IF @Entitlement IS NULL
     BEGIN
-        SELECT 0 AS NewRequestId, 'No leave entitlement found for this leave type' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'No leave balance assigned for this leave type' AS ConfirmationMessage;
         RETURN;
     END;
 
     IF @Duration > @Entitlement
     BEGIN
-        SELECT 0 AS NewRequestId, 'Insufficient leave balance. Requested: ' 
-               + CAST(@Duration AS VARCHAR(10)) 
-               + ', Available: ' + CAST(@Entitlement AS VARCHAR(10)) AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'Insufficient balance. You have ' + CAST(@Entitlement AS VARCHAR(10)) + ' days left.' AS ConfirmationMessage;
         RETURN;
     END;
 
     --------------------------------------------------------
-    -- 5. Insert Leave Request (FIXED)
+    -- 5. Insert Leave Request
     --------------------------------------------------------
-    -- We append the dates to the justification so the Manager can see them
-    DECLARE @FinalReason VARCHAR(255);
+    -- Combine Reason with Dates for clarity
+    DECLARE @FinalReason VARCHAR(500);
     SET @FinalReason = @Reason + ' (From: ' + CONVERT(VARCHAR, @StartDate, 23) + ' To: ' + CONVERT(VARCHAR, @EndDate, 23) + ')';
 
     INSERT INTO LeaveRequest (employee_id, leave_id, justification, duration, approval_timing, status)
     VALUES (@EmployeeID, @LeaveTypeID, @FinalReason, @Duration, NULL, 'Pending');
 
+    -- Capture the ID immediately
     DECLARE @NewID INT = SCOPE_IDENTITY();
 
     --------------------------------------------------------
@@ -99,8 +99,7 @@ BEGIN
     BEGIN
         INSERT INTO Notification (message_content, urgency, read_status, notification_type)
         VALUES (
-            'Employee ' + @EmployeeName + ' (ID ' + CAST(@EmployeeID AS VARCHAR(10)) 
-            + ') submitted a ' + @LeaveType + ' leave request.',
+            'Employee ' + @EmployeeName + ' submitted a request for ' + @LeaveType,
             'Normal',
             0,
             'Leave Request'
@@ -113,49 +112,63 @@ BEGIN
     END;
 
     --------------------------------------------------------
-    -- 7. Success Return (FIXED)
+    -- 7. Return Result to C#
     --------------------------------------------------------
-    -- Returns the ID so C# can upload the file
+    -- This matches exactly what the C# Service expects: NewRequestId and ConfirmationMessage
     SELECT @NewID AS NewRequestId, 'Leave request submitted successfully' AS ConfirmationMessage;
 END;
 GO
 
 
 -- 2 GetLeaveBalance
-CREATE PROCEDURE GetLeaveBalance
+
+
+CREATE OR ALTER PROCEDURE GetLeaveBalance
     @EmployeeID INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    ----------------------------------------------------
-    -- Validate employee exists
-    ----------------------------------------------------
-    IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
-    BEGIN
-        SELECT 'Invalid employee ID' AS Message;
-        RETURN;
-    END;
+    -- 1. Constants
+    DECLARE @GlobalEntitlement DECIMAL(18,2) = 30.00;
 
-    ----------------------------------------------------
-    -- Calculate leave balance for each leave type
-    ----------------------------------------------------
+    -- 2. Calculate Total Shared Usage (Vacation + Sick Combined)
+    DECLARE @TotalSharedUsed DECIMAL(18,2);
+    SELECT @TotalSharedUsed = ISNULL(SUM(duration), 0)
+    FROM LeaveRequest lr
+    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
+    WHERE lr.employee_id = @EmployeeID
+      AND lr.status = 'Approved'
+      AND l.leave_type IN ('Annual', 'Sick', 'Vacation');
+
+    -- 3. Return Data
     SELECT 
-        e.employee_id,
-        e.full_name,
         l.leave_type,
-        le.entitlement 
-            - ISNULL((
-                SELECT SUM(duration)
-                FROM LeaveRequest lr
-                WHERE lr.employee_id = @EmployeeID
-                  AND lr.leave_id = le.leave_type_id
-                  AND lr.status = 'Approved'
-            ), 0) AS remaining_days
-    FROM Employee e
-    INNER JOIN LeaveEntitlement le ON e.employee_id = le.employee_id
-    INNER JOIN [Leave] l ON le.leave_type_id = l.leave_id
-    WHERE e.employee_id = @EmployeeID;
+        
+        -- Entitlement: 30 for shared types
+        CASE 
+            WHEN l.leave_type IN ('Annual', 'Sick', 'Vacation') THEN @GlobalEntitlement
+            ELSE 0 
+        END AS entitlement,
+
+        -- Used: Calculates usage strictly for THIS leave type
+        ISNULL((
+            SELECT SUM(duration) 
+            FROM LeaveRequest lr2 
+            WHERE lr2.employee_id = @EmployeeID 
+              AND lr2.leave_id = l.leave_id 
+              AND lr2.status = 'Approved'
+        ), 0) AS days_used,
+
+        -- Remaining: Shared Global Remaining
+        CASE 
+            WHEN l.leave_type IN ('Annual', 'Sick', 'Vacation') THEN (@GlobalEntitlement - @TotalSharedUsed)
+            ELSE 0 
+        END AS remaining_balance
+
+    FROM [Leave] l
+    INNER JOIN LeaveEntitlement le ON l.leave_id = le.leave_type_id
+    WHERE le.employee_id = @EmployeeID;
 END;
 GO
 
@@ -705,17 +718,16 @@ GO
 
 
 -- 14. UpdateEmergencyContact
-CREATE PROCEDURE UpdateEmployeeInfo
+CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
     @EmployeeID INT,
     @Email VARCHAR(100),
     @Phone VARCHAR(20),
     @Address VARCHAR(150),
-    @ProfileImage VARCHAR(500) = NULL
+    @ProfileImage VARBINARY(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Standard validations
     IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
     BEGIN
         SELECT 'Error: Employee not found.' AS Message;
@@ -728,14 +740,11 @@ BEGIN
         RETURN;
     END;
 
-    -- UPDATE LOGIC:
-    -- We removed COALESCE. If @ProfileImage is passed as NULL, 
-    -- the database will overwrite the old image with NULL (Deleting it).
     UPDATE Employee
     SET email = @Email,
         phone = @Phone,
         address = @Address,
-        profile_image = @ProfileImage 
+        profile_image = @ProfileImage
     WHERE employee_id = @EmployeeID;
 
     SELECT 'Employee information updated successfully' AS ConfirmationMessage;
@@ -1342,31 +1351,19 @@ END;
 GO
 
 -- 27. ViewLeaveHistory
-CREATE PROCEDURE ViewLeaveHistory
+CREATE OR ALTER PROCEDURE ViewLeaveHistory
     @EmployeeID INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -------------------------------------------------------
-    -- Validate employee
-    -------------------------------------------------------
-    IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
-    BEGIN
-        SELECT 'Invalid employee ID' AS Message;
-        RETURN;
-    END;
-
-    -------------------------------------------------------
-    -- Show sorted history
-    -------------------------------------------------------
     SELECT 
         lr.request_id,
-        l.leave_type,
-        lr.justification,
+        l.leave_type,       -- Matches C# property 'leave_type'
         lr.duration,
-        lr.approval_timing,
-        lr.status
+        lr.status,
+        lr.justification,
+        lr.approval_timing  -- Matches C# property 'approval_timing'
     FROM LeaveRequest lr
     INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
     WHERE lr.employee_id = @EmployeeID

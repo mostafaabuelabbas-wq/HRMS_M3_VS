@@ -107,8 +107,6 @@
         <nav class="nav flex-column px-3">
 
             <!-- 1. DASHBOARD (Everyone) -->
-            <!-- CRITICAL FIX: asp-area="" (Empty Quotes) -->
-            <!-- This forces the link to go to the Main Controllers folder, not the Area -->
             <a class="nav-link" asp-area="" asp-controller="Dashboard" asp-action="Index">
                 <i class="fas fa-home"></i> Dashboard
             </a>
@@ -118,9 +116,7 @@
                 <i class="fas fa-id-card"></i> My Profile
             </a>
 
-            <!-- ============================================== -->
-            <!-- 3. ATTENDANCE SECTION (UPDATED) -->
-            <!-- ============================================== -->
+            <!-- 3. ATTENDANCE SECTION -->
             <!-- My Attendance: Visible to Everyone -->
             <a class="nav-link" asp-area="Attendance" asp-controller="Track" asp-action="Index">
                 <i class="fas fa-user-clock"></i> My Attendance
@@ -129,30 +125,48 @@
             <!-- Admin/Manager Only Features -->
             @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
             {
-                <!-- Shift Planning (Configuration) -->
                 <a class="nav-link" asp-area="Attendance" asp-controller="Shift" asp-action="Index">
                     <i class="fas fa-calendar-alt"></i> Shift Planning
                 </a>
 
-                <!-- Attendance Ops (Sync Leaves, Corrections) - NEW LINK -->
                 <a class="nav-link" asp-area="Attendance" asp-controller="AttendanceManager" asp-action="Index">
                     <i class="fas fa-tasks"></i> Attendance Ops
                 </a>
             }
+
+            <!-- 4. LEAVES SECTION (UPDATED) -->
+            
+            <!-- My Leave (Employees View Balance & History) -->
+            <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="MyLeave">
+                <i class="fas fa-calendar-check"></i> My Leave
             <!-- ============================================== -->
             <!-- 4. LEAVES (Everyone) -->
             <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
                 <i class="fas fa-calendar-alt"></i> Leave Management
             </a>
 
+            <!-- ✅ UPDATED: Leave Management (Strictly Manager Only) -->
+            @if (User.IsInRole("Manager"))
+            {
+                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
+                    <i class="fas fa-clipboard-list"></i> Leave Management
+                </a>
+            }
+
+            <!-- ✅ ADDED: HR Configuration (Strictly HR Only) -->
+            @if (User.IsInRole("HRAdmin"))
+            {
+                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
+                    <i class="fas fa-cogs"></i> Leave Config
+                </a>
+            }
+
             <!-- 5. MISSIONS (Everyone) -->
             <a class="nav-link" asp-area="Employee" asp-controller="Mission" asp-action="Index">
                 <i class="fas fa-briefcase"></i> Missions
             </a>
 
-            <!-- ============================================== -->
-            <!-- ROLE SPECIFIC SECTIONS -->
-            <!-- ============================================== -->
+            <!-- 6. ROLE SPECIFIC SECTIONS -->
             <!-- MANAGER ONLY -->
             @if (User.IsInRole("Manager") ||  User.IsInRole("SystemAdmin"))
             {
@@ -160,7 +174,6 @@
                     <i class="fas fa-users-cog"></i> My Team
                 </a>
 
-                <!-- UPDATED: Pointing to Attendance Area now -->
                 <a class="nav-link" asp-area="Attendance" asp-controller="TeamAttendance" asp-action="Index">
                     <i class="fas fa-user-clock"></i> Team Attendance
                 </a>
@@ -196,7 +209,7 @@
 
         </nav>
 
-        <!-- LOGOUT SECTION (Pinned to Bottom) -->
+        <!-- LOGOUT SECTION -->
         <div class="p-3 border-top border-secondary" style="background-color: rgba(0,0,0,0.2);">
             @if (User.Identity!.IsAuthenticated)
             {
