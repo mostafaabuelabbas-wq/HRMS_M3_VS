@@ -3,45 +3,137 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Assign Shift to Employee</h2>
+<div class="container py-5" style="max-width: 700px;">
 
-@if (ViewBag.Error != null)
-{
-    <div class="alert alert-danger">@ViewBag.Error</div>
-}
-
-<form method="post" class="card p-4 shadow-sm">
-
-    <!-- Employee Dropdown -->
-    <div class="mb-3">
-        <label class="form-label">Employee</label>
-        <select asp-for="employee_id" class="form-control"
-                asp-items="@(new SelectList(ViewBag.Employees, "employee_id", "full_name"))" required>
-            <option value="">-- Select Employee --</option>
-        </select>
-    </div>
-
-    <!-- Shift Dropdown (Typo Fixed Here) -->
-    <div class="mb-3">
-        <label class="form-label">Shift</label>
-        <!-- Using lowercase "shift_id" and "name" to match your DTO -->
-        <select asp-for="shift_id" class="form-control"
-                asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
-            <option value="">-- Select Shift --</option>
-        </select>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Start Date</label>
-            <input asp-for="start_date" type="date" class="form-control" required />
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
+            <i class="fa fa-user-clock fa-2x"></i>
         </div>
-        <div class="col-md-6 mb-3">
-            <label class="form-label">End Date</label>
-            <input asp-for="end_date" type="date" class="form-control" required />
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Assign Shift</h2>
+            <p class="text-muted mb-0">Map an employee to a specific work schedule</p>
         </div>
     </div>
 
-    <button type="submit" class="btn btn-primary">Assign</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+    <!-- Error Alert -->
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <i class="fa fa-exclamation-circle fs-5 me-3"></i>
+            <div>@ViewBag.Error</div>
+        </div>
+    }
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <!-- Colorful Top Accent -->
+        <div style="height: 6px; background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%);"></div>
+
+        <div class="card-body p-4 p-md-5 bg-white">
+            <form method="post">
+
+                <h6 class="text-uppercase text-muted fw-bold tracking-wide mb-4 small">
+                    <i class="fa fa-link me-2"></i>Assignment Details
+                </h6>
+
+                <!-- Employee Dropdown -->
+                <div class="mb-4">
+                    <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Employee</label>
+                    <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                        <span class="input-group-text border-0 bg-light text-primary ps-3">
+                            <i class="fa fa-user"></i>
+                        </span>
+                        <select asp-for="employee_id" class="form-select border-0 bg-light fw-bold py-3"
+                                asp-items="@(new SelectList(ViewBag.Employees, "employee_id", "full_name"))" required>
+                            <option value="">Select Employee...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Shift Dropdown -->
+                <div class="mb-4">
+                    <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Shift Schedule</label>
+                    <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                        <span class="input-group-text border-0 bg-light text-primary ps-3">
+                            <i class="fa fa-clock"></i>
+                        </span>
+                        <select asp-for="shift_id" class="form-select border-0 bg-light fw-bold py-3"
+                                asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
+                            <option value="">Select Shift...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Date Range -->
+                <div class="row g-3 mb-5">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Start Date</label>
+                        <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                            <span class="input-group-text border-0 bg-light text-primary ps-3">
+                                <i class="fa fa-calendar-plus"></i>
+                            </span>
+                            <input asp-for="start_date" type="date" class="form-control border-0 bg-light fw-bold py-3" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">End Date</label>
+                        <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                            <span class="input-group-text border-0 bg-light text-primary ps-3">
+                                <i class="fa fa-calendar-minus"></i>
+                            </span>
+                            <input asp-for="end_date" type="date" class="form-control border-0 bg-light fw-bold py-3" required />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex gap-3 pt-2">
+                    <a asp-action="Index" class="btn btn-light btn-lg w-100 fw-bold text-muted border">Cancel</a>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm hover-lift btn-gradient">
+                        <i class="fa fa-check-circle me-2"></i> Assign Shift
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* --- Typography --- */
+    .tracking-wide {
+        letter-spacing: 0.8px;
+        font-size: 0.7rem;
+    }
+
+    /* --- Input Styling --- */
+    .input-group:focus-within {
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important;
+        border: 1px solid #0d6efd;
+    }
+
+    .form-control:focus, .form-select:focus {
+        box-shadow: none;
+        background-color: #fff !important;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+
+    /* --- Button Gradient --- */
+    .btn-gradient {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        border: none;
+    }
+
+    /* --- Hover Effects --- */
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2) !important;
+        }
+</style>

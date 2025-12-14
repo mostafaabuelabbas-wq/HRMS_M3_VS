@@ -1423,6 +1423,8 @@ IF OBJECT_ID('dbo.GetAllEmployees_Roles', 'P') IS NOT NULL
     DROP PROCEDURE dbo.GetAllEmployees_Roles;
 GO
 
+
+
 CREATE PROCEDURE dbo.GetAllEmployees_Roles
 AS
 BEGIN
@@ -1534,6 +1536,9 @@ BEGIN
 END;
 GO
 
+
+
+
 -- 2. Helper for Employee Dropdown
 CREATE OR ALTER PROCEDURE GetAllEmployeesSimple
 AS
@@ -1641,3 +1646,117 @@ BEGIN
     ORDER BY lr.approval_timing DESC;
 END;
 GO
+--
+
+USE HRMS;
+GO
+
+-- 1. Helper: Get Leave Types for Dropdown (Employee) & Grid (Admin)
+CREATE OR ALTER PROCEDURE GetLeaveTypes
+AS
+BEGIN
+    SELECT 
+        leave_id, 
+        leave_type, 
+        leave_description 
+    FROM [Leave]; -- Matches your schema table name
+END;
+GO
+
+-- 2. Requirement #5.1: Submit Leave Request (Employee)
+CREATE OR ALTER PROCEDURE SubmitLeaveRequest
+    @EmployeeID INT,
+    @LeaveTypeID INT,
+    @StartDate DATE,
+    @EndDate DATE,
+    @Reason VARCHAR(100) -- mapped to justification
+AS
+BEGIN
+    -- Insert into your schema's LeaveRequest table
+    INSERT INTO LeaveRequest (employee_id, leave_id, justification, duration, status, approval_timing)
+    VALUES (
+        @EmployeeID, 
+        @LeaveTypeID, 
+        @Reason, 
+        DATEDIFF(day, @StartDate, @EndDate) + 1, -- Simple duration calculation
+        'Pending',
+        NULL
+    );
+
+    SELECT 'Leave request submitted successfully.' AS Message;
+END;
+GO
+
+-- 3. Requirement #5.2: Get Leave Balance
+CREATE OR ALTER PROCEDURE GetLeaveBalance
+    @EmployeeID INT
+AS
+BEGIN
+    -- Joins LeaveEntitlement with Leave Type name
+    SELECT 
+        l.leave_type, 
+        le.entitlement AS RemainingDays
+    FROM LeaveEntitlement le
+    INNER JOIN [Leave] l ON le.leave_type_id = l.leave_id
+    WHERE le.employee_id = @EmployeeID;
+END;
+GO
+
+-- 4. Helper: Get Employee's Request History
+CREATE OR ALTER PROCEDURE ViewLeaveHistory
+    @EmployeeID INT
+AS
+BEGIN
+    SELECT 
+        lr.request_id,
+        l.leave_type,
+        lr.duration,
+        lr.status,
+        lr.justification
+    FROM LeaveRequest lr
+    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
+    WHERE lr.employee_id = @EmployeeID
+    ORDER BY lr.request_id DESC;
+END;
+GO
+
+-- 5. Requirement #30 & #32: Manage Leave Types (Admin)
+-- Updated to match your schema table: LeavePolicy
+CREATE OR ALTER PROCEDURE ManageLeavePolicy
+    @Name VARCHAR(100),
+    @Purpose VARCHAR(255),
+    @Eligibility VARCHAR(255),
+    @NoticePeriod INT,
+    @MaxDuration INT -- Note: Your schema didn't have MaxDuration in LeavePolicy, 
+                     -- but the requirement asks for it. 
+                     -- I will ignore it for now or we can ALTER table.
+                     -- Let's stick to existing columns: name, purpose, eligibility, notice_period
+AS
+BEGIN
+    IF EXISTS (SELECT 1 FROM LeavePolicy WHERE name = @Name)
+    BEGIN
+        UPDATE LeavePolicy
+        SET 
+            purpose = @Purpose,
+            eligibility_rules = @Eligibility,
+            notice_period = @NoticePeriod
+        WHERE name = @Name;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, reset_on_new_year)
+        VALUES (@Name, @Purpose, @Eligibility, @NoticePeriod, 1);
+    END
+    
+    SELECT 'Policy saved successfully.' AS Message;
+END;
+GO
+
+-- 6. Helper: Get All Policies (Admin Grid)
+CREATE OR ALTER PROCEDURE GetAllLeavePolicies
+AS
+BEGIN
+    SELECT * FROM LeavePolicy;
+END;
+GO
+

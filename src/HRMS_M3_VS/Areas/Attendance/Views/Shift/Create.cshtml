@@ -3,56 +3,175 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2 class="mb-4">Create New Shift</h2>
+<div class="container py-5" style="max-width: 800px;">
 
-<form method="post" class="card p-4 shadow-sm">
-
-    <!-- 1. Name -->
-    <div class="mb-3">
-        <label class="form-label">Name</label>
-        <!-- WAS: asp-for="Name" -> FIXED: asp-for="name" -->
-        <input asp-for="name" class="form-control" required />
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
+            <i class="fa fa-clock fa-2x"></i>
+        </div>
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Create New Shift</h2>
+            <p class="text-muted mb-0">Define schedule parameters and timing</p>
+        </div>
     </div>
 
-    <!-- 2. Type -->
-    <div class="mb-3">
-        <label class="form-label">Type</label>
-        <input asp-for="type" class="form-control" required />
-    </div>
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-4 p-md-5">
 
-    <!-- 3. Start Time -->
-    <div class="mb-3">
-        <label class="form-label">Start Time</label>
-        <input asp-for="start_time" type="time" class="form-control" required />
-    </div>
+            <form method="post">
 
-    <!-- 4. End Time -->
-    <div class="mb-3">
-        <label class="form-label">End Time</label>
-        <input asp-for="end_time" type="time" class="form-control" required />
-    </div>
+                <!-- Section: Basic Details -->
+                <h6 class="text-uppercase text-muted fw-bold tracking-wide mb-3 small">
+                    <i class="fa fa-info-circle me-2"></i>Shift Details
+                </h6>
 
-    <!-- 5. Break Duration -->
-    <div class="mb-3">
-        <label class="form-label">Break Duration (mins)</label>
-        <input asp-for="break_duration" type="number" class="form-control" required />
-    </div>
+                <div class="row g-3 mb-4">
+                    <!-- 1. Name -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="name" class="form-control bg-light border-0 fw-bold" placeholder="Morning Shift" required />
+                            <label asp-for="name" class="text-muted">Shift Name</label>
+                        </div>
+                    </div>
 
-    <!-- 6. Date -->
-    <div class="mb-3">
-        <label class="form-label">Shift Date</label>
-        <input asp-for="shift_date" type="date" class="form-control" />
-    </div>
+                    <!-- 2. Type -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select asp-for="type" class="form-select bg-light border-0 fw-bold" required>
+                                <option value="" selected disabled>Select Type...</option>
+                                <option value="Regular">Regular</option>
+                                <option value="Overtime">Overtime</option>
+                                <option value="Night">Night Shift</option>
+                                <option value="Flexible">Flexible</option>
+                            </select>
+                            <label asp-for="type" class="text-muted">Shift Type</label>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- 7. Status (Hidden or Editable) -->
-    <div class="mb-3">
-        <label class="form-label">Status</label>
-        <select asp-for="status" class="form-control">
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-        </select>
-    </div>
+                <hr class="my-4 opacity-10">
 
-    <button type="submit" class="btn btn-primary">Create Shift</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+                <!-- Section: Timing -->
+                <h6 class="text-uppercase text-muted fw-bold tracking-wide mb-3 small">
+                    <i class="fa fa-hourglass-half me-2"></i>Timing Configuration
+                </h6>
+
+                <div class="row g-3 mb-4">
+                    <!-- 3. Start Time -->
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input asp-for="start_time" type="time" class="form-control bg-light border-0 fw-bold" required />
+                            <label asp-for="start_time" class="text-muted">Start Time</label>
+                        </div>
+                    </div>
+
+                    <!-- 4. End Time -->
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input asp-for="end_time" type="time" class="form-control bg-light border-0 fw-bold" required />
+                            <label asp-for="end_time" class="text-muted">End Time</label>
+                        </div>
+                    </div>
+
+                    <!-- 5. Break Duration -->
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input asp-for="break_duration" type="number" class="form-control bg-light border-0 fw-bold" placeholder="60" required />
+                            <label asp-for="break_duration" class="text-muted">Break (mins)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4 opacity-10">
+
+                <!-- Section: Schedule & Status -->
+                <div class="row g-3 mb-5">
+                    <!-- 6. Date -->
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold text-uppercase tracking-wide">Effective Date</label>
+                        <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                            <span class="input-group-text border-0 bg-white text-primary ps-3">
+                                <i class="fa fa-calendar-alt"></i>
+                            </span>
+                            <input asp-for="shift_date" type="date" class="form-control border-0 py-3 fw-bold" />
+                        </div>
+                    </div>
+
+                    <!-- 7. Status Toggle -->
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small fw-bold text-uppercase tracking-wide">Status</label>
+                        <div class="d-flex bg-light p-1 rounded-3 border">
+                            <input type="radio" class="btn-check" name="status" id="status_active" value="Active" checked>
+                            <label class="btn btn-sm flex-fill rounded-2 fw-bold py-2 transition-all" for="status_active" id="lbl_active">
+                                Active
+                            </label>
+
+                            <input type="radio" class="btn-check" name="status" id="status_inactive" value="Inactive">
+                            <label class="btn btn-sm flex-fill rounded-2 fw-bold py-2 transition-all text-muted" for="status_inactive" id="lbl_inactive">
+                                Inactive
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex gap-3">
+                    <a asp-action="Index" class="btn btn-light btn-lg w-100 fw-bold text-muted border">Cancel</a>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm hover-lift">
+                        <i class="fa fa-save me-2"></i> Create Shift
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* --- Typography --- */
+    .tracking-wide {
+        letter-spacing: 1px;
+        font-size: 0.75rem;
+    }
+
+    /* --- Form Styling --- */
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+        height: 3.5rem;
+        line-height: 1.25;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+        border-color: transparent;
+    }
+
+    /* --- Toggle Logic --- */
+    #status_active:checked + #lbl_active {
+        background-color: #fff;
+        color: #198754; /* Green */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    #status_inactive:checked + #lbl_inactive {
+        background-color: #fff;
+        color: #6c757d; /* Gray */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    /* --- Hover Effects --- */
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2) !important;
+        }
+
+    .transition-all {
+        transition: all 0.2s ease;
+    }
+</style>
