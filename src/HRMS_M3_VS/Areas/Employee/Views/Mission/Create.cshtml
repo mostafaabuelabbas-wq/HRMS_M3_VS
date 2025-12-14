@@ -1,43 +1,93 @@
 ﻿@model HRMS_M3_VS.Areas.Employee.Models.MissionCreateViewModel
 
-<div class="container mt-4">
-    <div class="card shadow border-0" style="max-width: 600px; margin: auto;">
-        <div class="card-header bg-dark text-white">
-            <h4 class="mb-0"><i class="fas fa-plane-departure me-2"></i>Assign New Mission</h4>
-        </div>
-        <div class="card-body p-4">
-            <form asp-action="Create" method="post">
-                
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Select Employee</label>
-                    <select asp-for="EmployeeId" asp-items="Model.Employees" class="form-select">
-                        <option value="">-- Choose Employee --</option>
-                    </select>
-                </div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Destination</label>
-                    <input asp-for="Destination" class="form-control" placeholder="e.g. Dubai Branch" />
-                </div>
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Description</label>
-                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                </div>
-
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <label class="form-label fw-bold">Start Date</label>
-                        <input asp-for="StartDate" type="date" class="form-control" />
+                <!-- 1. Header -->
+                <div class="card-header bg-primary text-white p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1 fw-bold"><i class="fas fa-plane-departure me-2"></i>New Mission Assignment</h5>
+                        <p class="mb-0 small opacity-75">Assign a task or travel order to an employee.</p>
                     </div>
-                    <div class="col-6 mb-3">
-                        <label class="form-label fw-bold">End Date</label>
-                        <input asp-for="EndDate" type="date" class="form-control" />
-                    </div>
+                    <a asp-action="Index" class="btn btn-sm btn-light bg-opacity-25 text-white border-0 rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-times"></i>
+                    </a>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Assign Mission</button>
-            </form>
+                <div class="card-body p-5">
+                    <form asp-action="Create" method="post">
+
+                        <!-- 2. The Assignee (Who) -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Employee</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-primary"><i class="fas fa-user-circle"></i></span>
+                                <select asp-for="EmployeeId" asp-items="Model.Employees" class="form-select border-start-0 ps-0 bg-light">
+                                    <option value="">-- Select Employee --</option>
+                                </select>
+                            </div>
+                            <div class="form-text small ms-1">
+                                <i class="fas fa-info-circle me-1"></i> The mission will be supervised by their direct manager.
+                            </div>
+                            <span asp-validation-for="EmployeeId" class="text-danger small"></span>
+                        </div>
+
+                        <hr class="my-4 text-muted opacity-25">
+
+                        <!-- 3. Mission Details (Where & Why) -->
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Destination</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 text-danger"><i class="fas fa-map-marker-alt"></i></span>
+                                    <input asp-for="Destination" class="form-control border-start-0 ps-0" placeholder="e.g. Dubai Branch, Conference Center" />
+                                </div>
+                                <span asp-validation-for="Destination" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Description</label>
+                                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Briefly describe the objectives..."></textarea>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 text-muted opacity-25">
+
+                        <!-- 4. Timeline (When) -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">Start Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="far fa-calendar-alt"></i></span>
+                                    <input asp-for="StartDate" type="date" class="form-control border-start-0 ps-0" />
+                                </div>
+                                <span asp-validation-for="StartDate" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary small text-uppercase">End Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="far fa-calendar-check"></i></span>
+                                    <input asp-for="EndDate" type="date" class="form-control border-start-0 ps-0" />
+                                </div>
+                                <span asp-validation-for="EndDate" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- 5. Actions -->
+                        <div class="d-flex justify-content-end gap-2 mt-5 pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-light text-muted px-4 fw-bold">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
+                                Confirm Assignment
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
