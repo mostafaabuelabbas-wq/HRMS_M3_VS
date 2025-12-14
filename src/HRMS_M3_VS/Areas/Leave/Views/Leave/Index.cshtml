@@ -1,0 +1,103 @@
+@model IEnumerable<HRMS_M3_VS.Areas.Leave.Models.PendingLeaveRequestDto>
+
+@{
+    ViewData["Title"] = "Leave Management";
+    // This ensures we use the same sidebar/header as the Dashboard
+    Layout = "~/Views/Shared/_Layout.cshtml"; 
+}
+
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Leave Management</h1>
+        <!-- Button for Employee to Apply (Visible to everyone for now) -->
+        <a asp-action="Create" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Apply for Leave
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Content Row -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Pending Leave Requests</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Type</th>
+                            <th>Duration</th>
+                            <th>Reason / Dates</th>
+                            <th>Status</th>
+                            <th style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No pending requests found.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="align-middle fw-bold">@item.EmployeeName</td>
+                                    <td class="align-middle">
+                                        <span class="badge bg-info text-dark">@item.LeaveType</span>
+                                    </td>
+                                    <td class="align-middle">@item.Duration day(s)</td>
+                                    <td class="align-middle">@item.Justification</td>
+                                    <td class="align-middle">
+                                        <span class="badge bg-warning text-dark">@item.Status</span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex gap-2">
+                                            <!-- Approve Form -->
+                                            <form asp-action="Approve" method="post" style="display:inline;">
+                                                <input type="hidden" name="id" value="@item.RequestId" />
+                                                <button type="submit" class="btn btn-success btn-sm" title="Approve">
+                                                    Approve
+                                                </button>
+                                            </form>
+
+                                            <!-- Reject Button (Triggers Modal or Simple Prompt) -->
+                                            <!-- Simple inline form for now to keep it working -->
+                                            <form asp-action="Reject" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to reject this request?');">
+                                                <input type="hidden" name="id" value="@item.RequestId" />
+                                                <input type="hidden" name="reason" value="Rejected by Manager" /> <!-- Default reason for quick action -->
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Reject">
+                                                    Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
