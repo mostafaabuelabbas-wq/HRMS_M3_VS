@@ -17,8 +17,8 @@ builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<ContractService>();
 builder.Services.AddScoped<ShiftService>();
 
-//builder.Services.AddScoped<AttendanceAdminService>();
-//builder.Services.AddScoped<TeamAttendanceService>();
+builder.Services.AddScoped<AttendanceAdminService>();
+builder.Services.AddScoped<TeamAttendanceService>();
 builder.Services.AddScoped<TrackingService>();
 
 

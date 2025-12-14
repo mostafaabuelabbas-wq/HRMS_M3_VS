@@ -1,0 +1,75 @@
+﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.MissionDto>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">Missions</h2>
+        @if (User.IsInRole("HRAdmin"))
+        {
+            <a asp-action="Create" class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus me-2"></i>Assign Mission
+            </a>
+        }
+    </div>
+
+    <div class="card shadow border-0 rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-dark text-white">
+                    <tr>
+                        <th class="ps-4">Employee</th>
+                        <th>Destination</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th class="text-center">Status</th>
+                        @if (User.IsInRole("Manager"))
+                        {
+                            <th class="text-end pe-4">Action</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">@item.EmployeeName</td>
+                            <td>@item.Destination</td>
+                            <td>@item.Start_Date.ToShortDateString()</td>
+                            <td>@item.End_Date.ToShortDateString()</td>
+                            <td class="text-center">
+                                @if (item.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                                else if (item.Status == "Approved")
+                                {
+
+                                    <span class="badge bg-success">Approved</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge bg-danger">Rejected</span>
+                                }
+                            </td>
+
+                            @if (User.IsInRole("Manager") && item.Status == "Pending")
+                            {
+                                <td class="text-end pe-4">
+                                    <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@item.Mission_Id" />
+                                        <button type="submit" name="status" value="Approved" class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
+                                        <button type="submit" name="status" value="Rejected" class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
+                                    </form>
+                                </td>
+                            }
+                            else if (User.IsInRole("Manager"))
+                            {
+                                <td class="text-end pe-4 text-muted small">Done</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

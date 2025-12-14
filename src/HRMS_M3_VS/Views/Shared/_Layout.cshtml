@@ -154,7 +154,7 @@
             <!-- ROLE SPECIFIC SECTIONS -->
             <!-- ============================================== -->
             <!-- MANAGER ONLY -->
-            @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+            @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin"))
             {
                 <a class="nav-link" asp-area="Employee" asp-controller="Manager" asp-action="Index">
                     <i class="fas fa-users-cog"></i> My Team
