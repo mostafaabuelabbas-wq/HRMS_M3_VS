@@ -6,11 +6,12 @@ namespace HRMS_M3_VS.Areas.Leave.Models
         public int EmployeeId { get; set; }
         public string EmployeeName { get; set; } = string.Empty;
         public string LeaveType { get; set; } = string.Empty;
-        
-        // This will contain the reason AND the dates we appended
-        public string Justification { get; set; } = string.Empty; 
-        
+        public string Justification { get; set; } = string.Empty;
         public int Duration { get; set; }
         public string Status { get; set; } = string.Empty;
+        
+        // Needed for the Card UI
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
     }
 }
