@@ -207,13 +207,12 @@ END;
 GO
 
 
-
--- 4 AssignMission
--- PROCEDURE: AssignMission
-CREATE PROCEDURE AssignMission
+--AssignMission
+CREATE OR ALTER PROCEDURE AssignMission
     @EmployeeID INT,
-    @ManagerID INT,
+    @ManagerID INT, -- We keep this to match PDF Signature, but we calculate it inside.
     @Destination VARCHAR(50),
+    @Description NVARCHAR(MAX),
     @StartDate DATE,
     @EndDate DATE
 AS
@@ -223,7 +222,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- Validate employee exists
+        -- 1. Validate employee exists
         IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
         BEGIN
             RAISERROR('Employee does not exist.', 16, 1);
@@ -231,15 +230,20 @@ BEGIN
             RETURN;
         END;
 
-        -- Validate manager exists
-        IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @ManagerID)
+        -- 2. AUTO-DETECT MANAGER (The Logic Change)
+        -- We ignore the input @ManagerID and fetch the real one from the table.
+        DECLARE @RealManagerID INT;
+        SELECT @RealManagerID = manager_id FROM Employee WHERE employee_id = @EmployeeID;
+
+        -- Check if employee has a manager
+        IF @RealManagerID IS NULL
         BEGIN
-            RAISERROR('Manager does not exist.', 16, 1);
+            RAISERROR('This employee does not have a manager assigned.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
         END;
 
-        -- Validate date range
+        -- 3. Validate dates
         IF (@StartDate >= @EndDate)
         BEGIN
             RAISERROR('StartDate must be earlier than EndDate.', 16, 1);
@@ -247,30 +251,22 @@ BEGIN
             RETURN;
         END;
 
-        -- Insert mission
-        INSERT INTO Mission (destination, start_date, end_date, status, employee_id, manager_id)
-        VALUES (@Destination, @StartDate, @EndDate, 'Assigned', @EmployeeID, @ManagerID);
+        -- 4. Insert mission (Using @RealManagerID)
+        INSERT INTO Mission (destination, description, start_date, end_date, status, employee_id, manager_id)
+        VALUES (@Destination, @Description, @StartDate, @EndDate, 'Pending', @EmployeeID, @RealManagerID);
 
-        -- Create notification
+        -- 5. Notification Logic (Kept from your code)
         INSERT INTO Notification (message_content, urgency, read_status, notification_type)
-        VALUES (
-            'You have been assigned a mission to ' + @Destination +
-            ' from ' + CONVERT(VARCHAR(10), @StartDate, 120) +
-            ' to ' + CONVERT(VARCHAR(10), @EndDate, 120),
-            'High',
-            0,
-            'Mission Assignment'
-        );
+        VALUES ('Mission assigned: ' + @Destination, 'High', 0, 'Mission Assignment');
 
         DECLARE @NotificationID INT = SCOPE_IDENTITY();
 
-        -- Assign notification to employee
         INSERT INTO Employee_Notification (employee_id, notification_id, delivery_status, delivered_at)
         VALUES (@EmployeeID, @NotificationID, 'Sent', GETDATE());
 
         COMMIT TRANSACTION;
 
-        SELECT 'Mission assigned successfully to employee ' + CAST(@EmployeeID AS VARCHAR(10)) AS ConfirmationMessage;
+        SELECT 'Mission assigned successfully.' AS Message;
 
     END TRY
     BEGIN CATCH
@@ -279,7 +275,6 @@ BEGIN
     END CATCH
 END;
 GO
-
 
 
 -- 5 ReviewReimbursement
@@ -2994,3 +2989,56 @@ BEGIN
 END;
 GO
 
+--EXTRA PROCEDURES
+-- 4. SP: View Missions (Smart: Returns Employee Name for Managers)
+CREATE PROCEDURE ViewMissionsByRole
+    @UserID INT,
+    @Role NVARCHAR(50) -- 'Manager' or 'Employee'
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        m.mission_id,
+        m.destination,
+        m.start_date,
+        m.end_date,
+        m.status,
+        m.Description,
+        e.full_name AS EmployeeName, -- Who is going?
+        mgr.full_name AS ManagerName -- Who assigned/approves it?
+    FROM Mission m
+    JOIN Employee e ON m.employee_id = e.employee_id
+    LEFT JOIN Employee mgr ON m.manager_id = mgr.employee_id
+    WHERE 
+        (@Role = 'Manager' AND m.manager_id = @UserID) -- Manager sees missions assigned to them
+        OR 
+        (@Role = 'Employee' AND m.employee_id = @UserID) -- Employee sees their own missions
+        OR
+        (@Role = 'HRAdmin') -- HR sees everything (Optional)
+    ORDER BY m.start_date DESC;
+END;
+GO
+
+-- 5. SP: Update Status (Approve/Reject)
+CREATE PROCEDURE UpdateMissionStatus
+    @MissionID INT,
+    @Status NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Mission SET status = @Status WHERE mission_id = @MissionID;
+END;
+GO
+
+
+CREATE OR ALTER PROCEDURE GetEmployeeSimpleList
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT employee_id, full_name 
+    FROM Employee
+    ORDER BY full_name;
+END;
+GO
