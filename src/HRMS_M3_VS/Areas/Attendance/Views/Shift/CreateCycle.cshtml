@@ -3,18 +3,99 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Create Rotational Cycle</h2>
+<div class="container py-5" style="max-width: 700px;">
 
-<form method="post" class="card p-4 shadow-sm">
-    <div class="mb-3">
-        <label class="form-label">Cycle Name</label>
-        <!-- Matching snake_case model -->
-        <input asp-for="cycle_name" class="form-control" placeholder="e.g. Monthly Nurse Rotation" required />
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
+            <i class="fa fa-sync-alt fa-2x"></i>
+        </div>
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Create Rotational Cycle</h2>
+            <p class="text-muted mb-0">Define the container for your shift rotation patterns</p>
+        </div>
     </div>
-    <div class="mb-3">
-        <label class="form-label">Description</label>
-        <textarea asp-for="description" class="form-control"></textarea>
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <!-- Colorful Top Accent -->
+        <div style="height: 6px; background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%);"></div>
+
+        <div class="card-body p-4 p-md-5 bg-white">
+            <form method="post">
+
+                <h6 class="text-uppercase text-muted fw-bold tracking-wide mb-4 small">
+                    <i class="fa fa-pen me-2"></i>Cycle Configuration
+                </h6>
+
+                <!-- Cycle Name -->
+                <div class="mb-4">
+                    <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Cycle Name</label>
+                    <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                        <span class="input-group-text border-0 bg-light text-primary ps-3">
+                            <i class="fa fa-tag"></i>
+                        </span>
+                        <input asp-for="cycle_name" class="form-control border-0 bg-light fw-bold py-3" placeholder="e.g. Monthly Nurse Rotation" required />
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-5">
+                    <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Description</label>
+                    <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                        <span class="input-group-text border-0 bg-light text-primary ps-3 align-items-start pt-3">
+                            <i class="fa fa-align-left"></i>
+                        </span>
+                        <textarea asp-for="description" class="form-control border-0 bg-light py-3" placeholder="Describe the purpose of this rotation..." style="height: 150px;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex gap-3 pt-2">
+                    <a asp-action="Index" class="btn btn-light btn-lg w-100 fw-bold text-muted border">Cancel</a>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm hover-lift btn-gradient">
+                        <i class="fa fa-plus-circle me-2"></i> Create Cycle
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary">Create Cycle</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+</div>
+
+<style>
+    /* --- Typography --- */
+    .tracking-wide {
+        letter-spacing: 0.8px;
+        font-size: 0.7rem;
+    }
+
+    /* --- Input Styling --- */
+    .input-group:focus-within {
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important;
+        border: 1px solid #0d6efd;
+    }
+
+    .form-control:focus {
+        box-shadow: none;
+        background-color: #fff !important;
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+    }
+
+    /* --- Button Gradient --- */
+    .btn-gradient {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        border: none;
+    }
+
+    /* --- Hover Effects --- */
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2) !important;
+        }
+</style>

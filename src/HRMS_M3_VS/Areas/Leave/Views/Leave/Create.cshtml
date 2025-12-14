@@ -1,0 +1,120 @@
+@model HRMS_M3_VS.Areas.Leave.Models.LeaveApplyDto
+
+@{
+    ViewData["Title"] = "Apply for Leave";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <!-- Header -->
+                <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);">
+                    <div class="mb-2">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-plane-departure fs-2"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1">New Leave Request</h3>
+                    <p class="mb-0 text-white-50 small">Submit a request for manager approval.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-white">
+                    
+                    <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger shadow-sm border-0 border-start border-danger border-4 mb-4">
+                            @TempData["Error"]
+                        </div>
+                    }
+
+                    <!-- ✅ ADDED: enctype for file upload -->
+                    <form action="/Leave/Leave/Create" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Leave Type Dropdown -->
+                        <div class="mb-4">
+                            <label for="leave_id" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">Leave Type</label>
+                            
+                            <select name="leave_id" id="leave_id" class="form-select bg-light shadow-sm" required>
+                                <option value="">-- Select Approved Leave Type --</option>
+                                @if (ViewBag.LeaveTypes != null)
+                                {
+                                    foreach (var type in ViewBag.LeaveTypes)
+                                    {
+                                        if (type.leave_type == "Probation")
+                                        {
+                                            <option value="@type.leave_id" disabled class="text-muted">
+                                                @type.leave_type (Policy-based / HR-controlled)
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@type.leave_id">@type.leave_type</option>
+                                        }
+                                    }
+                                }
+                            </select>
+                            <div class="form-text small text-muted mt-2">
+                                <i class="fas fa-info-circle me-1"></i> Only Vacation and Sick leave can be requested here.
+                            </div>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label for="start_date" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">Start Date</label>
+                                <input name="start_date" id="start_date" type="date" class="form-control bg-light" required 
+                                       value="@Model.start_date.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="col-6">
+                                <label for="end_date" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">End Date</label>
+                                <input name="end_date" id="end_date" type="date" class="form-control bg-light" required 
+                                       value="@Model.end_date.ToString("yyyy-MM-dd")" />
+                            </div>
+                        </div>
+
+                        <!-- Justification -->
+                        <div class="mb-4">
+                            <label for="justification" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">Reason / Justification</label>
+                            <textarea name="justification" id="justification" class="form-control bg-light" rows="3" placeholder="Explain the reason for your request..." required>@Model.justification</textarea>
+                        </div>
+
+                        <!-- ✅ ADDED: Attachment Field -->
+                        <div class="mb-4">
+                            <label for="attachment" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">Attachment (Optional)</label>
+                            <input type="file" name="attachment" id="attachment" class="form-control bg-light" />
+                            <div class="form-text small text-muted">Upload medical certificates or supporting documents.</div>
+                        </div>
+
+                        <hr class="my-4 text-muted opacity-25" />
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm" style="background-color: #2c5364; border-color: #2c5364;">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Request
+                            </button>
+                            <a href="/Leave/Leave/MyLeave" class="btn btn-outline-secondary btn-lg border-0">
+                                Cancel
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-wider { letter-spacing: 1px; }
+    .form-control:focus, .form-select:focus {
+        border-color: #2c5364;
+        box-shadow: 0 0 0 0.2rem rgba(44, 83, 100, 0.25);
+    }
+</style>

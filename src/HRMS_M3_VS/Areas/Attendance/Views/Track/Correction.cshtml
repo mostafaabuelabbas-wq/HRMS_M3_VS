@@ -4,49 +4,122 @@
     ViewData["Title"] = "Correction Request";
 }
 
-<h2 class="mb-4 text-warning"><i class="fa fa-tools me-2"></i>Attendance Correction</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-5">
 
-@if (ViewBag.Error != null)
-{
-    <div class="alert alert-danger">
-        <i class="fa fa-exclamation-triangle"></i> @ViewBag.Error
-    </div>
-}
+            <!-- Error Alert (Floating above card) -->
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                    <div>@ViewBag.Error</div>
+                </div>
+            }
 
-<div class="card shadow-sm">
-    <div class="card-body">
-        <form method="post">
-            <input type="hidden" asp-for="employee_id" />
+            <!-- Main Card -->
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
 
-            <!-- Date -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Date of Incident</label>
-                <input asp-for="date" type="date" class="form-control" required />
+                <!-- Header: Dark Corporate Navy -->
+                <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);">
+                    <div class="d-flex flex-column align-items-center">
+                        <!-- Icon Circle -->
+                        <div class="bg-white bg-opacity-10 rounded-circle p-3 mb-3">
+                            <i class="bi bi-tools fs-2 text-warning"></i>
+                        </div>
+                        <h4 class="fw-semibold mb-1">Attendance Correction</h4>
+                        <p class="mb-0 opacity-75 small">Resolve discrepancies in your timesheet</p>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form method="post">
+                        <input type="hidden" asp-for="employee_id" />
+
+                        <!-- Date Input -->
+                        <div class="mb-4">
+                            <label asp-for="date" class="form-label fw-medium text-muted small text-uppercase tracking-wider">Date of Incident</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-calendar-event text-secondary"></i>
+                                </span>
+                                <input asp-for="date" type="date" class="form-control border-start-0 ps-0 bg-light" required />
+                            </div>
+                        </div>
+
+                        <!-- Correction Type Select -->
+                        <div class="mb-4">
+                            <label asp-for="correction_type" class="form-label fw-medium text-muted small text-uppercase tracking-wider">Correction Type</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-list-check text-secondary"></i>
+                                </span>
+                                <select asp-for="correction_type" class="form-select border-start-0 ps-0 bg-light">
+                                    <option value="Missed Check-In">Missed Check-In</option>
+                                    <option value="Missed Check-Out">Missed Check-Out</option>
+                                    <option value="Late Arrival">Excused Late Arrival</option>
+                                    <option value="Early Departure">Excused Early Departure</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Reason Textarea -->
+                        <div class="mb-4">
+                            <label asp-for="reason" class="form-label fw-medium text-muted small text-uppercase tracking-wider">Reason / Justification</label>
+                            <textarea asp-for="reason" class="form-control bg-light" rows="4" placeholder="Please explain the reason for this correction request..." style="resize: none;" required></textarea>
+                        </div>
+
+                        <hr class="my-4 border-light" />
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow-sm" style="background-color: #2c5364; border-color: #2c5364;">
+                                <i class="bi bi-send-fill me-2"></i>Submit Request
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg rounded-3 border-0">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <!-- Correction Type -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Type</label>
-                <select asp-for="correction_type" class="form-control">
-                    <option value="Missed Check-In">Missed Check-In</option>
-                    <option value="Missed Check-Out">Missed Check-Out</option>
-                    <option value="Late Arrival">Excused Late Arrival</option>
-                    <option value="Early Departure">Excused Early Departure</option>
-                </select>
-            </div>
-
-            <!-- Reason -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Reason</label>
-                <textarea asp-for="reason" class="form-control" rows="3" placeholder="Explain why..." required></textarea>
-            </div>
-
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-warning text-dark fw-bold">
-                    Submit Request
-                </button>
-                <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
+
+<!-- Custom Styles for Consistency -->
+<style>
+    .tracking-wider {
+        letter-spacing: 0.8px;
+    }
+
+    /* Focus States */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #2c5364;
+        box-shadow: 0 0 0 0.2rem rgba(44, 83, 100, 0.25);
+        background-color: #fff !important;
+    }
+
+    /* Input Group adjustments */
+    .input-group-text {
+        border-color: #ced4da;
+    }
+
+    .form-control, .form-select {
+        border-color: #ced4da;
+    }
+
+    /* Button Hover */
+    .btn-primary:hover {
+        background-color: #203a43 !important;
+        border-color: #203a43 !important;
+    }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,62 +1,188 @@
 ﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.EmployeeDto>
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-dark">My Team</h2>
+<div class="container-fluid py-5 bg-light min-vh-100">
+    <!-- Header Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-12 col-xl-10">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-end border-bottom pb-3">
+                <div>
+                    <h6 class="text-uppercase text-primary fw-bold tracking-wide mb-1">Team Management</h6>
+                    <h1 class="display-6 fw-bold text-dark mb-0">Direct Reports</h1>
+                </div>
+                <div class="text-md-end mt-3 mt-md-0">
+                    <div class="d-inline-flex align-items-center bg-white px-4 py-2 rounded-pill shadow-sm border">
+                        <span class="fs-5 fw-bold text-dark me-2">@Model.Count()</span>
+                        <span class="text-muted small text-uppercase">Total Members</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="card shadow border-0 rounded-3 overflow-hidden">
-        <div class="card-body p-0">
-            <table class="table table-hover table-striped align-middle mb-0">
-                <thead class="bg-dark text-white">
-                    <tr>
-                        <th class="py-3 ps-4">Name</th>
-                        <th class="py-3">Department</th>
-                        <th class="py-3">Position</th>
-                        <th class="py-3">Status</th>
-                        <th class="py-3 text-end pe-4">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Any())
+    <!-- Content Grid -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <div class="mb-4 opacity-25">
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                    <h4 class="text-muted fw-normal">No team members found</h4>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var item in Model)
                     {
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">
-                                <i class="fas fa-users-slash fa-2x mb-2"></i><br />
-                                You do not have any team members assigned yet.
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Model)
+                        // Initials Logic
+                        string initials = "??";
+                        string colorClass = "bg-primary"; // Default
+
+                        if (!string.IsNullOrWhiteSpace(item.Full_Name))
                         {
-                            <tr>
-                                <td class="ps-4 fw-semibold text-primary">
-                                    @item.Full_Name
-                                </td>
-                                <td>@(item.Department ?? "Not Assigned")</td>
-                                <td>@(item.Position ?? "Not Assigned")</td>
-                                <td>
-                                    <span class="badge bg-info text-dark">
-                                        @(item.Employment_Status ?? "Unknown")
+                            var parts = item.Full_Name.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length >= 2) initials = $"{parts[0][0]}{parts[parts.Length - 1][0]}".ToUpper();
+                            else if (parts.Length == 1 && parts[0].Length >= 2) initials = parts[0].Substring(0, 2).ToUpper();
+                            else if (parts.Length == 1) initials = parts[0].Substring(0, 1).ToUpper();
+
+                            // Generate a consistent pastel color based on the name length (Visual variety)
+                            int nameLen = item.Full_Name.Length;
+                            colorClass = (nameLen % 4) switch
+                            {
+                                0 => "bg-primary",
+                                1 => "bg-success",
+                                2 => "bg-info",
+                                _ => "bg-indigo"
+                            };
+                        }
+
+                        // Status Logic
+                        var status = item.Employment_Status ?? "Unknown";
+                        var statusBadge = status.ToLower() switch
+                        {
+                            "active" => "bg-success-subtle text-success",
+                            "inactive" or "terminated" => "bg-danger-subtle text-danger",
+                            "on leave" => "bg-warning-subtle text-warning-emphasis",
+                            _ => "bg-secondary-subtle text-secondary"
+                        };
+
+                        <div class="col-md-6 col-lg-4 col-xl-3">
+                            <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden hover-card group-card">
+                                <!-- Top Accent Line -->
+                                <div class="card-top-line @colorClass"></div>
+
+                                <div class="card-body text-center pt-4 pb-3">
+                                    <!-- Avatar -->
+                                    <div class="avatar-circle mx-auto mb-3 @colorClass bg-opacity-10 text-white shadow-sm">
+                                        <span class="fs-4 fw-bold">@initials</span>
+                                    </div>
+
+                                    <!-- Name & Role -->
+                                    <h5 class="fw-bold text-dark mb-1 text-truncate px-2" title="@item.Full_Name">
+                                        @item.Full_Name
+                                    </h5>
+                                    <p class="text-muted small mb-3 text-truncate">
+                                        @(item.Position ?? "Position Not Set")
+                                    </p>
+
+                                    <!-- Status Badge -->
+                                    <span class="badge rounded-pill fw-medium px-3 py-2 mb-4 @statusBadge">
+                                        @status
                                     </span>
-                                </td>
-                                <td class="text-end pe-4">
-                                    <!-- Using Home/Profile because the View page is shared -->
+
+                                    <!-- Info Grid -->
+                                    <div class="row g-0 border-top border-bottom py-2 mb-3 text-start bg-light rounded-2">
+                                        <div class="col-6 border-end px-3 py-1">
+                                            <div class="text-xs text-muted text-uppercase fw-bold">ID</div>
+                                            <div class="small fw-semibold text-dark text-truncate">@item.Employee_Id</div>
+                                        </div>
+                                        <div class="col-6 px-3 py-1">
+                                            <div class="text-xs text-muted text-uppercase fw-bold">Dept</div>
+                                            <div class="small fw-semibold text-dark text-truncate">@(item.Department ?? "-")</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action -->
                                     <a asp-area="Employee"
                                        asp-controller="Home"
                                        asp-action="Profile"
                                        asp-route-id="@item.Employee_Id"
-                                       class="btn btn-sm btn-primary shadow-sm">
+                                       class="btn btn-outline-dark btn-sm w-100 rounded-2 fw-medium stretched-link transition-btn">
                                         View Profile
                                     </a>
-                                </td>
-                            </tr>
-                        }
+                                </div>
+                            </div>
+                        </div>
                     }
-                </tbody>
-            </table>
+                </div>
+            }
         </div>
     </div>
 </div>
+
+<style>
+    /* Professional Color Palette */
+    .bg-indigo {
+        background-color: #6610f2 !important;
+    }
+
+    /* Typography Tweaks */
+    .tracking-wide {
+        letter-spacing: 1.5px;
+        font-size: 0.7rem;
+    }
+
+    .text-xs {
+        font-size: 0.65rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Card Styling */
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: #fff;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        }
+
+    /* Top Accent Line */
+    .card-top-line {
+        height: 4px;
+        width: 100%;
+    }
+
+    /* Avatar Styling */
+    .avatar-circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* Create a gradient effect for the avatar background */
+        background-image: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
+    }
+
+    /* Button Hover */
+    .transition-btn {
+        transition: all 0.2s;
+    }
+
+    .group-card:hover .transition-btn {
+        background-color: #212529;
+        color: #fff;
+        border-color: #212529;
+    }
+
+    /* Media Query Fix */
+    @@media (max-width: 768px) {
+        .display-6 {
+            font-size: 1.75rem;
+        }
+    }
+</style>
