@@ -3,43 +3,148 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Assign Shift to Department</h2>
+<div class="container py-5" style="max-width: 700px;">
 
-@if (ViewBag.Error != null)
-{
-    <div class="alert alert-danger">@ViewBag.Error</div>
-}
-
-<form method="post" class="card p-4 shadow-sm">
-    <div class="mb-3">
-        <label class="form-label">Department</label>
-        <select asp-for="department_id" class="form-control"
-                asp-items="@(new SelectList(ViewBag.Departments, "department_id", "department_name"))" required>
-            <option value="">-- Select Department --</option>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Shift</label>
-
-        <!-- FIXED: changed "ShiftId" to "shift_id" and "Name" to "name" -->
-        <select asp-for="shift_id" class="form-control"
-                asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
-            <option value="">-- Select Shift --</option>
-        </select>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label class="form-label">Start Date</label>
-            <input asp-for="start_date" type="date" class="form-control" required />
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-3 me-3">
+            <i class="fa fa-building fa-2x"></i>
         </div>
-        <div class="col-md-6 mb-3">
-            <label class="form-label">End Date</label>
-            <input asp-for="end_date" type="date" class="form-control" required />
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Department Assignment</h2>
+            <p class="text-muted mb-0">Bulk assign a shift schedule to an entire department</p>
         </div>
     </div>
 
-    <button type="submit" class="btn btn-warning">Assign to All Active Employees</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+    <!-- Error Alert -->
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <i class="fa fa-exclamation-triangle fs-5 me-3"></i>
+            <div>@ViewBag.Error</div>
+        </div>
+    }
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <!-- Gradient Top Accent (Red/Orange for Bulk Action) -->
+        <div style="height: 6px; background: linear-gradient(90deg, #dc3545 0%, #fd7e14 100%);"></div>
+
+        <div class="card-body p-4 p-md-5 bg-white">
+            <form method="post">
+
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h6 class="text-uppercase text-muted fw-bold tracking-wide mb-0 small">
+                        <i class="fa fa-layer-group me-2"></i>Bulk Configuration
+                    </h6>
+                    <span class="badge bg-warning text-dark border border-warning rounded-pill">
+                        <i class="fa fa-users me-1"></i> Affects Multiple Users
+                    </span>
+                </div>
+
+                <!-- Department Dropdown -->
+                <div class="mb-4">
+                    <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Target Department</label>
+                    <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                        <span class="input-group-text border-0 bg-light text-danger ps-3">
+                            <i class="fa fa-sitemap"></i>
+                        </span>
+                        <select asp-for="department_id" class="form-select border-0 bg-light fw-bold py-3"
+                                asp-items="@(new SelectList(ViewBag.Departments, "department_id", "department_name"))" required>
+                            <option value="">Select Department...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Shift Dropdown -->
+                <div class="mb-4">
+                    <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Shift Schedule</label>
+                    <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                        <span class="input-group-text border-0 bg-light text-danger ps-3">
+                            <i class="fa fa-clock"></i>
+                        </span>
+                        <select asp-for="shift_id" class="form-select border-0 bg-light fw-bold py-3"
+                                asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
+                            <option value="">Select Shift...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Date Range -->
+                <div class="row g-3 mb-5">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Start Date</label>
+                        <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                            <span class="input-group-text border-0 bg-light text-danger ps-3">
+                                <i class="fa fa-calendar-plus"></i>
+                            </span>
+                            <input asp-for="start_date" type="date" class="form-control border-0 bg-light fw-bold py-3" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">End Date</label>
+                        <div class="input-group shadow-sm rounded-2 overflow-hidden">
+                            <span class="input-group-text border-0 bg-light text-danger ps-3">
+                                <i class="fa fa-calendar-minus"></i>
+                            </span>
+                            <input asp-for="end_date" type="date" class="form-control border-0 bg-light fw-bold py-3" required />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex gap-3 pt-2">
+                    <a asp-action="Index" class="btn btn-light btn-lg w-100 fw-bold text-muted border">Cancel</a>
+                    <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold shadow-sm hover-lift btn-gradient text-white">
+                        <i class="fa fa-check-double me-2"></i> Assign to All
+                    </button>
+                </div>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted fst-italic">
+                        Note: This will update schedules for all active employees in the selected department.
+                    </small>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* --- Typography --- */
+    .tracking-wide {
+        letter-spacing: 0.8px;
+        font-size: 0.7rem;
+    }
+
+    /* --- Input Styling --- */
+    .input-group:focus-within {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important; /* Red focus ring */
+        border: 1px solid #dc3545;
+    }
+
+    .form-control:focus, .form-select:focus {
+        box-shadow: none;
+        background-color: #fff !important;
+    }
+
+    .input-group-text {
+        background-color: #fff5f5; /* Light red background for icons */
+    }
+
+    /* --- Button Gradient --- */
+    .btn-gradient {
+        background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        border: none;
+    }
+
+    /* --- Hover Effects --- */
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.2) !important;
+        }
+</style>

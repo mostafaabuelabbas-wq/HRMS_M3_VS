@@ -1,5 +1,6 @@
 ﻿using HRMS_M3_VS.Areas.Attendance.Services;
 using HRMS_M3_VS.Areas.Employee.Services;
+using HRMS_M3_VS.Areas.Leave.Services;
 using HRMS_M3_VS.Services;
 using Microsoft.AspNetCore.Authentication.Cookies; // <--- 1. ADD THIS NAMESPACE
 using Microsoft.Data.SqlClient;
