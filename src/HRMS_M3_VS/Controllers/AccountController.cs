@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using HRMS_M3_VS.Services;
-using HRMS_M3_VS.Models; // Ensure you have the LoginViewModel here
+using HRMS_M3_VS.Models;
 using Dapper;
 
 namespace HRMS_M3_VS.Controllers
@@ -27,46 +27,60 @@ namespace HRMS_M3_VS.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            // Note: We ignored ModelState.IsValid for password length to allow "anything"
             if (string.IsNullOrEmpty(model.Email)) return View(model);
 
-            // CALL THE PROCEDURE
-            // We pass whatever password the user typed, but SQL ignores it.
-            var user = (await _db.QueryAsync<dynamic>("UserLogin", new
+            // 1. GET ALL ROWS (Do not use FirstOrDefault here yet)
+            // If the user has 3 roles, this returns 3 rows.
+            var userRows = await _db.QueryAsync<dynamic>("UserLogin", new
             {
                 Email = model.Email,
                 Password = model.Password ?? "dummy"
-            })).FirstOrDefault();
+            });
 
-            if (user == null)
+            // 2. CHECK IF USER EXISTS
+            if (!userRows.Any())
             {
                 TempData["Error"] = "Email not found in system.";
                 return View(model);
             }
 
-            // CREATE SESSION
+            // 3. GET BASIC INFO FROM FIRST ROW
+            // (ID and Name are the same across all rows)
+            var userInfo = userRows.First();
+
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, ((int)user.employee_id).ToString()),
-                new Claim(ClaimTypes.Name, (string)user.full_name),
-                new Claim(ClaimTypes.Role, (string)user.role_name ?? "Employee")
+                new Claim(ClaimTypes.NameIdentifier, ((int)userInfo.employee_id).ToString()),
+                new Claim(ClaimTypes.Name, (string)userInfo.full_name)
             };
 
+            // 4. LOOP THROUGH ALL ROWS TO ADD ALL ROLES
+            // This ensures User.IsInRole("Manager") works if the user has multiple roles
+            foreach (var row in userRows)
+            {
+                if (!string.IsNullOrEmpty((string)row.role_name))
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, (string)row.role_name));
+                }
+            }
+
+            // Fallback: If DB returned no role name, default to "Employee"
+            if (!claims.Any(c => c.Type == ClaimTypes.Role))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Employee"));
+            }
+
+            // 5. CREATE SESSION
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
-            return RedirectToAction("Index", "Dashboard"); // Or Home/Index
+            return RedirectToAction("Index", "Dashboard");
         }
 
-        
-        // GET: /Account/Logout
         public async Task<IActionResult> Logout()
         {
-            // 1. Delete the Cookie
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            // 2. Redirect to Login Page
             return RedirectToAction("Login", "Account");
         }
     }
