@@ -1543,55 +1543,32 @@ BEGIN
     WHERE is_active = 1; -- Only show active employees
 END;
 GO
-SELECT * FROM ShiftCycle;
-SELECT *
-FROM ShiftCycleAssignment
-ORDER BY cycle_id, order_number;
 
-SELECT *
-FROM ShiftAssignment
-ORDER BY assignment_id DESC;
-
-SELECT shift_id, name, type, start_time, end_time 
-FROM ShiftSchedule
-ORDER BY shift_id;
-
+USE HRMS;
 GO
-CREATE OR ALTER PROCEDURE GetApprovedLeavesForSync
-AS
-BEGIN
-    SELECT 
-        lr.request_id,
-        lr.employee_id,
-        e.first_name + ' ' + e.last_name AS employee_name,
-        l.leave_type,
-        lr.approval_timing AS start_date,
-        DATEADD(DAY, lr.duration, lr.approval_timing) AS end_date,
-        lr.status
-    FROM LeaveRequest lr
-    INNER JOIN Employee e ON lr.employee_id = e.employee_id
-    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
-    -- Only show Approved ones. 'Synced' ones will now disappear.
-    WHERE lr.status IN ('Approved', 'Finalized', 'Approved - Balance Updated')
-    ORDER BY lr.approval_timing DESC;
-END;
-GO
-
 
 CREATE OR ALTER PROCEDURE GetAttendanceBreaches
-    @DepartmentID INT = NULL,
-    @Date DATE
+    @DepartmentID INT = NULL, -- Optional Filter
+    @Date DATE -- The specific day to check
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- 1. Get Policy
+    -- 1. Get the Active Lateness Policy (Assuming 1 active policy for simplicity)
     DECLARE @GracePeriod INT;
-    SELECT TOP 1 @GracePeriod = lp.grace_period_mins
-    FROM LatenessPolicy lp JOIN PayrollPolicy pp ON lp.policy_id = pp.policy_id
+    DECLARE @DeductionRate DECIMAL(5,2);
+
+    -- Fetch the most recent active policy
+    SELECT TOP 1 
+        @GracePeriod = lp.grace_period_mins,
+        @DeductionRate = lp.deduction_rate
+    FROM LatenessPolicy lp
+    JOIN PayrollPolicy pp ON lp.policy_id = pp.policy_id
     ORDER BY pp.effective_date DESC;
 
+    -- Fallback if no policy exists
     SET @GracePeriod = ISNULL(@GracePeriod, 0);
+    SET @DeductionRate = ISNULL(@DeductionRate, 0);
 
     -- 2. Calculate Breaches
     SELECT 
@@ -1599,19 +1576,21 @@ BEGIN
         e.first_name + ' ' + e.last_name AS employee_name,
         d.department_name,
         
+        -- Times
         ss.start_time AS shift_start,
         ss.end_time AS shift_end,
         CAST(a.entry_time AS TIME) AS actual_in,
         CAST(a.exit_time AS TIME) AS actual_out,
 
-        -- Raw Late
+        -- 1. Calculate Raw Lateness (In Minutes)
         CASE 
             WHEN CAST(a.entry_time AS TIME) > ss.start_time 
             THEN DATEDIFF(MINUTE, ss.start_time, CAST(a.entry_time AS TIME)) 
             ELSE 0 
         END AS raw_late_minutes,
 
-        -- Penalized Late (0 if within grace)
+        -- 2. Apply Grace Period Logic
+        -- If Late <= Grace, then Late = 0. Otherwise, count full lateness.
         CASE 
             WHEN CAST(a.entry_time AS TIME) > ss.start_time 
                  AND DATEDIFF(MINUTE, ss.start_time, CAST(a.entry_time AS TIME)) > @GracePeriod
@@ -1619,7 +1598,7 @@ BEGIN
             ELSE 0 
         END AS penalized_late_minutes,
 
-        -- Early Leave
+        -- 3. Calculate Early Leave (No grace period usually applies to leaving early)
         CASE 
             WHEN a.exit_time IS NOT NULL AND CAST(a.exit_time AS TIME) < ss.end_time
             THEN DATEDIFF(MINUTE, CAST(a.exit_time AS TIME), ss.end_time)
@@ -1634,12 +1613,9 @@ BEGIN
     JOIN ShiftSchedule ss ON a.shift_id = ss.shift_id
     WHERE CAST(a.entry_time AS DATE) = @Date
       AND (@DepartmentID IS NULL OR e.department_id = @DepartmentID)
-      
-      -- ==========================================================
-      -- THE FIX: Show anyone who is LATE, not just Penalized
-      -- ==========================================================
+      -- Only show records where there is a violation
       AND (
-          (CAST(a.entry_time AS TIME) > ss.start_time) -- Simply Late (Raw)
+          (CAST(a.entry_time AS TIME) > DATEADD(MINUTE, @GracePeriod, ss.start_time)) -- Late > Grace
           OR 
           (a.exit_time IS NOT NULL AND CAST(a.exit_time AS TIME) < ss.end_time) -- Early Out
       );
