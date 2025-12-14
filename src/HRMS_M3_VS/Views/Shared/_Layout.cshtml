@@ -133,19 +133,13 @@
                     <i class="fas fa-tasks"></i> Attendance Ops
                 </a>
             }
-
-            <!-- 4. LEAVES SECTION (UPDATED) -->
-            
-            <!-- My Leave (Employees View Balance & History) -->
+            <!-- 4. LEAVES SECTION -->
+            <!-- My Leave (Employees) -->
             <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="MyLeave">
                 <i class="fas fa-calendar-check"></i> My Leave
-            <!-- ============================================== -->
-            <!-- 4. LEAVES (Everyone) -->
-            <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
-                <i class="fas fa-calendar-alt"></i> Leave Management
             </a>
 
-            <!-- ✅ UPDATED: Leave Management (Strictly Manager Only) -->
+            <!-- Leave Management (Manager only) -->
             @if (User.IsInRole("Manager"))
             {
                 <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
@@ -153,7 +147,7 @@
                 </a>
             }
 
-            <!-- ✅ ADDED: HR Configuration (Strictly HR Only) -->
+            <!-- Leave Configuration (HR only) -->
             @if (User.IsInRole("HRAdmin"))
             {
                 <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
