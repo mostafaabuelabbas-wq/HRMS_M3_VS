@@ -17,8 +17,8 @@
         }
 
         /* ------------------------------
-                    SIDEBAR (Merged Styles)
-                   ------------------------------ */
+                            SIDEBAR (Merged Styles)
+                           ------------------------------ */
         .sidebar {
             position: fixed;
             left: 0;
@@ -162,7 +162,7 @@
 
             <!-- 6. ROLE SPECIFIC SECTIONS -->
             <!-- MANAGER ONLY -->
-            @if (User.IsInRole("Manager") ||  User.IsInRole("SystemAdmin"))
+            @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin"))
             {
                 <a class="nav-link" asp-area="Employee" asp-controller="Manager" asp-action="Index">
                     <i class="fas fa-users-cog"></i> My Team
@@ -211,9 +211,28 @@
                     <div class="me-2">
                         <i class="fas fa-user-circle fa-2x"></i>
                     </div>
-                    <div>
-                        <span class="d-block text-white fw-bold">@User.Identity.Name</span>
-                        <span class="d-block" style="font-size: 0.8em;">Logged In</span>
+                    <div style="overflow: hidden;">
+                        <span class="d-block text-white fw-bold text-truncate">@User.Identity.Name</span>
+
+                        <!-- UPDATED: Display Highest Priority Role -->
+                        <span class="d-block text-truncate" style="font-size: 0.8em; opacity: 0.8;">
+                            @if (User.IsInRole("SystemAdmin"))
+                            {
+                                <span>System Admin</span>
+                            }
+                            else if (User.IsInRole("HRAdmin"))
+                            {
+                                <span>HR Admin</span>
+                            }
+                            else if (User.IsInRole("Manager"))
+                            {
+                                <span>Manager</span>
+                            }
+                            else
+                            {
+                                <span>Employee</span>
+                            }
+                        </span>
                     </div>
                 </div>
             }
