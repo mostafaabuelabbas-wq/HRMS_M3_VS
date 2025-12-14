@@ -4,56 +4,157 @@
     ViewData["Title"] = "Configure Split Shift";
 }
 
-<h2 class="mb-4">Configure Split Shift</h2>
+<div class="container py-5" style="max-width: 900px;">
 
-<!-- Display Error Message from SQL if exists -->
-@if (ViewBag.Error != null)
-{
-    <div class="alert alert-danger">
-        <i class="fa fa-exclamation-triangle"></i> @ViewBag.Error
-    </div>
-}
-
-<form method="post" class="card p-4 shadow-sm">
-
-    <!-- Shift Name -->
-    <div class="mb-3">
-        <label class="form-label">Base Shift Name</label>
-        <input asp-for="Name" class="form-control" placeholder="e.g. Security Split" required />
-    </div>
-
-    <div class="row">
-        <!-- Slot 1 -->
-        <div class="col-md-6">
-            <div class="card bg-light mb-3">
-                <div class="card-header fw-bold">First Slot</div>
-                <div class="card-body">
-                    <label>Start</label>
-                    <input asp-for="FirstSlotStart" type="time" class="form-control mb-2" required />
-
-                    <label>End</label>
-                    <input asp-for="FirstSlotEnd" type="time" class="form-control" required />
-                </div>
-            </div>
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-success bg-opacity-10 text-success rounded-circle p-3 me-3">
+            <i class="fa fa-columns fa-2x"></i>
         </div>
-
-        <!-- Slot 2 -->
-        <div class="col-md-6">
-            <div class="card bg-light mb-3">
-                <div class="card-header fw-bold">Second Slot</div>
-                <div class="card-body">
-                    <label>Start</label>
-                    <input asp-for="SecondSlotStart" type="time" class="form-control mb-2" required />
-
-                    <label>End</label>
-                    <input asp-for="SecondSlotEnd" type="time" class="form-control" required />
-                </div>
-            </div>
+        <div>
+            <h2 class="fw-bold text-dark mb-1">Split Shift Configuration</h2>
+            <p class="text-muted mb-0">Define two distinct working periods for a single shift</p>
         </div>
     </div>
 
-    <button type="submit" class="btn btn-success">
-        <i class="fa fa-save"></i> Save Configuration
-    </button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+    <!-- Error Alert -->
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-2 me-3">
+                <i class="fa fa-exclamation-triangle"></i>
+            </div>
+            <div class="fw-medium">@ViewBag.Error</div>
+        </div>
+    }
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-body p-4 p-md-5">
+
+            <form method="post">
+
+                <!-- Base Info -->
+                <div class="mb-5">
+                    <label class="form-label text-muted small fw-bold text-uppercase tracking-wide">Shift Identity</label>
+                    <div class="form-floating">
+                        <input asp-for="Name" class="form-control bg-light border-0 fw-bold fs-5" placeholder="e.g. Security Split" required />
+                        <label asp-for="Name" class="text-muted">Shift Name</label>
+                    </div>
+                </div>
+
+                <!-- Visual Split Container -->
+                <div class="row g-4 position-relative">
+
+                    <!-- Connector Line (Desktop Only) -->
+                    <div class="d-none d-md-block position-absolute top-50 start-50 translate-middle text-muted opacity-25" style="z-index: 0; width: 100%; border-top: 2px dashed #ccc;"></div>
+                    <div class="d-none d-md-flex position-absolute top-50 start-50 translate-middle bg-white p-2 rounded-circle border text-muted small fw-bold shadow-sm" style="z-index: 1; width: auto;">
+                        BREAK
+                    </div>
+
+                    <!-- Slot 1 -->
+                    <div class="col-md-6 position-relative" style="z-index: 2;">
+                        <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden transition-hover">
+                            <div class="card-header bg-primary text-white py-3 px-4 border-0">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa fa-sun fs-4 me-2 opacity-75"></i>
+                                    <h6 class="mb-0 fw-bold">First Segment</h6>
+                                </div>
+                            </div>
+                            <div class="card-body p-4 bg-primary bg-opacity-10">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="FirstSlotStart" type="time" class="form-control border-0 shadow-sm fw-bold" required />
+                                    <label asp-for="FirstSlotStart" class="text-primary fw-bold">Start Time</label>
+                                </div>
+                                <div class="form-floating">
+                                    <input asp-for="FirstSlotEnd" type="time" class="form-control border-0 shadow-sm fw-bold" required />
+                                    <label asp-for="FirstSlotEnd" class="text-primary fw-bold">End Time</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slot 2 -->
+                    <div class="col-md-6 position-relative" style="z-index: 2;">
+                        <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden transition-hover">
+                            <div class="card-header bg-indigo text-white py-3 px-4 border-0">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa fa-moon fs-4 me-2 opacity-75"></i>
+                                    <h6 class="mb-0 fw-bold">Second Segment</h6>
+                                </div>
+                            </div>
+                            <div class="card-body p-4 bg-indigo-subtle">
+                                <div class="form-floating mb-3">
+                                    <input asp-for="SecondSlotStart" type="time" class="form-control border-0 shadow-sm fw-bold" required />
+                                    <label asp-for="SecondSlotStart" class="text-indigo fw-bold">Start Time</label>
+                                </div>
+                                <div class="form-floating">
+                                    <input asp-for="SecondSlotEnd" type="time" class="form-control border-0 shadow-sm fw-bold" required />
+                                    <label asp-for="SecondSlotEnd" class="text-indigo fw-bold">End Time</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex gap-3 mt-5 pt-3 border-top">
+                    <a asp-action="Index" class="btn btn-light btn-lg w-100 fw-bold text-muted border">Cancel</a>
+                    <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm hover-lift">
+                        <i class="fa fa-save me-2"></i> Save Configuration
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* --- Colors --- */
+    .bg-indigo {
+        background-color: #6610f2;
+    }
+
+    .text-indigo {
+        color: #6610f2;
+    }
+
+    .bg-indigo-subtle {
+        background-color: #e0cffc;
+    }
+
+    /* --- Typography --- */
+    .tracking-wide {
+        letter-spacing: 1px;
+        font-size: 0.75rem;
+    }
+
+    /* --- Form Styling --- */
+    .form-floating > .form-control {
+        height: 3.5rem;
+        line-height: 1.25;
+    }
+
+    .form-control:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+    }
+
+    /* --- Hover Effects --- */
+    .transition-hover {
+        transition: transform 0.3s ease;
+    }
+
+        .transition-hover:hover {
+            transform: translateY(-5px);
+        }
+
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(25, 135, 84, 0.2) !important;
+        }
+</style>

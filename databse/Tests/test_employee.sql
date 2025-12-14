@@ -237,56 +237,10 @@ EXEC NotifyLeaveStatusChange
 
 -- 1. Set the ID of the Manager you want to assign the team to
 -- (Make sure this matches the user you are logging in as!)
-DECLARE @ManagerID INT = (SELECT employee_id FROM Employee WHERE full_name = 'Mohamed Amr');
-
--- Verify we found the manager
-IF @ManagerID IS NULL
-BEGIN
-    PRINT 'Manager not found! Check the name.';
-    RETURN;
-END
-
--- 2. Update the Employee Table directly
--- This is what your website reads.
-UPDATE Employee
-SET manager_id = @ManagerID
-WHERE employee_id IN (
-    SELECT TOP 15 employee_id
-    FROM Employee
-    WHERE department_id = (SELECT department_id FROM Department WHERE department_name = 'IT')
-      AND employee_id <> @ManagerID -- Prevent managing yourself
-);
-
-
----------------------------------------------------
--- 1. Get the IDs for the new Managers
----------------------------------------------------
-DECLARE @OmarID INT = (SELECT employee_id FROM Employee WHERE full_name = 'Omar Khalaf');
-DECLARE @AyaID INT  = (SELECT employee_id FROM Employee WHERE full_name = 'Aya Nabil');
-
--- Debug check
-IF @OmarID IS NULL PRINT '❌ Error: Could not find Omar Khalaf';
-IF @AyaID IS NULL  PRINT '❌ Error: Could not find Aya Nabil';
-
-IF @OmarID IS NOT NULL AND @AyaID IS NOT NULL
-BEGIN
-    ---------------------------------------------------
-    -- 2. Assign FINANCE employees to Omar
-    ---------------------------------------------------
-    UPDATE Employee
-    SET manager_id = @OmarID
-    WHERE department_id = (SELECT department_id FROM Department WHERE department_name = 'Finance')
-      AND employee_id <> @OmarID; -- Omar shouldn't manage himself
-
-    PRINT '✅ Finance Team assigned to Omar.';
-
-    ---------------------------------------------------
-    -- 3. Assign HR employees to Aya
-    ---------------------------------------------------
-    UPDATE Employee
-    SET manager_id = @AyaID
-    WHERE department_id = (SELECT department_id FROM Department WHERE department_name = 'HR')
-      AND employee_id <> @AyaID; -- Aya shouldn't manage herself
-
-    PRINT '✅ HR Team assigned to Aya.';
-END
+SELECT *
+FROM EmployeeHierarchy
+WHERE manager_id = 6;
+SELECT e.employee_id, e.first_name, e.last_name
+FROM EmployeeHierarchy h
+JOIN Employee e ON e.employee_id = h.employee_id
+WHERE h.manager_id = 6;

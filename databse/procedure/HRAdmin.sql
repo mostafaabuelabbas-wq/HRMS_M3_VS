@@ -151,85 +151,56 @@ GO
 
 
 -- 3  ApproveLeaveRequest
-CREATE PROCEDURE ApproveLeaveRequest
+CREATE OR ALTER PROCEDURE ApproveLeaveRequest
     @LeaveRequestID INT,
     @ApproverID INT,
-    @Status VARCHAR(20)
+    @Status VARCHAR(20) = 'Approved' -- Added this parameter to match your C# code
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        DECLARE @LeaveID INT;
-        DECLARE @EmployeeID INT;
-        DECLARE @LeaveType VARCHAR(50);
-
-        -- Validate request exists
+        -- 1. Validate Request exists
         IF NOT EXISTS (SELECT 1 FROM LeaveRequest WHERE request_id = @LeaveRequestID)
         BEGIN
-            RAISERROR('Leave request does not exist.', 16, 1);
+            RAISERROR('Leave request not found.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
-        END;
+        END
 
-        -- Validate approver exists
-        IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @ApproverID)
-        BEGIN
-            RAISERROR('Approver does not exist.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
-        END;
-
-        -- Fetch request data
-        SELECT 
-            @LeaveID = leave_id,
-            @EmployeeID = employee_id
-        FROM LeaveRequest
-        WHERE request_id = @LeaveRequestID;
-
-        -- Get leave type
-        SELECT @LeaveType = leave_type
-        FROM [Leave]
-        WHERE leave_id = @LeaveID;
-
-        -- Update request status
+        -- 2. Update Status
         UPDATE LeaveRequest
         SET status = @Status,
             approval_timing = GETDATE()
         WHERE request_id = @LeaveRequestID;
 
-        -- Update subtype table IF Vacation leave
-        IF @LeaveType = 'Vacation'
-        BEGIN
-            UPDATE VacationLeave
-            SET approving_manager = @ApproverID
-            WHERE leave_id = @LeaveID;
-        END
+        -- 3. Notify Employee
+        DECLARE @EmployeeID INT;
+        SELECT @EmployeeID = employee_id FROM LeaveRequest WHERE request_id = @LeaveRequestID;
 
-        -- Create notification
         INSERT INTO Notification (message_content, urgency, read_status, notification_type)
         VALUES (
-            'Your leave request has been ' + @Status,
+            'Your leave request #' + CAST(@LeaveRequestID AS VARCHAR) + ' has been ' + @Status + '.',
             'Medium',
             0,
-            'Leave'
+            'LeaveStatus'
         );
 
-        DECLARE @NotificationID INT = SCOPE_IDENTITY();
+        DECLARE @NID INT = SCOPE_IDENTITY();
 
-        -- Assign notification to employee
         INSERT INTO Employee_Notification (employee_id, notification_id, delivery_status, delivered_at)
-        VALUES (@EmployeeID, @NotificationID, 'Sent', GETDATE());
+        VALUES (@EmployeeID, @NID, 'Sent', GETDATE());
 
         COMMIT TRANSACTION;
 
-        SELECT 'Leave request ' + @Status + ' successfully' AS ConfirmationMessage;
+        SELECT 'Leave request ' + @Status + ' successfully.' AS ConfirmationMessage;
 
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         THROW;
     END CATCH
 END;
@@ -412,33 +383,36 @@ GO
 
 -- 7 GetTeamByManager
 -- PROCEDURE: GetTeamByManager
-CREATE PROCEDURE GetTeamByManager
+CREATE OR ALTER PROCEDURE GetTeamByManager
     @ManagerID INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-        e.employee_id,
-        e.full_name,
-        e.employment_status,
-        
-        -- FIX: Alias these to match EmployeeDto.cs
-        d.department_name AS Department, 
-        p.position_title AS Position,
+        e.employee_id        AS Employee_Id,
+        e.first_name + ' ' + e.last_name AS Full_Name,
+        e.employment_status  AS Employment_Status,
 
-        -- Optional: Include these if your view needs them later
+        d.department_name    AS Department,
+        p.position_title     AS Position,
+
         e.email,
         e.phone
 
-    FROM Employee e
-    LEFT JOIN Position p ON e.position_id = p.position_id
-    LEFT JOIN Department d ON e.department_id = d.department_id
-    WHERE e.manager_id = @ManagerID 
-      AND e.is_active = 1 -- Good check to keep
-    ORDER BY e.full_name;
+    FROM EmployeeHierarchy h
+    JOIN Employee e 
+        ON e.employee_id = h.employee_id
+    LEFT JOIN Position p 
+        ON e.position_id = p.position_id
+    LEFT JOIN Department d 
+        ON e.department_id = d.department_id
+    WHERE h.manager_id = @ManagerID
+      AND e.is_active = 1
+    ORDER BY e.first_name, e.last_name;
 END;
 GO
+
 
 
 -- 8 UpdateLeavePolicy
@@ -3019,3 +2993,4 @@ BEGIN
     ORDER BY full_name;
 END;
 GO
+

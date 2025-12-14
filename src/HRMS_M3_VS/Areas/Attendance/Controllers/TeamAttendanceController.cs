@@ -1,20 +1,32 @@
 ﻿using HRMS_M3_VS.Areas.Employee.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims; // <--- Required to read the User ID
 
-namespace HRMS_M3_VS.Areas.Attendance.Controllers // Changed namespace
+namespace HRMS_M3_VS.Areas.Attendance.Controllers
 {
-    [Area("Attendance")] // Changed Area
+    [Area("Attendance")]
     public class TeamAttendanceController : Controller
     {
         private readonly TeamAttendanceService _service;
 
-        // MOCK ID: Assuming ID 1 is the Manager. 
-        // IMPORTANT: Ensure Employee #1 is set as 'manager_id' for other employees in your DB.
-        private const int CurrentUser = 1;
-
         public TeamAttendanceController(TeamAttendanceService service)
         {
             _service = service;
+        }
+
+        // -------------------------------------------------------------
+        // HELPER: Get the Real Logged-In User ID
+        // -------------------------------------------------------------
+        private int CurrentManagerId
+        {
+            get
+            {
+                // Finds the "NameIdentifier" claim (which holds the ID)
+                var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+                // If found, parse it to int. If not found (not logged in), return 0.
+                return idClaim != null ? int.Parse(idClaim.Value) : 0;
+            }
         }
 
         public async Task<IActionResult> Index(DateTime? start, DateTime? end)
@@ -26,7 +38,9 @@ namespace HRMS_M3_VS.Areas.Attendance.Controllers // Changed namespace
             ViewBag.Start = s;
             ViewBag.End = e;
 
-            var logs = await _service.GetTeamAttendance(CurrentUser, s, e);
+            // Pass the Real Logged-in Manager ID instead of a Mock ID
+            var logs = await _service.GetTeamAttendance(CurrentManagerId, s, e);
+
             return View(logs);
         }
     }

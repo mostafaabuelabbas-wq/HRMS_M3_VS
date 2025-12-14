@@ -5,83 +5,204 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container p-0">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary fw-bold">
-            <i class="fa fa-sync-alt me-2"></i>Sync Leaves to Attendance
-        </h2>
-        <a asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+<div class="container-fluid min-vh-100 pb-5" style="background-color: #f8f9fa;">
+
+    <!-- 1. Clean Aesthetic Header -->
+    <div class="row py-5 px-3 px-lg-5">
+        <div class="col-12">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+
+                <!-- Title Section -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-white shadow-sm rounded-4 p-3 me-4 d-none d-md-block text-primary">
+                        <i class="fa fa-sync-alt fa-2x"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-uppercase text-muted fw-bold tracking-wide mb-1 small">Attendance Module</h6>
+                        <h1 class="fw-bold text-dark mb-0 display-6">Sync Leaves</h1>
+                    </div>
+                </div>
+
+                <!-- Stats & Actions -->
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-white px-4 py-2 rounded-pill shadow-sm border d-flex align-items-center">
+                        <span class="text-muted small text-uppercase fw-bold me-2">Pending</span>
+                        <span class="fs-4 fw-bold text-dark">@Model.Count()</span>
+                    </div>
+                    <a asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 fw-medium transition-btn">
+                        <i class="fa fa-arrow-left me-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Success Message -->
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fa fa-check-circle me-2"></i> @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
+    <!-- 2. Main Content Area -->
+    <div class="row px-3 px-lg-5">
+        <div class="col-12">
 
-    <!-- Error Message -->
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fa fa-exclamation-triangle me-2"></i> @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
+            <!-- Alerts -->
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center mb-4 bg-white border-start border-success border-4">
+                    <i class="fa fa-check-circle text-success fs-5 me-3"></i>
+                    <div class="fw-medium text-dark">@TempData["Success"]</div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                </div>
+            }
 
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0 text-muted">Approved Leaves Pending Sync</h5>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Req ID</th>
-                        <th>Employee</th>
-                        <th>Leave Type</th>
-                        <th>Duration</th>
-                        <th>Status</th>
-                        <th class="text-end">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Any())
+            <!-- 3. The Floating List -->
+            <div class="d-flex flex-column gap-3">
+
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5">
+                        <div class="mb-4 opacity-25">
+                            <i class="fa fa-clipboard-check fa-4x text-muted"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark">All Caught Up</h4>
+                        <p class="text-muted">No approved leaves pending synchronization.</p>
+                    </div>
+                }
+                else
+                {
+                    <!-- List Header (Visible on Desktop) -->
+                    <div class="d-none d-md-flex px-4 pb-2 text-uppercase text-muted small fw-bold tracking-wide">
+                        <div style="width: 35%;">Employee Details</div>
+                        <div style="width: 20%;">Leave Type</div>
+                        <div style="width: 25%;">Duration</div>
+                        <div style="width: 20%;" class="text-end">Action</div>
+                    </div>
+
+                    @foreach (var item in Model)
                     {
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="fa fa-clipboard-check fa-3x mb-3 opacity-25"></i>
-                                <p class="mb-0">No approved leaves found.</p>
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Model)
+                        // Initials Logic
+                        string initials = "??";
+                        string colorClass = "bg-primary"; // Default
+
+                        if (!string.IsNullOrEmpty(item.employee_name))
                         {
-                            <tr>
-                                <td>#@item.request_id</td>
-                                <td class="fw-bold">@item.employee_name</td>
-                                <td><span class="badge bg-info text-dark">@item.leave_type</span></td>
-                                <td>
-                                    @item.start_date.ToString("MMM dd") - @item.end_date.ToString("MMM dd")
-                                </td>
-                                <td><span class="badge bg-success">@item.status</span></td>
-                                <td class="text-end">
-                                    <form asp-action="SyncLeaves" method="post">
-                                        <input type="hidden" name="id" value="@item.request_id" />
-                                        <button type="submit" class="btn btn-warning btn-sm fw-bold">
-                                            <i class="fa fa-exchange-alt me-1"></i> Sync
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
+                            var parts = item.employee_name.Split(' ');
+                            initials = parts.Length > 1 ? $"{parts[0][0]}{parts[parts.Length - 1][0]}" : parts[0].Substring(0, 1);
+
+                            // Random color for variety
+                            int len = item.employee_name.Length;
+                            colorClass = (len % 4) switch { 0 => "bg-primary", 1 => "bg-indigo", 2 => "bg-teal", _ => "bg-orange" };
                         }
+
+                        <!-- Floating Row Card -->
+                        <div class="card border-0 shadow-sm rounded-4 hover-card mb-1 overflow-hidden">
+                            <div class="card-body p-0 d-flex flex-column flex-md-row align-items-center">
+
+                                <!-- Left Accent Bar -->
+                                <div class="d-none d-md-block h-100 @colorClass" style="width: 6px; min-height: 80px;"></div>
+
+                                <div class="p-3 p-md-4 w-100 d-flex flex-column flex-md-row align-items-center">
+
+                                    <!-- 1. Employee -->
+                                    <div class="d-flex align-items-center w-100 mb-3 mb-md-0" style="flex: 0 0 35%;">
+                                        <div class="avatar-circle @colorClass text-white fw-bold me-3 shadow-sm">
+                                            @initials
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">@item.employee_name</div>
+                                            <div class="small text-muted font-monospace">REQ #@item.request_id</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Type -->
+                                    <div class="w-100 mb-2 mb-md-0" style="flex: 0 0 20%;">
+                                        <span class="badge bg-light text-dark border fw-medium px-3 py-2 rounded-pill">
+                                            @item.leave_type
+                                        </span>
+                                    </div>
+
+                                    <!-- 3. Duration -->
+                                    <div class="w-100 mb-3 mb-md-0" style="flex: 0 0 25%;">
+                                        <div class="d-flex align-items-center">
+                                            <div class="text-dark fw-bold">@item.start_date.ToString("MMM dd")</div>
+                                            <div class="mx-2 text-muted opacity-50"><i class="fa fa-arrow-right small"></i></div>
+                                            <div class="text-dark fw-bold">@item.end_date.ToString("MMM dd")</div>
+                                        </div>
+                                        <div class="small text-success mt-1">
+                                            <i class="fa fa-check-circle me-1"></i> @item.status
+                                        </div>
+                                    </div>
+
+                                    <!-- 4. Action -->
+                                    <div class="w-100 text-md-end" style="flex: 0 0 20%;">
+                                        <form asp-action="SyncLeaves" method="post">
+                                            <input type="hidden" name="id" value="@item.request_id" />
+                                            <button type="submit" class="btn btn-dark rounded-pill px-4 fw-bold shadow-sm btn-sync w-100 w-md-auto">
+                                                Sync
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     }
-                </tbody>
-            </table>
+                }
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* --- Colors --- */
+    .bg-indigo {
+        background-color: #6610f2;
+    }
+
+    .bg-teal {
+        background-color: #20c997;
+    }
+
+    .bg-orange {
+        background-color: #fd7e14;
+    }
+
+    /* --- Typography --- */
+    .tracking-wide {
+        letter-spacing: 1px;
+        font-size: 0.75rem;
+    }
+
+    /* --- Avatar --- */
+    .avatar-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    /* --- Hover Effects --- */
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+        }
+
+    .btn-sync {
+        transition: all 0.2s;
+    }
+
+        .btn-sync:hover {
+            background-color: #000;
+            transform: scale(1.05);
+        }
+
+    .transition-btn {
+        transition: transform 0.2s;
+    }
+
+        .transition-btn:hover {
+            transform: translateY(-2px);
+        }
+</style>
