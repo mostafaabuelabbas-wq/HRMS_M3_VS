@@ -1693,69 +1693,63 @@ GO
 
 
 --29 ConfigureLeaveEligibility
-CREATE PROCEDURE ConfigureLeaveEligibility
+CREATE OR ALTER PROCEDURE ConfigureLeaveEligibility
     @LeaveType VARCHAR(50),
     @MinTenure INT,
     @EmployeeType VARCHAR(50)
 AS
 BEGIN
-    INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year)
-    VALUES (
-        @LeaveType + ' Eligibility Policy',
-        'Eligibility configuration for ' + @LeaveType,
-        'MinTenure=' + CAST(@MinTenure AS VARCHAR(10)) + ';EmployeeType=' + @EmployeeType,
-        7,
-        @LeaveType,
-        1
-    );
+    SET NOCOUNT ON;
+
+    -- Update the SAME policy row created by Rules
+    IF EXISTS (SELECT 1 FROM LeavePolicy WHERE special_leave_type = @LeaveType)
+    BEGIN
+        UPDATE LeavePolicy
+        SET eligibility_rules = 'MinTenure=' + CAST(@MinTenure AS VARCHAR(10)) + ';Type=' + @EmployeeType
+        WHERE special_leave_type = @LeaveType;
+    END
+    ELSE
+    BEGIN
+        -- Fallback if policy doesn't exist yet
+        INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year)
+        VALUES (
+            @LeaveType + ' Policy',
+            'Eligibility Policy',
+            'MinTenure=' + CAST(@MinTenure AS VARCHAR(10)) + ';Type=' + @EmployeeType,
+            0,
+            @LeaveType,
+            1
+        );
+    END
 
     SELECT 'Leave eligibility configured successfully' AS ConfirmationMessage;
 END;
 GO
 -- 30 ManageLeaveTypes
 -- PROCEDURE: ManageLeaveTypes
-CREATE PROCEDURE ManageLeaveTypes
+CREATE OR ALTER PROCEDURE ManageLeaveTypes
     @LeaveType VARCHAR(50),
     @Description VARCHAR(200)
 AS
 BEGIN
     SET NOCOUNT ON;
-
     BEGIN TRY
         BEGIN TRANSACTION;
-
-        ------------------------------------------------------
-        -- 1. Check if leave type already exists
-        ------------------------------------------------------
         IF EXISTS (SELECT 1 FROM [Leave] WHERE leave_type = @LeaveType)
         BEGIN
-            -- Update existing leave description
-            UPDATE [Leave]
-            SET leave_description = @Description
-            WHERE leave_type = @LeaveType;
-
+            UPDATE [Leave] SET leave_description = @Description WHERE leave_type = @LeaveType;
             COMMIT TRANSACTION;
-
             SELECT 'Leave type updated successfully' AS ConfirmationMessage;
             RETURN;
         END
-
-        ------------------------------------------------------
-        -- 2. Insert new leave type
-        ------------------------------------------------------
-        INSERT INTO [Leave] (leave_type, leave_description)
-        VALUES (@LeaveType, @Description);
-
+        INSERT INTO [Leave] (leave_type, leave_description) VALUES (@LeaveType, @Description);
         COMMIT TRANSACTION;
-
         SELECT 'New leave type created successfully' AS ConfirmationMessage;
-
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
-        SELECT 'Error: Leave type could not be created or updated.' AS ConfirmationMessage;
+        SELECT 'Error: Leave type could not be created/updated.' AS ConfirmationMessage;
     END CATCH
-
 END;
 GO
 
@@ -1763,80 +1757,40 @@ GO
 
 -- 31 AssignLeaveEntitlement
 -- PROCEDURE: AssignLeaveEntitlement
-CREATE PROCEDURE AssignLeaveEntitlement
+CREATE OR ALTER PROCEDURE AssignLeaveEntitlement
     @EmployeeID INT,
-    @LeaveType VARCHAR(50),
+    @LeaveTypeID INT,
     @Entitlement DECIMAL(5,2)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
-        BEGIN TRANSACTION;
-
-        ----------------------------------------------------
-        -- 1. Validate employee exists
-        ----------------------------------------------------
-        IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
-        BEGIN
-            RAISERROR('Employee does not exist.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
-        END;
-
-        ----------------------------------------------------
-        -- 2. Validate leave type exists
-        ----------------------------------------------------
-        DECLARE @LeaveTypeID INT;
-        SELECT @LeaveTypeID = leave_id FROM [Leave] WHERE leave_type = @LeaveType;
-
-        IF @LeaveTypeID IS NULL
-        BEGIN
-            RAISERROR('Invalid leave type.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
-        END;
-
-        ----------------------------------------------------
-        -- 3. Update if entitlement exists
-        ----------------------------------------------------
-        IF EXISTS (
-            SELECT 1 FROM LeaveEntitlement
-            WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID
-        )
-        BEGIN
-            UPDATE LeaveEntitlement
-            SET entitlement = @Entitlement
-            WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID;
-
-            COMMIT TRANSACTION;
-
-            SELECT 'Entitlement updated successfully.' AS ConfirmationMessage;
-            RETURN;
-        END;
-
-        ----------------------------------------------------
-        -- 4. Insert new entitlement
-        ----------------------------------------------------
+    -- Check if record exists
+    IF EXISTS (
+        SELECT 1 FROM LeaveEntitlement 
+        WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID
+    )
+    BEGIN
+        -- Update existing
+        UPDATE LeaveEntitlement
+        SET entitlement = @Entitlement
+        WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID;
+    END
+    ELSE
+    BEGIN
+        -- Insert new
         INSERT INTO LeaveEntitlement (employee_id, leave_type_id, entitlement)
         VALUES (@EmployeeID, @LeaveTypeID, @Entitlement);
+    END
 
-        COMMIT TRANSACTION;
-
-        SELECT 'Entitlement assigned successfully.' AS ConfirmationMessage;
-
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
+    SELECT 'Leave entitlement assigned successfully.' AS ConfirmationMessage;
 END;
 GO
 
 
 -- 32 ConfigureLeaveRules
 -- PROCEDURE: ConfigureLeaveRules
-CREATE PROCEDURE ConfigureLeaveRules
+CREATE OR ALTER PROCEDURE ConfigureLeaveRules
     @LeaveType VARCHAR(50),
     @MaxDuration INT,
     @NoticePeriod INT,
@@ -1844,58 +1798,32 @@ CREATE PROCEDURE ConfigureLeaveRules
 AS
 BEGIN
     SET NOCOUNT ON;
-
-    BEGIN TRY
-        BEGIN TRANSACTION;
-
-        ----------------------------------------------------
-        -- 1. Validate that LeaveType exists
-        ----------------------------------------------------
-        IF NOT EXISTS (SELECT 1 FROM [Leave] WHERE leave_type = @LeaveType)
-        BEGIN
-            RAISERROR('Leave type does not exist.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
-        END;
-
-        ----------------------------------------------------
-        -- 2. Prevent duplicate rule creation
-        ----------------------------------------------------
-        IF EXISTS (
-            SELECT 1 FROM LeavePolicy
-            WHERE special_leave_type = @LeaveType
-              AND purpose LIKE 'Leave rules configuration%'
-        )
-        BEGIN
-            RAISERROR('Rules for this leave type already exist.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
-        END;
-
-        ----------------------------------------------------
-        -- 3. Insert new rule
-        ----------------------------------------------------
-        INSERT INTO LeavePolicy
-            (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year)
+    
+    -- Check if a policy row exists for this leave type
+    IF EXISTS (SELECT 1 FROM LeavePolicy WHERE special_leave_type = @LeaveType)
+    BEGIN
+        -- UPDATE existing row
+        UPDATE LeavePolicy
+        SET notice_period = @NoticePeriod,
+            -- We append MaxDuration to purpose to avoid overwriting eligibility_rules
+            purpose = 'Rules: MaxDuration=' + CAST(@MaxDuration AS VARCHAR(10)) + ';Workflow=' + @WorkflowType
+        WHERE special_leave_type = @LeaveType;
+    END
+    ELSE
+    BEGIN
+        -- INSERT new row
+        INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year)
         VALUES (
-            @LeaveType + ' Rules',
-            'Leave rules configuration for ' + @LeaveType,
-            'MaxDuration=' + CAST(@MaxDuration AS VARCHAR(10)) +
-                ';WorkflowType=' + @WorkflowType,
+            @LeaveType + ' Policy',
+            'Rules: MaxDuration=' + CAST(@MaxDuration AS VARCHAR(10)) + ';Workflow=' + @WorkflowType,
+            'All', -- Default eligibility
             @NoticePeriod,
             @LeaveType,
             1
         );
+    END
 
-        COMMIT TRANSACTION;
-
-        SELECT 'Leave rules configured successfully' AS ConfirmationMessage;
-
-    END TRY
-    BEGIN CATCH
-        ROLLBACK TRANSACTION;
-        THROW;
-    END CATCH
+    SELECT 'Leave rules configured successfully' AS ConfirmationMessage;
 END;
 GO
 

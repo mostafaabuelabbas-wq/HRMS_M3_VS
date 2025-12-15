@@ -90,3 +90,25 @@ JOIN Employee e ON le.employee_id = e.employee_id
 JOIN [Leave] l ON le.leave_type_id = l.leave_id
 ORDER BY e.employee_id;
 GO
+
+CREATE OR ALTER PROCEDURE GetLeaveConfiguration
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- Joins Leave Types with their Policy (if it exists)
+    -- matching on special_leave_type
+    SELECT 
+        l.leave_id,
+        l.leave_type,
+        l.leave_description,
+        ISNULL(p.notice_period, 0) AS notice_period,
+        ISNULL(p.eligibility_rules, 'All') AS eligibility_rules
+    FROM [Leave] l
+    LEFT JOIN LeavePolicy p ON l.leave_type = p.special_leave_type;
+END;
+GO
+
+
+
+

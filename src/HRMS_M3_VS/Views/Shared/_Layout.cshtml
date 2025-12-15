@@ -139,10 +139,6 @@
             <!-- My Leave (Employees View Balance & History) -->
             <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="MyLeave">
                 <i class="fas fa-calendar-check"></i> My Leave
-            <!-- ============================================== -->
-            <!-- 4. LEAVES (Everyone) -->
-            <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
-                <i class="fas fa-calendar-alt"></i> Leave Management
             </a>
 
             <!-- ✅ UPDATED: Leave Management (Strictly Manager Only) -->
@@ -191,6 +187,16 @@
                 <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
                     <i class="fas fa-file-contract me-2"></i> Contracts
                 </a>
+                @if (User.IsInRole("HRAdmin"))
+{
+    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
+        <i class="fas fa-cogs"></i> Leave Config
+    </a>
+
+    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="AssignEntitlement">
+        <i class="fas fa-user-edit"></i> Leave Entitlements
+    </a>
+}
             }
 
             <!-- SYSTEM ADMIN ONLY -->
