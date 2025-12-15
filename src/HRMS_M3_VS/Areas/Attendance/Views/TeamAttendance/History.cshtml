@@ -1,0 +1,129 @@
+﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.TeamAttendanceLogDto>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Employee History";
+
+    // Calculate stats for this specific person
+    var totalDays = Model.Count();
+    var lateDays = Model.Count(x => x.entry_time.HasValue && x.entry_time.Value.TimeOfDay > new TimeSpan(9, 15, 0));
+}
+
+<div class="container-fluid p-0">
+
+    <!-- HEADER & BACK BUTTON -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-3">
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-circle">
+                    <i class="fa fa-arrow-left"></i>
+                </a>
+                <h3 class="text-primary fw-bold mb-0">
+                    @ViewBag.EmployeeName
+                </h3>
+            </div>
+            <p class="text-muted small mb-0 ms-5">
+                History from <strong>@ViewBag.Start.ToString("MMM dd")</strong> to <strong>@ViewBag.End.ToString("MMM dd")</strong>
+            </p>
+        </div>
+
+        <!-- Date Filters for this person -->
+        <div class="btn-group shadow-sm" role="group">
+            <a asp-action="History" asp-route-id="@ViewBag.TargetEmployeeId" asp-route-filter="week" class="btn btn-outline-primary @(ViewBag.Filter == "week" ? "active" : "")">Week</a>
+            <a asp-action="History" asp-route-id="@ViewBag.TargetEmployeeId" asp-route-filter="month" class="btn btn-outline-primary @(ViewBag.Filter == "month" ? "active" : "")">Month</a>
+            <a asp-action="History" asp-route-id="@ViewBag.TargetEmployeeId" asp-route-filter="year" class="btn btn-outline-primary @(ViewBag.Filter == "year" ? "active" : "")">Year</a>
+        </div>
+    </div>
+
+    <!-- SUMMARY FOR THIS PERSON -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card bg-primary text-white shadow-sm border-0">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase small opacity-75">Days Present</h6>
+                        <h2 class="mb-0 fw-bold">@totalDays</h2>
+                    </div>
+                    <i class="fa fa-calendar-check fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-warning text-dark shadow-sm border-0">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase small opacity-75">Late Arrivals</h6>
+                        <h2 class="mb-0 fw-bold">@lateDays</h2>
+                    </div>
+                    <i class="fa fa-clock fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORY TABLE -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                No records found for this date range.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">@log.entry_time?.ToString("ddd, MMM dd yyyy")</td>
+                                <td class="text-success font-monospace">@log.entry_time?.ToString("hh:mm tt")</td>
+                                <td class="text-danger font-monospace">@(log.exit_time?.ToString("hh:mm tt") ?? "-")</td>
+
+                                <td>
+                                    @if (log.duration > 0)
+                                    {
+                                        <span>@Math.Round(log.duration.Value / 60.0, 1) hrs</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span>-</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (log.login_method.Contains("Leave"))
+                                    {
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle">Leave</span>
+                                    }
+                                    else if (log.exit_time == null)
+                                    {
+
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="badge bg-light text-secondary border">Present</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

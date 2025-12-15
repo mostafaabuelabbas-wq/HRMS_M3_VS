@@ -1538,23 +1538,26 @@ GROUP BY h.manager_id;
 ------------------------------------------------------------
 
 
+SET NOCOUNT ON;
+------------------------------------------------------------
+-- LEAVE ENTITLEMENT (UNCHANGED – SAFE)
+------------------------------------------------------------
+
 -- Vacation
 INSERT INTO LeaveEntitlement (employee_id, leave_type_id, entitlement)
 SELECT e.employee_id, l.leave_id, 21
 FROM Employee e
 JOIN [Leave] l ON l.leave_type = 'Vacation'
-WHERE e.employee_id IN (
-    SELECT employee_id FROM Employee
-    WHERE email IN (
-        'mostafa.mohamed@company.com',
-        'hasan.mahmoud@company.com',
-        'mohamed.amr@company.com',
-        'omar.khalaf@company.com',
-        'aya.nabil@company.com'
-    )
+WHERE e.email IN (
+    'mostafa.mohamed@company.com',
+    'hasan.mahmoud@company.com',
+    'mohamed.amr@company.com',
+    'omar.khalaf@company.com',
+    'aya.nabil@company.com'
 )
 AND NOT EXISTS (
-    SELECT 1 FROM LeaveEntitlement le
+    SELECT 1
+    FROM LeaveEntitlement le
     WHERE le.employee_id = e.employee_id
       AND le.leave_type_id = l.leave_id
 );
@@ -1564,33 +1567,124 @@ INSERT INTO LeaveEntitlement (employee_id, leave_type_id, entitlement)
 SELECT e.employee_id, l.leave_id, 10
 FROM Employee e
 JOIN [Leave] l ON l.leave_type = 'Sick'
-WHERE e.employee_id IN (
-    SELECT employee_id FROM Employee
-    WHERE email IN (
-        'mostafa.mohamed@company.com',
-        'hasan.mahmoud@company.com',
-        'mohamed.amr@company.com',
-        'omar.khalaf@company.com',
-        'aya.nabil@company.com'
-    )
+WHERE e.email IN (
+    'mostafa.mohamed@company.com',
+    'hasan.mahmoud@company.com',
+    'mohamed.amr@company.com',
+    'omar.khalaf@company.com',
+    'aya.nabil@company.com'
 )
 AND NOT EXISTS (
-    SELECT 1 FROM LeaveEntitlement le
+    SELECT 1
+    FROM LeaveEntitlement le
     WHERE le.employee_id = e.employee_id
       AND le.leave_type_id = l.leave_id
 );
---making aya hr admin
-INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
-SELECT 
-    e.employee_id,
-    r.role_id,
-    GETDATE()
-FROM Employee e
-JOIN Role r ON r.role_name = 'HRAdmin'
-WHERE e.email = 'aya.nabil@company.com'
-AND NOT EXISTS (
-    SELECT 1
-    FROM Employee_Role er
-    WHERE er.employee_id = e.employee_id
-      AND er.role_id = r.role_id
+
+------------------------------------------------------------
+-- FIX HIERARCHY (NO SELECT OUTPUT)
+------------------------------------------------------------
+
+TRUNCATE TABLE EmployeeHierarchy;
+
+DECLARE @Mostafa INT = (SELECT employee_id FROM Employee WHERE email='mostafa.mohamed@company.com');
+DECLARE @Amr     INT = (SELECT employee_id FROM Employee WHERE email='mohamed.amr@company.com');
+DECLARE @Aya     INT = (SELECT employee_id FROM Employee WHERE email='aya.nabil@company.com');
+DECLARE @Omar    INT = (SELECT employee_id FROM Employee WHERE email='omar.khalaf@company.com');
+
+DECLARE @IT  INT = (SELECT department_id FROM Department WHERE department_name='IT');
+DECLARE @HR  INT = (SELECT department_id FROM Department WHERE department_name='HR');
+DECLARE @FIN INT = (SELECT department_id FROM Department WHERE department_name='Finance');
+
+-- Level 1
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+VALUES (@Mostafa, NULL, 1);
+
+-- Level 2
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+VALUES
+(@Amr,  @Mostafa, 2),
+(@Aya,  @Mostafa, 2),
+(@Omar, @Mostafa, 2);
+
+-- Level 3 – IT
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Amr, 3
+FROM Employee
+WHERE department_id = @IT
+  AND employee_id NOT IN (@Mostafa, @Amr);
+
+-- Level 3 – HR
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Aya, 3
+FROM Employee
+WHERE department_id = @HR
+  AND employee_id <> @Aya;
+
+-- Level 3 – Finance
+INSERT INTO EmployeeHierarchy (employee_id, manager_id, hierarchy_level)
+SELECT employee_id, @Omar, 3
+FROM Employee
+WHERE department_id = @FIN
+  AND employee_id <> @Omar;
+
+------------------------------------------------------------
+-- ATTENDANCE GENERATION (SILENT)
+------------------------------------------------------------
+
+DECLARE @AmrId INT = @Amr;
+
+DECLARE @MorningShift INT =
+(
+    SELECT TOP 1 shift_id
+    FROM ShiftSchedule
+    WHERE name = 'Morning'
 );
+
+DECLARE @BaseDate DATETIME = CAST(GETDATE() AS DATE);
+
+-- LAST 7 DAYS
+DECLARE @i INT = 1;
+WHILE @i <= 7
+BEGIN
+    INSERT INTO Attendance (
+        employee_id, shift_id, entry_time, exit_time, login_method, logout_method
+    )
+    SELECT 
+        h.employee_id,
+        @MorningShift,
+        DATEADD(HOUR, 9, DATEADD(DAY, -@i, @BaseDate)),
+        DATEADD(HOUR, 17, DATEADD(DAY, -@i, @BaseDate)),
+        'Device', 'Device'
+    FROM EmployeeHierarchy h
+    WHERE h.manager_id = @AmrId;
+
+    SET @i += 1;
+END;
+
+-- LAST 30 DAYS (excluding last 7)
+DECLARE @d INT = 8;
+WHILE @d <= 30
+BEGIN
+    INSERT INTO Attendance (
+        employee_id, shift_id, entry_time, exit_time, login_method, logout_method
+    )
+    SELECT 
+        h.employee_id,
+        @MorningShift,
+        DATEADD(MINUTE, 5, DATEADD(HOUR, 9, DATEADD(DAY, -@d, @BaseDate))),
+        DATEADD(MINUTE, 5, DATEADD(HOUR, 17, DATEADD(DAY, -@d, @BaseDate))),
+        'Device', 'Device'
+    FROM EmployeeHierarchy h
+    WHERE h.manager_id = @AmrId;
+
+    SET @d += 1;
+END;
+
+
+
+
+
+
+
+
