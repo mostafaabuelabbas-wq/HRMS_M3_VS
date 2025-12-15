@@ -82,12 +82,6 @@ WHERE NOT EXISTS (
     AND le.leave_type_id = l.leave_id
 );
 
--- 2. Verify the data exists (Optional check)
-SELECT TOP 10 e.full_name, l.leave_type, le.entitlement
-FROM LeaveEntitlement le
-JOIN Employee e ON le.employee_id = e.employee_id
-JOIN [Leave] l ON le.leave_type_id = l.leave_id
-ORDER BY e.employee_id;
 GO
 
 CREATE OR ALTER PROCEDURE GetLeaveConfiguration
