@@ -143,10 +143,10 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
         // ==========================================================
 
         // 1. Grid View (List all types)
-        [Authorize(Roles = "HRAdmin")]
+        [Authorize(Roles = "HRAdmin,SystemAdmin")]
         public async Task<IActionResult> ManageTypes()
         {
-            try 
+            try
             {
                 var types = await _leaveService.GetLeaveConfigurations();
                 return View(types);
@@ -159,7 +159,7 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
         }
 
         // 2. Form View (Create or Edit)
-        [Authorize(Roles = "HRAdmin")]
+        [Authorize(Roles = "HRAdmin,SystemAdmin")]
         public async Task<IActionResult> EditType(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -171,16 +171,16 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             // Edit Mode: Find the existing item
             var list = await _leaveService.GetLeaveConfigurations();
             var item = list.FirstOrDefault(x => x.leave_type == id);
-            
+
             if (item == null) return NotFound();
-            
+
             return View(item);
         }
 
         // 3. Submit Action
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "HRAdmin")]
+        [Authorize(Roles = "HRAdmin,SystemAdmin")]
         public async Task<IActionResult> SaveType(LeaveConfigDto model)
         {
             if (!ModelState.IsValid) return View("EditType", model);

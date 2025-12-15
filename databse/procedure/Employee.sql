@@ -1688,22 +1688,7 @@ GO
 USE HRMS;
 GO
 
--- MISSING IN PDF: Procedure for Employee to view their own attendance
 CREATE OR ALTER PROCEDURE GetMyAttendance
-    @EmployeeID INT
-AS
-BEGIN
-    SELECT 
-        a.attendance_id,
-        a.entry_time,
-        a.exit_time,
-        ss.name AS shift_name,
-        ss.start_time,
-        ss.end_time
-    FROM Attendance a
-    LEFT JOIN ShiftSchedule ss ON a.shift_id = ss.shift_id
-    WHERE a.employee_id = @EmployeeID
-    ORDER BY a.entry_time DCREATE OR ALTER PROCEDURE GetMyAttendance
     @EmployeeID INT
 AS
 BEGIN
@@ -1720,8 +1705,6 @@ BEGIN
     LEFT JOIN ShiftSchedule ss ON a.shift_id = ss.shift_id
     WHERE a.employee_id = @EmployeeID
     ORDER BY a.entry_time DESC;
-END;
-GOESC;
 END;
 GO
 

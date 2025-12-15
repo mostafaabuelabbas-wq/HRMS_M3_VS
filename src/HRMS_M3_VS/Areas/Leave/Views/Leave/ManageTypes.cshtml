@@ -1,98 +1,177 @@
 @model IEnumerable<HRMS_M3_VS.Areas.Leave.Models.LeaveConfigDto>
 
 @{
-    ViewData["Title"] = "Leave Configuration";
+    ViewData["Title"] = "Leave Policies";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid py-4">
-    <!-- Header -->
+<div class="container-fluid p-4">
+
+    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">Leave Policies</h2>
-            <p class="text-muted mb-0">Configure leave types, rules, and eligibility.</p>
+            <h3 class="text-dark fw-bold mb-1">
+                Leave Policies
+            </h3>
+            <p class="text-muted small mb-0">Configure leave types, rules, and eligibility.</p>
         </div>
-        <!-- FIX: Direct Link -->
-        <a href="/Leave/Leave/EditType" class="btn btn-primary shadow-sm rounded-pill px-4 fw-bold">
-            <i class="fas fa-plus me-2"></i> Create New Policy
+
+        <!-- Create Button - Direct URL approach if tag helpers fail -->
+        <a href="/Leave/Leave/EditType"
+           class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <i class="fa fa-plus me-2"></i>Create New Policy
         </a>
     </div>
 
+    <!-- MESSAGES -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success border-0 shadow-sm border-start border-success border-4 rounded-3 mb-4">
-            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+        <div class="alert alert-success border-0 shadow-sm small mb-4">
+            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
         </div>
     }
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger border-0 shadow-sm border-start border-danger border-4 rounded-3 mb-4">
-            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
+        <div class="alert alert-danger border-0 shadow-sm small mb-4">
+            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
         </div>
     }
 
-    <!-- Content Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-header bg-white py-3 border-0">
-            <h5 class="fw-bold text-dark mb-0">Existing Policies</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr class="text-uppercase text-secondary small fw-bold" style="letter-spacing: 0.5px;">
-                            <th class="ps-4 py-3">Leave Type</th>
-                            <th class="py-3">Description</th>
-                            <th class="py-3">Rules</th>
-                            <th class="py-3">Eligibility</th>
-                            <th class="py-3 text-end pe-4">Actions</th>
+    <!-- DATA TABLE -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr class="text-uppercase small text-muted">
+                        <th class="ps-4 py-3" style="width: 15%;">LEAVE TYPE</th>
+                        <th style="width: 25%;">DESCRIPTION</th>
+                        <th style="width: 20%;">RULES</th>
+                        <th style="width: 25%;">ELIGIBILITY RULES</th>
+                        <th class="text-end pe-4">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fa fa-folder-open fa-2x mb-3 opacity-25"></i>
+                                <p>No leave policies found.</p>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.Any())
-                        {
-                            @foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-bold text-dark">
-                                        <span class="badge bg-light text-primary border border-primary-subtle px-2 py-1">
-                                            @item.leave_type
-                                        </span>
-                                    </td>
-                                    <td class="text-muted text-truncate" style="max-width: 250px;">
-                                        @item.leave_description
-                                    </td>
-                                    <td>
-                                        <div class="d-flex flex-column small">
-                                            <span class="text-dark fw-bold">@item.notice_period days notice</span>
-                                            <span class="text-muted">Max @item.max_duration days</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">
-                                            @item.eligibility_rules
-                                        </span>
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <!-- FIX: Direct Link passing ID parameter -->
-                                        <a href="/Leave/Leave/EditType?id=@item.leave_type" class="btn btn-sm btn-outline-primary fw-bold">
-                                            <i class="fas fa-edit me-1"></i> Edit
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
                         {
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    No policies found. Click "Create New Policy" to start.
+                                <!-- 1. TYPE -->
+                                <td class="ps-4">
+                                    <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold">
+                                        @item.leave_type
+                                    </span>
+                                </td>
+
+                                <!-- 2. DESCRIPTION -->
+                                <td class="text-secondary small">
+                                    @(string.IsNullOrWhiteSpace(item.leave_description) ? "-" : item.leave_description)
+                                </td>
+
+                                <!-- 3. RULES (Notice & Max Duration) -->
+                                <td class="small">
+                                    <div class="d-flex flex-column gap-1">
+                                        <div>
+                                            <span class="fw-bold text-dark">@item.notice_period days</span> notice
+                                        </div>
+                                        <div class="text-muted">
+                                            Max <span class="fw-bold">@item.max_duration days</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- 4. ELIGIBILITY RULES (Plain Text) -->
+                                <td class="small text-dark">
+                                    @{
+                                        var eligibility = item.eligibility_rules;
+
+                                        // Clean up the eligibility text
+                                        if (string.IsNullOrWhiteSpace(eligibility) || eligibility == "All")
+                                        {
+                                            <span class="text-muted fst-italic">All</span>
+                                        }
+                                        else
+                                        {
+                                            // Extract only the Type value and ignore MinTenure
+                                            string displayText = eligibility;
+
+                                            if (eligibility.Contains("Type="))
+                                            {
+                                                // Extract just the Type value
+                                                var typeMatch = System.Text.RegularExpressions.Regex.Match(eligibility, @"Type=([^;]+)");
+                                                if (typeMatch.Success)
+                                                {
+                                                    displayText = typeMatch.Groups[1].Value.Trim();
+                                                }
+                                            }
+
+                                            // Remove MinTenure references
+                                            displayText = System.Text.RegularExpressions.Regex.Replace(displayText, @"MinTenure=\d+;?", "").Trim();
+                                            displayText = displayText.TrimEnd(';');
+
+                                            if (!string.IsNullOrWhiteSpace(displayText))
+                                            {
+                                                <span class="badge bg-light text-dark border px-3 py-2">
+                                                    @displayText
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">None</span>
+                                            }
+                                        }
+                                    }
+                                </td>
+
+                                <!-- 5. ACTIONS -->
+                                <td class="text-end pe-4">
+                                    <a href="/Leave/Leave/EditType?id=@item.leave_type"
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="fa fa-edit me-1"></i>Edit
+                                    </a>
                                 </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="mt-4">
+        <div class="alert alert-info border-0 shadow-sm d-flex align-items-start">
+            <i class="fa fa-info-circle me-3 mt-1"></i>
+            <div class="small">
+                <strong>Policy Management Tips:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>Notice period determines how far in advance employees must request leave</li>
+                    <li>Max duration sets the maximum days for a single leave request</li>
+                    <li>Eligibility rules define who can use this leave type</li>
+                </ul>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Ensure consistent badge sizing */
+    .badge {
+        font-size: 0.875rem;
+        letter-spacing: 0.3px;
+    }
+
+    /* Hover effect for table rows */
+    tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+</style>

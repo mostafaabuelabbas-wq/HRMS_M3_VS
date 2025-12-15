@@ -4,147 +4,124 @@
     ViewData["Title"] = "My Attendance";
 }
 
-<div class="container-fluid py-4">
-    <!-- Page Header & Actions -->
+<div class="container-fluid p-0">
+
+    <!-- 1. HEADER & BUTTONS -->
     <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold mb-0">
+            <i class="fa fa-history me-2"></i>My Attendance
+        </h2>
+
         <div>
-            <h2 class="fw-bold text-dark mb-1">Attendance History</h2>
-            <p class="text-muted mb-0">Track your daily punches and shift duration.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <!-- Correction Button -->
-            <a class="btn btn-outline-secondary d-flex align-items-center gap-2" asp-action="Correction">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                    <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z" />
-                </svg>
-                Fix Issue
+            <a class="btn btn-primary" asp-action="Record">
+                <i class="fa fa-edit me-1"></i> Record Attendance
             </a>
-            <!-- Record Button -->
-            <a class="btn btn-primary d-flex align-items-center gap-2 shadow-sm" asp-action="Record">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock-fill" viewBox="0 0 16 16">
-                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
-                </svg>
-                Check In / Out
+            <a class="btn btn-outline-warning ms-2" asp-action="Correction">
+                <i class="fa fa-tools me-1"></i> Fix Issue
             </a>
         </div>
     </div>
 
-    <!-- Feedback Message -->
+    <!-- 2. MESSAGES -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-success border-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="fa fa-check-circle me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="fa fa-info-circle me-2"></i> @TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <!-- Main Content Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-body p-0">
-            @if (Model != null && Model.Any())
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light border-bottom">
-                            <tr class="text-uppercase text-secondary small fw-bold">
-                                <th class="ps-4 py-3">Date</th>
-                                <th class="py-3">Shift</th>
-                                <th class="py-3">Check In</th>
-                                <th class="py-3">Check Out</th>
-                                <th class="py-3">Duration</th>
-                                <th class="pe-4 py-3 text-end">Status</th>
+    <!-- 3. HISTORY TABLE -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Attendance Logs</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Date</th>
+                        <th>Shift</th>
+                        <th>In Time</th>
+                        <th>Out Time</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <
+                >
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fa fa-clipboard-list fa-3x mb-3 opacity-25"></i>
+                                <p>No attendance records found.</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <!-- Date -->
+                                <td class="ps-4 fw-bold text-dark">
+                                    @(log.entry_time.HasValue? log.entry_time.Value.ToString("MMM dd, yyyy") : "-")
+                                </td>
+
+                                <!-- Shift -->
+                                <td>
+                                    <span class="badge bg-light text-dark border">@log.shift_name</span>
+                                </td>
+
+                                <!-- In -->
+                                <td class="text-success font-monospace">
+                                    @(log.entry_time.HasValue? log.entry_time.Value.ToString("hh:mm tt") : "-")
+                                </td>
+
+                                <!-- Out -->
+                                <td class="text-danger font-monospace">
+                                    @(log.exit_time.HasValue? log.exit_time.Value.ToString("hh:mm tt") : "-")
+                                </td>
+
+                                <!-- Duration -->
+                                <td class="fw-bold text-secondary">
+                                    @log.duration
+                                </td>
+
+                                <!-- Status Badge -->
+                                <td>
+                                    @if (log.login_method != null && (log.login_method.Contains("Leave")))
+                                    {
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">On Leave</span>
+                                    }
+                                    else if (log.exception_id != null)
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">Exception</span>
+                                    }
+                                    else if (log.entry_time != null && log.exit_time == null)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                            <i class="fa fa-circle me-1" style="font-size: 0.5em;"></i> Working
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-secondary border rounded-pill">Completed</span>
+                                    }
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var log in Model)
-                            {
-                                <tr>
-                                    <!-- Date Column -->
-                                    <td class="ps-4 py-3">
-                                        <div class="d-flex flex-column">
-                                            <span class="fw-bold text-dark">@(log.entry_time?.ToString("MMM dd, yyyy") ?? "-")</span>
-                                            <small class="text-muted">@(log.entry_time?.ToString("dddd") ?? "")</small>
-                                        </div>
-                                    </td>
-
-                                    <!-- Shift Column -->
-                                    <td>
-                                        <span class="badge bg-light text-dark border border-secondary rounded-pill px-3 py-2">
-                                            @log.shift_name
-                                        </span>
-                                    </td>
-
-                                    <!-- Check In -->
-                                    <td>
-                                        @if (log.entry_time.HasValue)
-                                        {
-                                            <div class="d-flex align-items-center text-success fw-bold">
-                                                <i class="bi bi-box-arrow-in-right me-2"></i>
-                                                @log.entry_time?.ToString("hh:mm tt")
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted fst-italic">-</span>
-                                        }
-                                    </td>
-
-                                    <!-- Check Out -->
-                                    <td>
-                                        @if (log.exit_time.HasValue)
-                                        {
-                                            <div class="d-flex align-items-center text-danger fw-bold">
-                                                <i class="bi bi-box-arrow-right me-2"></i>
-                                                @log.exit_time?.ToString("hh:mm tt")
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-warning text-dark">Active</span>
-                                        }
-                                    </td>
-
-                                    <!-- Duration -->
-                                    <td>
-                                        <span class="font-monospace fw-bold text-secondary">
-                                            @log.duration
-                                        </span>
-                                    </td>
-
-                                    <!-- Visual Indicator (Status) -->
-                                    <td class="pe-4 text-end">
-                                        @if (log.entry_time.HasValue && log.exit_time.HasValue)
-                                        {
-                                            <i class="bi bi-check-circle-fill text-success fs-5" title="Completed"></i>
-                                        }
-                                        else
-                                        {
-                                            <div class="spinner-grow spinner-grow-sm text-warning" role="status" title="In Progress">
-                                                <span class="visually-hidden">In Progress</span>
-                                            </div>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-            else
-            {
-                <!-- Empty State -->
-                <div class="text-center py-5">
-                    <div class="mb-3 text-muted">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-calendar-x" viewBox="0 0 16 16">
-                            <path d="M6.146 7.146a.5.5 0 0 1 .708 0L8 8.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 9l1.147 1.146a.5.5 0 0 1-.708.708L8 9.707l-1.146 1.147a.5.5 0 0 1-.708-.708L7.293 9 6.146 7.854a.5.5 0 0 1 0-.708z" />
-                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
-                        </svg>
-                    </div>
-                    <h5 class="text-secondary">No attendance records found</h5>
-                    <p class="text-muted small">Start recording your attendance to see history here.</p>
-                </div>
-            }
+                        }
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
