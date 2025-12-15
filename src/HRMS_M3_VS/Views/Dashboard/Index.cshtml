@@ -1,7 +1,25 @@
 ﻿@{
     ViewData["Title"] = "Home";
     var userName = User.Identity?.Name ?? "Colleague";
-    var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Employee";
+
+    // -----------------------------------------------------------
+    // LOGIC: Determine Highest Priority Role
+    // -----------------------------------------------------------
+    string role = "Employee"; // Default fallback
+
+    if (User.IsInRole("SystemAdmin"))
+    {
+        role = "System Admin";
+    }
+    else if (User.IsInRole("HRAdmin"))
+    {
+        role = "HR Admin";
+    }
+    else if (User.IsInRole("Manager"))
+    {
+        role = "Manager";
+    }
+    // -----------------------------------------------------------
 }
 
 <!-- 1. The Modern Hero Banner -->
@@ -13,7 +31,11 @@
     <div style="position: absolute; bottom: -20px; right: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
 
     <h1 class="display-5 fw-bold position-relative">Good Evening, @userName! 🚀</h1>
-    <p class="lead position-relative opacity-75">You are logged in as <span class="badge bg-white text-primary">@role</span></p>
+    <p class="lead position-relative opacity-75">
+        You are logged in as
+        <!-- The role variable now holds the highest priority role -->
+        <span class="badge bg-white text-primary">@role</span>
+    </p>
 </div>
 
 <!-- 2. The Command Center (Quick Actions) -->

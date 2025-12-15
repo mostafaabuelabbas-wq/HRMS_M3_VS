@@ -468,6 +468,7 @@ VALUES (@e3,'Egypt','Monthly','2024-02-01');
 INSERT INTO LineManager (employee_id, team_size, supervised_departments, approval_limit)
 VALUES (@e1,5,'HR,IT',10000);
 
+
 ------------------------------------------------------------
 -- Done
 ------------------------------------------------------------
@@ -500,7 +501,7 @@ INSERT INTO Role (role_name, purpose) VALUES
 INSERT INTO Position (position_title, responsibilities, status) VALUES
 ('Project Manager','Lead projects, coordinate teams','Active'),
 ('HR Specialist','Employee relations, HR operations','Active'),
-('Team Lead','Oversee team tasks and performance','Active'),
+('Team Leader','Oversee team tasks and performance','Active'),
 ('Payroll Specialist','Manage payroll processing','Active'),
 ('Junior Software Engineer','Assist development, testing, maintenance','Active'),
 ('Senior Software Engineer','Advanced development, system architecture','Active'),
@@ -1485,3 +1486,111 @@ PRINT '------------------------------------------------------------';
 PRINT ' ALL DATA INSERTED + VALIDATED SUCCESSFULLY ';
 PRINT ' HRMS DATABASE IS NOW FULLY READY FOR MILESTONE 3 ';
 PRINT '------------------------------------------------------------';
+
+------------------------------------------------------------
+-- FINAL MANAGER NORMALIZATION (SOURCE OF TRUTH: HIERARCHY)
+------------------------------------------------------------
+
+-- 1️⃣ Clear Manager role from everyone (SAFE)
+DELETE er
+FROM Employee_Role er
+JOIN Role r ON er.role_id = r.role_id
+WHERE r.role_name = 'Manager';
+
+------------------------------------------------------------
+
+-- 2️⃣ Re-assign Manager role ONLY to real managers
+INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
+SELECT DISTINCT
+    h.manager_id,
+    r.role_id,
+    GETDATE()
+FROM EmployeeHierarchy h
+JOIN Role r ON r.role_name = 'Manager'
+WHERE h.manager_id IS NOT NULL;
+
+------------------------------------------------------------
+
+-- 3️⃣ Force Employee.manager_id to MATCH hierarchy (optional)
+-- If you want to keep it consistent instead of ignoring it
+UPDATE e
+SET manager_id = h.manager_id
+FROM Employee e
+JOIN EmployeeHierarchy h ON e.employee_id = h.employee_id;
+
+------------------------------------------------------------
+
+-- 4️⃣ Rebuild LineManager table from hierarchy (optional)
+TRUNCATE TABLE LineManager;
+
+INSERT INTO LineManager (employee_id, team_size, supervised_departments, approval_limit)
+SELECT
+    h.manager_id,
+    COUNT(*),
+    NULL,
+    0
+FROM EmployeeHierarchy h
+WHERE h.manager_id IS NOT NULL
+GROUP BY h.manager_id;
+
+------------------------------------------------------------
+-- END OF MANAGER NORMALIZATION
+------------------------------------------------------------
+
+
+-- Vacation
+INSERT INTO LeaveEntitlement (employee_id, leave_type_id, entitlement)
+SELECT e.employee_id, l.leave_id, 21
+FROM Employee e
+JOIN [Leave] l ON l.leave_type = 'Vacation'
+WHERE e.employee_id IN (
+    SELECT employee_id FROM Employee
+    WHERE email IN (
+        'mostafa.mohamed@company.com',
+        'hasan.mahmoud@company.com',
+        'mohamed.amr@company.com',
+        'omar.khalaf@company.com',
+        'aya.nabil@company.com'
+    )
+)
+AND NOT EXISTS (
+    SELECT 1 FROM LeaveEntitlement le
+    WHERE le.employee_id = e.employee_id
+      AND le.leave_type_id = l.leave_id
+);
+
+-- Sick
+INSERT INTO LeaveEntitlement (employee_id, leave_type_id, entitlement)
+SELECT e.employee_id, l.leave_id, 10
+FROM Employee e
+JOIN [Leave] l ON l.leave_type = 'Sick'
+WHERE e.employee_id IN (
+    SELECT employee_id FROM Employee
+    WHERE email IN (
+        'mostafa.mohamed@company.com',
+        'hasan.mahmoud@company.com',
+        'mohamed.amr@company.com',
+        'omar.khalaf@company.com',
+        'aya.nabil@company.com'
+    )
+)
+AND NOT EXISTS (
+    SELECT 1 FROM LeaveEntitlement le
+    WHERE le.employee_id = e.employee_id
+      AND le.leave_type_id = l.leave_id
+);
+--making aya hr admin
+INSERT INTO Employee_Role (employee_id, role_id, assigned_date)
+SELECT 
+    e.employee_id,
+    r.role_id,
+    GETDATE()
+FROM Employee e
+JOIN Role r ON r.role_name = 'HRAdmin'
+WHERE e.email = 'aya.nabil@company.com'
+AND NOT EXISTS (
+    SELECT 1
+    FROM Employee_Role er
+    WHERE er.employee_id = e.employee_id
+      AND er.role_id = r.role_id
+);

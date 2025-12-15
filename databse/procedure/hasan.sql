@@ -47,7 +47,6 @@ END;
 GO
 
 
-SELECT COUNT(*) FROM [Leave];
 
 
 
