@@ -185,6 +185,16 @@
                 <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
                     <i class="fas fa-file-contract me-2"></i> Contracts
                 </a>
+                @if (User.IsInRole("HRAdmin"))
+{
+    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
+        <i class="fas fa-cogs"></i> Leave Config
+    </a>
+
+    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="AssignEntitlement">
+        <i class="fas fa-user-edit"></i> Leave Entitlements
+    </a>
+}
             }
 
             <!-- SYSTEM ADMIN ONLY -->

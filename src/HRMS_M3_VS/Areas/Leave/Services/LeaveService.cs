@@ -119,5 +119,28 @@ namespace HRMS_M3_VS.Areas.Leave.Services
             await _db.ExecuteAsync("ConfigureLeaveEligibility", new { LeaveType = dto.leave_type, MinTenure = 0, EmployeeType = dto.eligibility_rules });
             return "Configuration saved successfully.";
         }
+        // ==========================================================
+        // HR ADMIN: ASSIGN ENTITLEMENTS
+        // ==========================================================
+
+        public async Task<IEnumerable<EmployeeSimpleDto>> GetAllEmployees()
+        {
+            // Uses your existing procedure that filters by is_active
+            return await _db.QueryAsync<EmployeeSimpleDto>("GetAllEmployeesSimple", null);
+        }
+
+        public async Task<string> AssignEntitlement(AssignEntitlementDto dto)
+        {
+            var result = await _db.QueryAsync<dynamic>(
+                "AssignLeaveEntitlement",
+                new
+                {
+                    EmployeeID = dto.EmployeeId,
+                    LeaveTypeID = dto.LeaveTypeId,
+                    Entitlement = dto.Entitlement
+                }
+            );
+            return result.FirstOrDefault()?.ConfirmationMessage ?? "Entitlement updated.";
+        }
     }
 }

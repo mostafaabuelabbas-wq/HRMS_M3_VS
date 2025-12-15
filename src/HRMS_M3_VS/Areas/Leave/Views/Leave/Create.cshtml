@@ -23,6 +23,7 @@
 
                 <div class="card-body p-4 p-md-5 bg-white">
                     
+                    <!-- Validation Summary to show why it fails if it does -->
                     <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
 
                     @if (TempData["Error"] != null)
@@ -32,63 +33,62 @@
                         </div>
                     }
 
-                    <!-- ✅ ADDED: enctype for file upload -->
+                    <!-- FORM START -->
+                    <!-- Action points to Leave Area -> Leave Controller -> Create Action -->
                     <form action="/Leave/Leave/Create" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
 
-                        <!-- Leave Type Dropdown -->
+                        <!-- 1. Leave Type Dropdown -->
                         <div class="mb-4">
-                            <label for="leave_id" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">Leave Type</label>
+                            <label for="leave_id" class="form-label fw-bold text-secondary small text-uppercase">Leave Type</label>
                             
+                            <!-- NAME must match DTO property: leave_id -->
                             <select name="leave_id" id="leave_id" class="form-select bg-light shadow-sm" required>
-                                <option value="">-- Select Approved Leave Type --</option>
-                                @if (ViewBag.LeaveTypes != null)
-                                {
-                                    foreach (var type in ViewBag.LeaveTypes)
-                                    {
-                                        if (type.leave_type == "Probation")
-                                        {
-                                            <option value="@type.leave_id" disabled class="text-muted">
-                                                @type.leave_type (Policy-based / HR-controlled)
-                                            </option>
-                                        }
-                                        else
-                                        {
-                                            <option value="@type.leave_id">@type.leave_type</option>
-                                        }
-                                    }
-                                }
-                            </select>
-                            <div class="form-text small text-muted mt-2">
-                                <i class="fas fa-info-circle me-1"></i> Only Vacation and Sick leave can be requested here.
-                            </div>
+    <option value="">-- Select Leave Type --</option>
+    @if (ViewBag.LeaveTypes != null)
+    {
+        foreach (var type in ViewBag.LeaveTypes)
+        {
+            // FIX: Hide specific types that employees should not request manually
+            if (type.leave_type == "Probation" || type.leave_type == "Holiday")
+            {
+                continue; 
+            }
+            
+            <option value="@type.leave_id">@type.leave_type</option>
+        }
+    }
+</select>
                         </div>
 
-                        <!-- Date Range -->
+                        <!-- 2. Date Range -->
                         <div class="row g-3 mb-4">
                             <div class="col-6">
-                                <label for="start_date" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">Start Date</label>
+                                <label for="start_date" class="form-label fw-bold text-secondary small text-uppercase">Start Date</label>
+                                <!-- NAME must match DTO property: start_date -->
                                 <input name="start_date" id="start_date" type="date" class="form-control bg-light" required 
                                        value="@Model.start_date.ToString("yyyy-MM-dd")" />
                             </div>
                             <div class="col-6">
-                                <label for="end_date" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">End Date</label>
+                                <label for="end_date" class="form-label fw-bold text-secondary small text-uppercase">End Date</label>
+                                <!-- NAME must match DTO property: end_date -->
                                 <input name="end_date" id="end_date" type="date" class="form-control bg-light" required 
                                        value="@Model.end_date.ToString("yyyy-MM-dd")" />
                             </div>
                         </div>
 
-                        <!-- Justification -->
+                        <!-- 3. Justification -->
                         <div class="mb-4">
-                            <label for="justification" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">Reason / Justification</label>
-                            <textarea name="justification" id="justification" class="form-control bg-light" rows="3" placeholder="Explain the reason for your request..." required>@Model.justification</textarea>
+                            <label for="justification" class="form-label fw-bold text-secondary small text-uppercase">Reason</label>
+                            <!-- NAME must match DTO property: justification -->
+                            <textarea name="justification" id="justification" class="form-control bg-light" rows="3" placeholder="Explain the reason..." required>@Model.justification</textarea>
                         </div>
 
-                        <!-- ✅ ADDED: Attachment Field -->
+                        <!-- 4. Attachment -->
                         <div class="mb-4">
-                            <label for="attachment" class="form-label fw-bold text-secondary small text-uppercase tracking-wider">Attachment (Optional)</label>
+                            <label for="attachment" class="form-label fw-bold text-secondary small text-uppercase">Attachment (Optional)</label>
+                            <!-- NAME must match DTO property: attachment -->
                             <input type="file" name="attachment" id="attachment" class="form-control bg-light" />
-                            <div class="form-text small text-muted">Upload medical certificates or supporting documents.</div>
                         </div>
 
                         <hr class="my-4 text-muted opacity-25" />
@@ -98,6 +98,8 @@
                             <button type="submit" class="btn btn-primary btn-lg shadow-sm" style="background-color: #2c5364; border-color: #2c5364;">
                                 <i class="fas fa-paper-plane me-2"></i> Submit Request
                             </button>
+                            
+                            <!-- Cancel Button redirects to MyLeave Dashboard -->
                             <a href="/Leave/Leave/MyLeave" class="btn btn-outline-secondary btn-lg border-0">
                                 Cancel
                             </a>
@@ -110,11 +112,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    .tracking-wider { letter-spacing: 1px; }
-    .form-control:focus, .form-select:focus {
-        border-color: #2c5364;
-        box-shadow: 0 0 0 0.2rem rgba(44, 83, 100, 0.25);
-    }
-</style>

@@ -875,7 +875,7 @@ EXEC UpdateContract
     @CurrentState = 'Active';
 
 SELECT * FROM Contract ORDER BY contract_id DESC;
-*/
+
 -- Before update
 SELECT * FROM Contract WHERE contract_id = 16;
 
@@ -889,3 +889,5 @@ EXEC UpdateContract
 
 -- After update
 SELECT * FROM Contract WHERE contract_id = 16;
+
+*/

@@ -1,0 +1,122 @@
+@model HRMS_M3_VS.Areas.Leave.Models.AssignEntitlementDto
+
+@{
+    ViewData["Title"] = "Assign Leave Entitlement";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+
+                <!-- Header -->
+                <div class="card-header text-white text-center py-4"
+                     style="background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);">
+                    <h3 class="fw-bold mb-1">Assign Leave Entitlement</h3>
+                    <p class="mb-0 text-white-50 small">
+                        Assign or adjust leave days for an employee
+                    </p>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-white">
+
+                    <!-- Alerts -->
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success border-0 shadow-sm mb-4">
+                            @TempData["Success"]
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger border-0 shadow-sm mb-4">
+                            @TempData["Error"]
+                        </div>
+                    }
+
+                    <!-- Validation -->
+                    <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
+                    <!-- FORM -->
+                    <form action="/Leave/Leave/AssignEntitlement" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Employee -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">
+                                Employee
+                            </label>
+                            <select name="EmployeeId" class="form-select" required>
+                                <option value="">-- Select Employee --</option>
+                                @foreach (var emp in ViewBag.Employees)
+                                {
+                                    <option value="@emp.employee_id">
+                                        @emp.full_name
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Leave Type -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">
+                                Leave Type
+                            </label>
+                            <select name="LeaveTypeId" class="form-select" required>
+                                <option value="">-- Select Leave Type --</option>
+                                @foreach (var type in ViewBag.LeaveTypes)
+                                {
+                                    <option value="@type.leave_id">
+                                        @type.leave_type
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Entitlement -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">
+                                Entitlement (Days)
+                            </label>
+                            <input type="number"
+                                   name="Entitlement"
+                                   class="form-control"
+                                   min="0"
+                                   step="0.5"
+                                   placeholder="e.g. 30"
+                                   required />
+                            <div class="form-text small">
+                                This overrides the default entitlement.
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-3">
+                            <button type="submit"
+                                    class="btn btn-primary btn-lg shadow-sm"
+                                    style="background-color:#2c5364;border-color:#2c5364;">
+                                <i class="fas fa-save me-2"></i> Save Entitlement
+                            </button>
+
+                            <a href="/Leave/Leave/ManageTypes"
+                               class="btn btn-outline-secondary btn-lg border-0">
+                                Cancel
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}
