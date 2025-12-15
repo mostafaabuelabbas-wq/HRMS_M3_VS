@@ -120,7 +120,7 @@ GO
 -- 3. ViewTeamAttendance
 -- ViewTeamAttendance
 -- PROCEDURE: ViewTeamAttendance
-CREATE PROCEDURE ViewTeamAttendance
+CREATE OR ALTER PROCEDURE ViewTeamAttendance
     @ManagerID INT,
     @DateRangeStart DATE,
     @DateRangeEnd DATE
@@ -152,7 +152,7 @@ BEGIN
     SELECT 
         a.attendance_id,
         a.employee_id,
-        e.full_name,
+        e.first_name + ' ' + e.last_name AS full_name,
         a.shift_id,
         a.entry_time,
         a.exit_time,
@@ -162,10 +162,13 @@ BEGIN
         a.exception_id
     FROM Attendance a
     INNER JOIN Employee e ON a.employee_id = e.employee_id
-    WHERE e.manager_id = @ManagerID
+    WHERE 
+      -- LOGIC CHANGE: If ManagerID is 0, show ALL. Else, show specific team.
+      (@ManagerID = 0 OR e.manager_id = @ManagerID)
+      
       AND a.entry_time >= @DateRangeStart
-      AND a.entry_time < DATEADD(DAY, 1, @DateRangeEnd)   -- include entire last day
-    ORDER BY a.entry_time;
+      AND a.entry_time < DATEADD(DAY, 1, @DateRangeEnd)
+    ORDER BY a.entry_time DESC;
 END;
 GO
 
