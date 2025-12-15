@@ -98,25 +98,51 @@ namespace HRMS_M3_VS.Areas.Leave.Services
         // --- Other Getters ---
         public async Task<IEnumerable<LeaveBalanceDto>> GetEmployeeBalance(int id) => await _db.QueryAsync<LeaveBalanceDto>("GetLeaveBalance", new { EmployeeID = id });
         public async Task<IEnumerable<LeaveHistoryDto>> GetEmployeeHistory(int id) => await _db.QueryAsync<LeaveHistoryDto>("ViewLeaveHistory", new { EmployeeID = id });
-        
-        // --- Admin ---
+
+        // --- HR Admin (Configuration) ---
+
         public async Task<IEnumerable<LeaveConfigDto>> GetLeaveConfigurations()
         {
+            // Requires SQL Procedure: GetLeaveConfiguration
             var result = await _db.QueryAsync<dynamic>("GetLeaveConfiguration", null);
+
             return result.Select(r => new LeaveConfigDto
             {
                 leave_id = r.leave_id,
                 leave_type = r.leave_type,
                 leave_description = r.leave_description,
                 notice_period = r.notice_period ?? 0,
+                max_duration = r.max_duration ?? 0, // Added this mapping
                 eligibility_rules = r.eligibility_rules ?? "All"
             });
         }
+
         public async Task<string> SaveLeaveConfiguration(LeaveConfigDto dto)
         {
-            await _db.ExecuteAsync("ManageLeaveTypes", new { LeaveType = dto.leave_type, Description = dto.leave_description });
-            await _db.ExecuteAsync("ConfigureLeaveRules", new { LeaveType = dto.leave_type, MaxDuration = dto.max_duration, NoticePeriod = dto.notice_period, WorkflowType = dto.workflow_type });
-            await _db.ExecuteAsync("ConfigureLeaveEligibility", new { LeaveType = dto.leave_type, MinTenure = 0, EmployeeType = dto.eligibility_rules });
+            // 1. Create/Update Type
+            await _db.ExecuteAsync("ManageLeaveTypes", new
+            {
+                LeaveType = dto.leave_type,
+                Description = dto.leave_description
+            });
+
+            // 2. Configure Rules (Added WorkflowType to match SQL Proc)
+            await _db.ExecuteAsync("ConfigureLeaveRules", new
+            {
+                LeaveType = dto.leave_type,
+                MaxDuration = dto.max_duration,
+                NoticePeriod = dto.notice_period,
+                WorkflowType = dto.workflow_type
+            });
+
+            // 3. Configure Eligibility (Map string rule to EmployeeType param)
+            await _db.ExecuteAsync("ConfigureLeaveEligibility", new
+            {
+                LeaveType = dto.leave_type,
+                MinTenure = 0,
+                EmployeeType = dto.eligibility_rules // Passing the string here
+            });
+
             return "Configuration saved successfully.";
         }
         // ==========================================================

@@ -252,6 +252,7 @@ CREATE TABLE Reimbursement (
 CREATE TABLE Mission (
     mission_id INT IDENTITY(1,1) PRIMARY KEY,
     destination VARCHAR(100),
+    description VARCHAR(200),
     start_date DATE,
     end_date DATE,
     status VARCHAR(50),
