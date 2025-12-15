@@ -4,20 +4,22 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "My Leave";
 
-    // --- LOGIC EXTRACTION ---
-    // Extract Data for the Shared Pool
-    var vacation = Model.Balances.FirstOrDefault(b => b.leave_type == "Vacation" || b.leave_type == "Annual");
-    var sick = Model.Balances.FirstOrDefault(b => b.leave_type == "Sick");
+    // --- LOGIC EXTRACTION (FIXED) ---
 
-    // Shared Math
-    decimal totalEntitlement = 30;
-    decimal globalRemaining = vacation?.remaining_balance ?? sick?.remaining_balance ?? 30;
-    decimal globalUsed = totalEntitlement - globalRemaining;
-    decimal vacationUsed = vacation?.days_used ?? 0;
-    decimal sickUsed = sick?.days_used ?? 0;
+    // 1. Identify "Banked" Leaves (Leaves where entitlement > 0)
+    // We assume any leave with a positive entitlement is part of the "Annual Pool"
+    // unless you have specific logic otherwise.
+    var bankedLeaves = Model.Balances.Where(b => b.entitlement > 0).ToList();
+
+    // 2. Calculate Totals dynamically
+    decimal totalEntitlement = bankedLeaves.Sum(b => b.entitlement);
+    decimal totalUsed = bankedLeaves.Sum(b => b.days_used);
+    decimal totalRemaining = bankedLeaves.Sum(b => b.remaining_balance);
+
+    // 3. Percentage for Progress Bar
+    decimal progressPercent = totalEntitlement > 0 ? (totalRemaining / totalEntitlement) * 100 : 0;
     
-    // Percentage for Main Progress Bar
-    decimal progressPercent = (globalRemaining / totalEntitlement) * 100;
+    // 4. Color Logic (Red = Low Balance)
     string progressColor = progressPercent < 20 ? "bg-danger" : (progressPercent < 50 ? "bg-warning" : "bg-success");
 }
 
@@ -34,6 +36,13 @@
         </a>
     </div>
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger border-0 shadow-sm border-start border-danger border-4 rounded-3 mb-4">
+            <i class="fas fa-exclamation-circle me-2"></i> @TempData["Error"]
+        </div>
+    }
+
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success border-0 shadow-sm border-start border-success border-4 rounded-3 mb-4">
@@ -41,7 +50,7 @@
         </div>
     }
 
-    <!-- SECTION 1: ANNUAL ENTITLEMENT (SHARED POOL) -->
+    <!-- SECTION 1: ANNUAL ENTITLEMENT (DYNAMIC POOL) -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
@@ -49,8 +58,8 @@
                     <div class="row align-items-center">
                         <!-- Main Balance Circle -->
                         <div class="col-md-3 text-center border-end">
-                            <h6 class="text-uppercase text-secondary fw-bold small">Annual Balance</h6>
-                            <h1 class="display-4 fw-bold text-dark mb-0">@globalRemaining.ToString("0.##")</h1>
+                            <h6 class="text-uppercase text-secondary fw-bold small">Total Balance</h6>
+                            <h1 class="display-4 fw-bold text-dark mb-0">@totalRemaining.ToString("0.##")</h1>
                             <span class="badge bg-light text-dark border rounded-pill mt-2">Days Remaining</span>
                         </div>
                         
@@ -59,9 +68,9 @@
                             <div class="d-flex justify-content-between align-items-end mb-2">
                                 <div>
                                     <h5 class="fw-bold text-dark mb-1">Annual Leave Pool</h5>
-                                    <p class="text-muted small mb-0">Combined Vacation & Sick Leave (30 Days Total)</p>
+                                    <p class="text-muted small mb-0">Combined Balance (@totalEntitlement Days Total)</p>
                                 </div>
-                                <span class="fw-bold text-dark">@globalUsed.ToString("0.##") / 30 Used</span>
+                                <span class="fw-bold text-dark">@totalUsed.ToString("0.##") / @totalEntitlement Used</span>
                             </div>
                             
                             <!-- Main Progress Bar -->
@@ -69,26 +78,31 @@
                                 <div class="progress-bar @progressColor" role="progressbar" style="width: @progressPercent%"></div>
                             </div>
 
-                            <!-- Usage Breakdown -->
+                            <!-- Usage Breakdown (Dynamic Loop) -->
                             <div class="row mt-4 g-3">
-                                <div class="col-sm-6">
-                                    <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <i class="fas fa-plane text-success me-2"></i>
-                                            <span class="fw-bold text-secondary">Vacation Used</span>
+                                @foreach (var leaf in bankedLeaves)
+                                {
+                                    <div class="col-sm-6 col-lg-4">
+                                        <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="fas fa-calendar-check text-primary me-2"></i>
+                                                <span class="fw-bold text-secondary">@leaf.leave_type</span>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold text-dark">@leaf.remaining_balance Left</div>
+                                                <small class="text-muted">of @leaf.entitlement</small>
+                                            </div>
                                         </div>
-                                        <span class="fw-bold text-dark">@vacationUsed</span>
                                     </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <i class="fas fa-notes-medical text-danger me-2"></i>
-                                            <span class="fw-bold text-secondary">Sick Used</span>
+                                }
+                                @if (!bankedLeaves.Any())
+                                {
+                                    <div class="col-12">
+                                        <div class="alert alert-warning mb-0">
+                                            <i class="fas fa-info-circle me-2"></i> No leave entitlements have been assigned to you yet. Please contact HR.
                                         </div>
-                                        <span class="fw-bold text-dark">@sickUsed</span>
                                     </div>
-                                </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -97,10 +111,10 @@
         </div>
     </div>
 
-    <!-- SECTION 2: OTHER LEAVE TYPES (INFO ONLY) -->
-    <h5 class="fw-bold text-dark mb-3">Other Policies</h5>
+    <!-- SECTION 2: OTHER LEAVE TYPES (Policy Based / Unlimited) -->
+    <h5 class="fw-bold text-dark mb-3">Policy Based Leaves</h5>
     <div class="row g-4 mb-5">
-        @foreach (var item in Model.Balances.Where(b => b.leave_type != "Vacation" && b.leave_type != "Annual" && b.leave_type != "Sick"))
+        @foreach (var item in Model.Balances.Where(b => b.entitlement == 0))
         {
             <div class="col-md-6 col-xl-3">
                 <div class="card border-0 shadow-sm h-100 rounded-4">

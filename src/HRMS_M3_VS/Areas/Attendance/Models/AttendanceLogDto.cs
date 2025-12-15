@@ -7,14 +7,26 @@
         public DateTime? exit_time { get; set; }
         public string shift_name { get; set; } = "Unknown";
 
-        // Helper to show duration
+        // Extra fields for logic
+        public string login_method { get; set; } // Needed for badge color
+        public string logout_method { get; set; }
+        public int? exception_id { get; set; }
+
+        // IMPROVED DURATION LOGIC
         public string duration
         {
             get
             {
                 if (entry_time.HasValue && exit_time.HasValue)
                 {
-                    var span = exit_time.Value - entry_time.Value;
+                    TimeSpan span = exit_time.Value - entry_time.Value;
+
+                    // Round to 1 decimal place (e.g., 8.5 hours)
+                    double totalHours = Math.Round(span.TotalHours, 1);
+
+                    if (totalHours < 0) return "Error"; // Handle overnight logic if needed later
+
+                    // Format: "8h 30m"
                     return $"{span.Hours}h {span.Minutes}m";
                 }
                 return "-";

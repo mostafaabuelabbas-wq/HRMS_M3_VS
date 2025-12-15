@@ -1,105 +1,108 @@
 
  --Employee
-USE HRMS;
-GO
-
 CREATE OR ALTER PROCEDURE SubmitLeaveRequest
     @EmployeeID INT,
     @LeaveTypeID INT,
     @StartDate DATE,
     @EndDate DATE,
-    @Reason VARCHAR(255) -- Increased size to match UI
+    @Reason VARCHAR(100)
 AS
 BEGIN
     SET NOCOUNT ON;
 
     DECLARE @Duration INT;
     DECLARE @Entitlement DECIMAL(5,2);
+    DECLARE @UsedDays DECIMAL(5,2) = 0;
     DECLARE @ManagerID INT;
     DECLARE @EmployeeName VARCHAR(101);
     DECLARE @LeaveType VARCHAR(50);
+    DECLARE @HasPolicy BIT = 0;
 
-    --------------------------------------------------------
     -- 1. Validate Employee
-    --------------------------------------------------------
-    SELECT 
-        @EmployeeName = full_name,
-        @ManagerID = manager_id
-    FROM Employee
-    WHERE employee_id = @EmployeeID;
+    SELECT @EmployeeName = full_name, @ManagerID = manager_id
+    FROM Employee WHERE employee_id = @EmployeeID;
 
     IF @EmployeeName IS NULL
     BEGIN
-        SELECT 0 AS NewRequestId, 'Invalid employee ID' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'Invalid employee' AS ConfirmationMessage;
         RETURN;
     END;
 
-    --------------------------------------------------------
-    -- 2. Validate Leave Type
-    --------------------------------------------------------
+    -- 2. Get Leave Type Name
     SELECT @LeaveType = leave_type
-    FROM [Leave]
-    WHERE leave_id = @LeaveTypeID;
+    FROM [Leave] WHERE leave_id = @LeaveTypeID;
 
-    IF @LeaveType IS NULL
-    BEGIN
-        SELECT 0 AS NewRequestId, 'Invalid leave type' AS ConfirmationMessage;
-        RETURN;
-    END;
-
-    --------------------------------------------------------
-    -- 3. Validate Date Range
-    --------------------------------------------------------
+    -- 3. Calculate Duration
     SET @Duration = DATEDIFF(DAY, @StartDate, @EndDate) + 1;
-
     IF @Duration <= 0
     BEGIN
-        SELECT 0 AS NewRequestId, 'End date must be after start date' AS ConfirmationMessage;
+        SELECT 0 AS NewRequestId, 'Invalid date range' AS ConfirmationMessage;
         RETURN;
     END;
 
-    --------------------------------------------------------
-    -- 4. Validate Entitlement
-    --------------------------------------------------------
+    -- 4. SMART CHECK: Entitlement - Used vs Requested
+    
+    -- Check Entitlement
     SELECT @Entitlement = entitlement
     FROM LeaveEntitlement
-    WHERE employee_id = @EmployeeID 
-      AND leave_type_id = @LeaveTypeID;
+    WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID;
 
-    -- Note: If this fails, you need to INSERT into LeaveEntitlement table for this user
-    IF @Entitlement IS NULL
+    -- Check Used Days (Approved + Pending)
+    IF @Entitlement IS NOT NULL
     BEGIN
-        SELECT 0 AS NewRequestId, 'No leave balance assigned for this leave type' AS ConfirmationMessage;
+        SELECT @UsedDays = ISNULL(SUM(duration), 0)
+        FROM LeaveRequest
+        WHERE employee_id = @EmployeeID 
+          AND leave_id = @LeaveTypeID 
+          AND status IN ('Approved', 'Pending');
+    END
+
+    -- Check Policy
+    IF EXISTS (SELECT 1 FROM LeavePolicy WHERE special_leave_type = @LeaveType)
+    BEGIN
+        SET @HasPolicy = 1;
+    END
+
+    -- VALIDATION LOGIC:
+    IF @Entitlement IS NOT NULL
+    BEGIN
+        -- Scenario A: Employee has a balance row
+        -- Formula: (Entitlement - Used) must be >= New Request Duration
+        IF (@Entitlement - @UsedDays) < @Duration
+        BEGIN
+            SELECT 0 AS NewRequestId, 
+                   'Insufficient leave balance. Remaining: ' + CAST((@Entitlement - @UsedDays) AS VARCHAR(10)) + ' days.' AS ConfirmationMessage;
+            RETURN;
+        END
+    END
+    ELSE IF @HasPolicy = 1
+    BEGIN
+        -- Scenario B: Policy exists (Unlimited/Special), allow request
+        SET @Entitlement = 999; 
+    END
+    ELSE
+    BEGIN
+        -- Scenario C: No balance AND No policy
+        SELECT 0 AS NewRequestId, 'Error: You are not eligible for this leave type.' AS ConfirmationMessage;
         RETURN;
     END;
 
-    IF @Duration > @Entitlement
-    BEGIN
-        SELECT 0 AS NewRequestId, 'Insufficient balance. You have ' + CAST(@Entitlement AS VARCHAR(10)) + ' days left.' AS ConfirmationMessage;
-        RETURN;
-    END;
-
-    --------------------------------------------------------
-    -- 5. Insert Leave Request
-    --------------------------------------------------------
-    -- Combine Reason with Dates for clarity
-    DECLARE @FinalReason VARCHAR(500);
+    -- 5. Insert Request
+    DECLARE @FinalReason VARCHAR(255);
     SET @FinalReason = @Reason + ' (From: ' + CONVERT(VARCHAR, @StartDate, 23) + ' To: ' + CONVERT(VARCHAR, @EndDate, 23) + ')';
 
     INSERT INTO LeaveRequest (employee_id, leave_id, justification, duration, approval_timing, status)
     VALUES (@EmployeeID, @LeaveTypeID, @FinalReason, @Duration, NULL, 'Pending');
 
-    -- Capture the ID immediately
     DECLARE @NewID INT = SCOPE_IDENTITY();
 
-    --------------------------------------------------------
-    -- 6. Notify Manager
-    --------------------------------------------------------
+    -- 6. Notification to Manager
     IF @ManagerID IS NOT NULL
     BEGIN
         INSERT INTO Notification (message_content, urgency, read_status, notification_type)
         VALUES (
-            'Employee ' + @EmployeeName + ' submitted a request for ' + @LeaveType,
+            'Employee ' + @EmployeeName + ' (ID ' + CAST(@EmployeeID AS VARCHAR(10)) 
+            + ') submitted a ' + @LeaveType + ' leave request.',
             'Normal',
             0,
             'Leave Request'
@@ -111,14 +114,9 @@ BEGIN
         VALUES (@ManagerID, @NotifID, 'Sent', GETDATE());
     END;
 
-    --------------------------------------------------------
-    -- 7. Return Result to C#
-    --------------------------------------------------------
-    -- This matches exactly what the C# Service expects: NewRequestId and ConfirmationMessage
     SELECT @NewID AS NewRequestId, 'Leave request submitted successfully' AS ConfirmationMessage;
 END;
 GO
-
 
 -- 2 GetLeaveBalance
 
@@ -129,49 +127,67 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- 1. Constants
-    DECLARE @GlobalEntitlement DECIMAL(18,2) = 30.00;
+    DECLARE @VacationID INT = 1; -- Vacation = Annual Leave
+    DECLARE @DefaultEntitlement INT = 30;
 
-    -- 2. Calculate Total Shared Usage (Vacation + Sick Combined)
-    DECLARE @TotalSharedUsed DECIMAL(18,2);
-    SELECT @TotalSharedUsed = ISNULL(SUM(duration), 0)
-    FROM LeaveRequest lr
-    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
-    WHERE lr.employee_id = @EmployeeID
-      AND lr.status = 'Approved'
-      AND l.leave_type IN ('Annual', 'Sick', 'Vacation');
-
-    -- 3. Return Data
-    SELECT 
+    /* =========================
+       1. VACATION (DEFAULT = 30)
+       ========================= */
+    SELECT
         l.leave_type,
-        
-        -- Entitlement: 30 for shared types
-        CASE 
-            WHEN l.leave_type IN ('Annual', 'Sick', 'Vacation') THEN @GlobalEntitlement
-            ELSE 0 
-        END AS entitlement,
-
-        -- Used: Calculates usage strictly for THIS leave type
-        ISNULL((
-            SELECT SUM(duration) 
-            FROM LeaveRequest lr2 
-            WHERE lr2.employee_id = @EmployeeID 
-              AND lr2.leave_id = l.leave_id 
-              AND lr2.status = 'Approved'
-        ), 0) AS days_used,
-
-        -- Remaining: Shared Global Remaining
-        CASE 
-            WHEN l.leave_type IN ('Annual', 'Sick', 'Vacation') THEN (@GlobalEntitlement - @TotalSharedUsed)
-            ELSE 0 
-        END AS remaining_balance
-
+        ISNULL(le.entitlement, @DefaultEntitlement) AS entitlement,
+        ISNULL(SUM(lr.duration), 0) AS days_used,
+        ISNULL(le.entitlement, @DefaultEntitlement) - ISNULL(SUM(lr.duration), 0) AS remaining_balance
     FROM [Leave] l
-    INNER JOIN LeaveEntitlement le ON l.leave_id = le.leave_type_id
-    WHERE le.employee_id = @EmployeeID;
+    LEFT JOIN LeaveEntitlement le
+        ON le.employee_id = @EmployeeID
+       AND le.leave_type_id = @VacationID
+    LEFT JOIN LeaveRequest lr
+        ON lr.employee_id = @EmployeeID
+       AND lr.leave_id = @VacationID
+       AND lr.status IN ('Approved','Pending')
+    WHERE l.leave_id = @VacationID
+    GROUP BY l.leave_type, le.entitlement
+
+    UNION ALL
+
+    /* =========================
+       2. HR-ASSIGNED LEAVES
+       ========================= */
+    SELECT
+        l.leave_type,
+        le.entitlement,
+        ISNULL(SUM(lr.duration), 0),
+        le.entitlement - ISNULL(SUM(lr.duration), 0)
+    FROM LeaveEntitlement le
+    INNER JOIN [Leave] l ON le.leave_type_id = l.leave_id
+    LEFT JOIN LeaveRequest lr
+        ON lr.employee_id = le.employee_id
+       AND lr.leave_id = le.leave_type_id
+       AND lr.status IN ('Approved','Pending')
+    WHERE le.employee_id = @EmployeeID
+      AND le.leave_type_id <> @VacationID
+    GROUP BY l.leave_type, le.entitlement
+
+    UNION ALL
+
+    /* =========================
+       3. POLICY LEAVES (NO BALANCE)
+       ========================= */
+    SELECT
+        l.leave_type,
+        0,
+        0,
+        0
+    FROM [Leave] l
+    WHERE l.leave_id NOT IN (
+        SELECT leave_type_id
+        FROM LeaveEntitlement
+        WHERE employee_id = @EmployeeID
+    )
+    AND l.leave_id <> @VacationID;
 END;
 GO
-
 -- 3 RecordAttendance
 CREATE PROCEDURE RecordAttendance
     @EmployeeID INT,
@@ -1672,7 +1688,6 @@ GO
 USE HRMS;
 GO
 
--- MISSING IN PDF: Procedure for Employee to view their own attendance
 CREATE OR ALTER PROCEDURE GetMyAttendance
     @EmployeeID INT
 AS
@@ -1681,9 +1696,11 @@ BEGIN
         a.attendance_id,
         a.entry_time,
         a.exit_time,
-        ss.name AS shift_name,
-        ss.start_time,
-        ss.end_time
+        -- Fix: If shift is missing, show 'Flexible/Manual' instead of NULL
+        ISNULL(ss.name, 'Flexible / Manual') AS shift_name,
+        a.login_method,
+        a.logout_method,
+        a.exception_id
     FROM Attendance a
     LEFT JOIN ShiftSchedule ss ON a.shift_id = ss.shift_id
     WHERE a.employee_id = @EmployeeID

@@ -1,6 +1,6 @@
-﻿using HRMS_M3_VS.Areas.Employee.Services; // Or .Attendance.Services depending on where you put the service
+﻿using HRMS_M3_VS.Areas.Employee.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims; // <--- REQUIRED for getting the login ID
+using System.Security.Claims;
 
 namespace HRMS_M3_VS.Areas.Attendance.Controllers
 {
@@ -14,29 +14,95 @@ namespace HRMS_M3_VS.Areas.Attendance.Controllers
             _service = service;
         }
 
-        // -----------------------------------------------------------
-        // THE FIX: Get the Real ID from the Cookie
-        // -----------------------------------------------------------
-        private int CurrentManagerId
+        private int CurrentManagerId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
+        // Updated Index to handle "viewAll"
+        public async Task<IActionResult> Index(string filter = "today", bool viewAll = false, DateTime? start = null, DateTime? end = null)
         {
-            get
+            DateTime s, e;
+
+            // 1. Date Logic
+            switch (filter.ToLower())
             {
-                var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                // If logged in, return ID. If not, return 0 (which returns empty list)
-                return idClaim != null ? int.Parse(idClaim.Value) : 0;
+                case "week":
+                    s = DateTime.Today.AddDays(-6);
+                    e = DateTime.Today;
+                    break;
+                case "month":
+                    s = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    e = DateTime.Today;
+                    break;
+                case "custom":
+                    s = start ?? DateTime.Today;
+                    e = end ?? DateTime.Today;
+                    break;
+                case "today":
+                default:
+                    s = DateTime.Today;
+                    e = DateTime.Today;
+                    break;
             }
-        }
 
-        public async Task<IActionResult> Index(DateTime? start, DateTime? end)
-        {
-            var s = start ?? DateTime.Today.AddDays(-7);
-            var e = end ?? DateTime.Today;
+            // 2. Manager Logic (Who do we fetch?)
+            int managerIdToFetch = CurrentManagerId;
 
+            // SECURITY CHECK: Only Admins can use "View All"
+            bool isAdmin = User.IsInRole("SystemAdmin") || User.IsInRole("HRAdmin");
+
+            if (viewAll && isAdmin)
+            {
+                managerIdToFetch = 0; // 0 tells SQL to fetch everyone
+            }
+
+            ViewBag.Filter = filter;
+            ViewBag.IsViewAll = (viewAll && isAdmin); // To toggle button state
+            ViewBag.CanViewAll = isAdmin;             // To show/hide button
             ViewBag.Start = s;
             ViewBag.End = e;
 
-            // USE "CurrentManagerId" NOT "6"
-            var logs = await _service.GetTeamAttendance(CurrentManagerId, s, e);
+            var logs = await _service.GetTeamAttendance(managerIdToFetch, s, e);
+            return View(logs);
+        }
+        // --- VIEW SPECIFIC EMPLOYEE HISTORY ---
+        public async Task<IActionResult> History(int id, string filter = "month", DateTime? start = null, DateTime? end = null)
+        {
+            DateTime s, e;
+
+            // Standard Date Logic
+            switch (filter.ToLower())
+            {
+                case "week":
+                    s = DateTime.Today.AddDays(-6);
+                    e = DateTime.Today;
+                    break;
+                case "month":
+                    s = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    e = DateTime.Today;
+                    break;
+                case "year":
+                    s = new DateTime(DateTime.Today.Year, 1, 1);
+                    e = DateTime.Today;
+                    break;
+                case "custom":
+                    s = start ?? DateTime.Today;
+                    e = end ?? DateTime.Today;
+                    break;
+                default: // month
+                    s = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    e = DateTime.Today;
+                    break;
+            }
+
+            ViewBag.Filter = filter;
+            ViewBag.Start = s;
+            ViewBag.End = e;
+            ViewBag.TargetEmployeeId = id; // Pass ID to view for pagination/filtering
+
+            var logs = await _service.GetEmployeeHistory(id, s, e);
+
+            // Grab name for the header (safely)
+            ViewBag.EmployeeName = logs.FirstOrDefault()?.full_name ?? "Employee #" + id;
+
             return View(logs);
         }
     }

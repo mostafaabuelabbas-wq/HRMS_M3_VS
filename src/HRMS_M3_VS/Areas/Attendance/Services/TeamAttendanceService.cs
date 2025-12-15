@@ -24,5 +24,16 @@ namespace HRMS_M3_VS.Areas.Employee.Services
             // Calls your existing SQL Procedure "ViewTeamAttendance"
             return await _db.QueryAsync<TeamAttendanceLogDto>("ViewTeamAttendance", parameters);
         }
+        // Add this method to TeamAttendanceService
+
+        public async Task<IEnumerable<TeamAttendanceLogDto>> GetEmployeeHistory(int employeeId, DateTime start, DateTime end)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("EmployeeID", employeeId);
+            parameters.Add("StartDate", start);
+            parameters.Add("EndDate", end);
+
+            return await _db.QueryAsync<TeamAttendanceLogDto>("GetEmployeeAttendanceHistory", parameters);
+        }
     }
 }

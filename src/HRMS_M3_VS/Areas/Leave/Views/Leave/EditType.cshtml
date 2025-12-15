@@ -1,0 +1,117 @@
+@model HRMS_M3_VS.Areas.Leave.Models.LeaveConfigDto
+
+@{
+    ViewData["Title"] = "Configure Policy";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isEdit = !string.IsNullOrEmpty(Model.leave_type);
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <!-- Header -->
+                <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);">
+                    <div class="mb-2">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-cogs fs-2"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1">@(isEdit ? "Edit Policy" : "New Policy")</h3>
+                    <p class="mb-0 text-white-50 small">Define rules and eligibility for this leave type.</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-white">
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger shadow-sm border-0 border-start border-danger border-4 mb-4">
+                            @TempData["Error"]
+                        </div>
+                    }
+
+                    <!-- FIX: Standard HTML Form Action -->
+                    <form action="/Leave/Leave/SaveType" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <!-- 1. Basic Info -->
+                        <h6 class="text-uppercase text-secondary fw-bold small mb-3 ls-1">Basic Information</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Leave Type Name</label>
+                            @if (isEdit)
+                            {
+                                <!-- Readonly in Edit Mode -->
+                                <input name="leave_type" value="@Model.leave_type" class="form-control bg-light" readonly />
+                            }
+                            else
+                            {
+                                <input name="leave_type" value="@Model.leave_type" class="form-control" placeholder="e.g. Remote Work" required />
+                            }
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-muted">Description</label>
+                            <textarea name="leave_description" class="form-control" rows="2" placeholder="Brief description...">@Model.leave_description</textarea>
+                        </div>
+
+                        <hr class="my-4 text-muted opacity-25" />
+
+                        <!-- 2. Rules -->
+                        <h6 class="text-uppercase text-secondary fw-bold small mb-3 ls-1">Policy Rules</h6>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold small text-muted">Notice Period (Days)</label>
+                                <input name="notice_period" value="@Model.notice_period" type="number" class="form-control" min="0" />
+                                <div class="form-text small">Days in advance required.</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold small text-muted">Max Duration (Days)</label>
+                                <input name="max_duration" value="@Model.max_duration" type="number" class="form-control" min="1" />
+                                <div class="form-text small">Max consecutive days.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-muted">Eligibility Rules</label>
+                            <!-- UPDATED: Text Input to match your Schema -->
+                            <input name="eligibility_rules" value="@Model.eligibility_rules" class="form-control" placeholder="e.g. Full-Time Employees Only" />
+                            <div class="form-text small">Enter rule as plain text (Max 200 chars).</div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-3 pt-2">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm" style="background-color: #2c5364; border-color: #2c5364;">
+                                <i class="fas fa-save me-2"></i> Save Configuration
+                            </button>
+                            <!-- Direct Link for Cancel -->
+                            <a href="/Leave/Leave/ManageTypes" class="btn btn-outline-secondary btn-lg border-0">
+                                Cancel
+                            </a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-1 {
+        letter-spacing: 1px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #2c5364;
+        box-shadow: 0 0 0 0.2rem rgba(44, 83, 100, 0.25);
+    }
+</style>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
