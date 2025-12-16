@@ -57,6 +57,16 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
+            // SECURITY FIX: Ensure the user is editing THEIR OWN profile
+            // SECURITY FIX: Ensure the user is editing THEIR OWN profile OR is HR Admin
+            var loggedInUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            bool isHRAdmin = User.IsInRole("HRAdmin");
+
+            if (!isHRAdmin && loggedInUserId != null && int.Parse(loggedInUserId) != id)
+            {
+                return Forbid(); 
+            }
+
             var emp = await _service.GetEmployeeByIdAsync(id);
             if (emp == null) return NotFound();
 
@@ -66,7 +76,7 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
                 Email = emp.Email,
                 Phone = emp.Phone,
                 Address = emp.Address,
-                ExistingImagePath = emp.Profile_Image,
+                ExistingImageBytes = emp.Profile_Image,
 
                 // --- ARE THESE LINES MISSING? ---
                 EmergencyContactName = emp.Emergency_Contact_Name,
@@ -85,35 +95,28 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
             // 1. SAFETY STEP: Fetch the current data from the DB to be sure
             // This prevents accidental deletion if the hidden field fails
             var currentEmp = await _service.GetEmployeeByIdAsync(model.EmployeeId);
-            string finalPath = currentEmp?.Profile_Image; // Start with what is currently in the DB
+            byte[]? finalBytes = currentEmp?.Profile_Image; 
 
             // 2. Logic: Handle changes
 
             // Case A: User checked "Remove Photo" -> Force Delete
             if (model.RemoveImage)
             {
-                finalPath = null;
+                finalBytes = null;
             }
 
             // Case B: User uploaded a NEW photo -> Force Update (Overrides everything)
             if (model.ProfileImage != null)
             {
-                string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "profiles");
-                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-                string uniqueFileName = model.EmployeeId + "_" + model.ProfileImage.FileName;
-                string filePath = Path.Combine(folderPath, uniqueFileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                using (var memoryStream = new MemoryStream())
                 {
-                    await model.ProfileImage.CopyToAsync(stream);
+                    await model.ProfileImage.CopyToAsync(memoryStream);
+                    finalBytes = memoryStream.ToArray();
                 }
-
-                finalPath = "/images/profiles/" + uniqueFileName;
             }
 
             // Update the model with the final decision
-            model.ExistingImagePath = finalPath;
+            model.ExistingImageBytes = finalBytes;
 
             // 3. Save Personal Info
             await _service.UpdateEmployeeAsync(model);

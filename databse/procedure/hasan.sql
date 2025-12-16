@@ -15,16 +15,19 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-        lr.request_id AS RequestId,
-        l.leave_type AS LeaveType,
-        lr.justification AS Justification, -- Contains the dates
-        lr.duration AS Duration,
-        lr.status AS Status,
-        lr.approval_timing AS ApprovalDate
-    FROM LeaveRequest lr
-    JOIN [Leave] l ON lr.leave_id = l.leave_id
-    WHERE lr.employee_id = @EmployeeID
-    ORDER BY lr.request_id DESC;
+    lr.request_id,
+    l.leave_type,
+    lr.duration,
+    lr.status,
+    lr.justification,
+    lr.approval_timing,
+    COUNT(ld.document_id) AS attachment_count  -- ✅ NEW LINE 1
+FROM LeaveRequest lr
+INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
+LEFT JOIN LeaveDocument ld ON lr.request_id = ld.leave_request_id  -- ✅ NEW LINE 2
+WHERE lr.employee_id = @EmployeeID
+GROUP BY lr.request_id, l.leave_type, lr.duration, lr.status, lr.justification, lr.approval_timing  -- ✅ NEW LINE 3
+ORDER BY lr.request_id DESC;
 END;
 GO
 

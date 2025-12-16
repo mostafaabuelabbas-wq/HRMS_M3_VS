@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using HRMS_M3_VS.Areas.Employee.Services;
 using HRMS_M3_VS.Areas.Employee.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HRMS_M3_VS.Areas.Employee.Controllers
 {
     [Area("Employee")]
+    [Authorize(Roles = "SystemAdmin")]
     public class RoleController : Controller
     {
         private readonly RoleService _roleService;

@@ -40,33 +40,63 @@ namespace HRMS_M3_VS.Areas.Attendance.Controllers
             return View(logs);
         }
 
-        // 2. Record Attendance (GET)
+        // 2. Record Attendance View (GET) - Now just shows Buttons
         public async Task<IActionResult> Record()
         {
-            // Get assigned shifts for the dropdown
-            ViewBag.Shifts = await _track.GetMyShifts(CurrentUserId);
-
-            // Pass the REAL ID to the view
+            // View now just needs the EmployeeID to confirm identity if needed
+            // No drop downs needed for Simple Clock In
             return View(new RecordAttendanceDto { employee_id = CurrentUserId });
         }
 
-        // 2. Record Attendance (POST)
+        // 3. CLOCK IN ACTION
         [HttpPost]
-        public async Task<IActionResult> Record(RecordAttendanceDto dto)
+        public async Task<IActionResult> ClockIn()
         {
-            // SECURITY: Overwrite the ID with the real logged-in ID
-            // (Prevents hacking by changing hidden fields)
-            dto.employee_id = CurrentUserId;
+            string msg = await _track.RecordPunch(CurrentUserId, DateTime.Now, "ClockIn");
+            
+            if (msg.Contains("Error") || msg.Contains("Duplicate")) // Check for DB error messages
+                 TempData["Error"] = msg;
+            else
+                 TempData["Success"] = "Clocked In Successfully at " + DateTime.Now.ToString("t");
 
-            if (!ModelState.IsValid)
+            return RedirectToAction("Index");
+        }
+
+        // 4. CLOCK OUT ACTION
+        [HttpPost]
+        public async Task<IActionResult> ClockOut()
+        {
+            string msg = await _track.RecordPunch(CurrentUserId, DateTime.Now, "ClockOut");
+            
+            if (msg.Contains("Error")) 
+                 TempData["Error"] = msg;
+            else
+                 TempData["Success"] = "Clocked Out Successfully at " + DateTime.Now.ToString("t");
+
+            return RedirectToAction("Index");
+        }
+
+        // 5. OFFLINE SYNC (API)
+        [HttpPost]
+        [Route("Attendance/Track/SyncOffline")]
+        public async Task<IActionResult> SyncOffline([FromBody] List<OfflinePunchDto> punches)
+        {
+            if (punches == null || !punches.Any())
+                return BadRequest("No data received");
+
+            int successCount = 0;
+            foreach (var p in punches)
             {
-                ViewBag.Shifts = await _track.GetMyShifts(CurrentUserId);
-                return View(dto);
+                // Ensure ID match for security (unless Admin, but this is for self-service)
+                int empId = CurrentUserId; 
+                if (empId == 0) return Unauthorized();
+
+                // Call existing service
+                await _track.RecordPunch(empId, p.Timestamp, p.Type);
+                successCount++;
             }
 
-            string message = await _track.RecordAttendance(dto);
-            TempData["Success"] = message ?? "Attendance Recorded.";
-            return RedirectToAction("Index");
+            return Ok(new { message = $"Synced {successCount} records successfully." });
         }
 
         // --- CORRECTION METHODS ---

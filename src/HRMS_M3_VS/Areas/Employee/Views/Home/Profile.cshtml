@@ -1,4 +1,6 @@
-﻿@model HRMS_M3_VS.Areas.Employee.Models.EmployeeDto
+@model HRMS_M3_VS.Areas.Employee.Models.EmployeeDto
+@using System.Security.Claims
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "My Profile";
@@ -11,7 +13,21 @@
 
         <!-- Cover Background -->
         <div style="height: 200px; background: linear-gradient(135deg, #0F172A 0%, #334155 100%); position: relative;">
-            <div class="position-absolute top-0 end-0 p-4">
+            <div class="position-absolute top-0 end-0 p-4 d-flex gap-2">
+                
+                <!-- LOGIC: Back Button for HR Admin (From Master) -->
+                @{
+                    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    // Show button ONLY if HR Admin AND NOT viewing their own profile
+                    if (User.IsInRole("HRAdmin") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
+                    {
+                        <a asp-controller="HRAdmin" asp-action="ProfileCompleteness" class="btn btn-outline-light shadow fw-bold rounded-pill px-4 transition-btn">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Report
+                        </a>
+                    }
+                }
+
+                <!-- Edit Button -->
                 <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-light shadow fw-bold rounded-pill px-4 transition-btn">
                     <i class="fas fa-pen me-2"></i> Edit Profile
                 </a>
@@ -24,10 +40,13 @@
             <div class="row mb-5">
                 <div class="col-lg-auto text-center text-lg-start" style="margin-top: -100px;">
                     <div class="position-relative d-inline-block">
-                        <!-- Avatar Logic -->
-                        @if (!string.IsNullOrEmpty(Model.Profile_Image))
+                        
+                        <!-- LOGIC: Image Handling (From Master - Base64) -->
+                        <!-- STYLE: Dark Borders (From Mohamad) -->
+                        @if (Model.Profile_Image != null && Model.Profile_Image.Length > 0)
                         {
-                            <img src="@Model.Profile_Image" class="rounded-circle shadow-lg"
+                            var base64 = Convert.ToBase64String(Model.Profile_Image);
+                            <img src="data:image/*;base64,@base64" class="rounded-circle shadow-lg"
                                  style="width: 170px; height: 170px; object-fit: cover; border: 6px solid #1E293B; background-color: #1E293B;"
                                  onerror="this.src='https://ui-avatars.com/api/?name=@Model.Full_Name&background=random&size=170';"
                                  alt="Profile" />

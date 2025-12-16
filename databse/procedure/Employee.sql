@@ -1,6 +1,6 @@
 
  --Employee
-CREATE OR ALTER PROCEDURE SubmitLeaveRequest
+ CREATE OR ALTER PROCEDURE SubmitLeaveRequest
     @EmployeeID INT,
     @LeaveTypeID INT,
     @StartDate DATE,
@@ -40,21 +40,19 @@ BEGIN
         RETURN;
     END;
 
-    -- 4. SMART CHECK: Entitlement - Used vs Requested
-    
-    -- Check Entitlement
+    -- 4. Check Entitlement
     SELECT @Entitlement = entitlement
     FROM LeaveEntitlement
     WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID;
 
-    -- Check Used Days (Approved + Pending)
+    -- ✅ FIXED: Check Used Days (ONLY Approved/Synced, NOT Pending)
     IF @Entitlement IS NOT NULL
     BEGIN
         SELECT @UsedDays = ISNULL(SUM(duration), 0)
         FROM LeaveRequest
         WHERE employee_id = @EmployeeID 
           AND leave_id = @LeaveTypeID 
-          AND status IN ('Approved', 'Pending');
+          AND status IN ('Approved', 'Synced');  -- ✅ FIXED LINE
     END
 
     -- Check Policy
@@ -63,11 +61,9 @@ BEGIN
         SET @HasPolicy = 1;
     END
 
-    -- VALIDATION LOGIC:
+    -- Validation
     IF @Entitlement IS NOT NULL
     BEGIN
-        -- Scenario A: Employee has a balance row
-        -- Formula: (Entitlement - Used) must be >= New Request Duration
         IF (@Entitlement - @UsedDays) < @Duration
         BEGIN
             SELECT 0 AS NewRequestId, 
@@ -77,12 +73,10 @@ BEGIN
     END
     ELSE IF @HasPolicy = 1
     BEGIN
-        -- Scenario B: Policy exists (Unlimited/Special), allow request
         SET @Entitlement = 999; 
     END
     ELSE
     BEGIN
-        -- Scenario C: No balance AND No policy
         SELECT 0 AS NewRequestId, 'Error: You are not eligible for this leave type.' AS ConfirmationMessage;
         RETURN;
     END;
@@ -117,7 +111,6 @@ BEGIN
     SELECT @NewID AS NewRequestId, 'Leave request submitted successfully' AS ConfirmationMessage;
 END;
 GO
-
 -- 2 GetLeaveBalance
 
 
@@ -734,37 +727,22 @@ GO
 
 
 -- 14. UpdateEmergencyContact
-CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
+CREATE OR ALTER PROCEDURE UpdateEmergencyContact
     @EmployeeID INT,
-    @Email VARCHAR(100),
-    @Phone VARCHAR(20),
-    @Address VARCHAR(150),
-    @ProfileImage VARBINARY(MAX) = NULL
+    @ContactName VARCHAR(100),
+    @Relation VARCHAR(50),
+    @Phone VARCHAR(20)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
-    BEGIN
-        SELECT 'Error: Employee not found.' AS Message;
-        RETURN;
-    END;
-
-    IF EXISTS (SELECT 1 FROM Employee WHERE email = @Email AND employee_id <> @EmployeeID)
-    BEGIN
-        SELECT 'Error: This email is already used by another employee.' AS Message;
-        RETURN;
-    END;
-
     UPDATE Employee
-    SET email = @Email,
-        phone = @Phone,
-        address = @Address,
-        profile_image = @ProfileImage
+    SET 
+        emergency_contact_name = @ContactName,
+        relationship = @Relation,
+        emergency_contact_phone = @Phone
     WHERE employee_id = @EmployeeID;
-
-    SELECT 'Employee information updated successfully' AS ConfirmationMessage;
-END;
+END
 GO
 
 
@@ -1752,5 +1730,24 @@ BEGIN
     WHERE e.email = @Email; 
     
     -- If this returns a row, Login Success.
+END;
+GO
+
+
+--extra 
+CREATE OR ALTER PROCEDURE GetAllEmployeesSimple
+    @ManagerID INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        employee_id,
+        full_name,
+        national_id -- Helpful for distinguishing same names
+    FROM Employee
+    WHERE (@ManagerID IS NULL OR manager_id = @ManagerID)
+      AND is_active = 1 -- Good practice to only show active employees
+    ORDER BY full_name;
 END;
 GO
