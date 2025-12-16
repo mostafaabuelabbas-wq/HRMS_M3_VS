@@ -17,7 +17,7 @@
         public IFormFile? ProfileImage { get; set; }
 
         // Keeps the existing image path if no new image is uploaded
-        public string? ExistingImagePath { get; set; }
+        public byte[]? ExistingImageBytes { get; set; }
         public bool RemoveImage { get; set; }
     }
 }

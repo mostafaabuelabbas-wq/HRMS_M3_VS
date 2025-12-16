@@ -216,6 +216,7 @@ ALTER COLUMN profile_image VARCHAR(500);
 GO
 
 -- 3. UpdateEmployeeInfo
+/*
 CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
     @EmployeeID INT,
     @Email VARCHAR(100),
@@ -249,6 +250,9 @@ BEGIN
     SELECT 'Employee information updated successfully' AS ConfirmationMessage;
 END;
 GO
+*/
+
+
 CREATE OR ALTER PROCEDURE AssignRole
     @EmployeeID INT,
     @RoleID INT

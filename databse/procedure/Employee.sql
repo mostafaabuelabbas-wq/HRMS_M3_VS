@@ -727,37 +727,22 @@ GO
 
 
 -- 14. UpdateEmergencyContact
-CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
+CREATE OR ALTER PROCEDURE UpdateEmergencyContact
     @EmployeeID INT,
-    @Email VARCHAR(100),
-    @Phone VARCHAR(20),
-    @Address VARCHAR(150),
-    @ProfileImage VARBINARY(MAX) = NULL
+    @ContactName VARCHAR(100),
+    @Relation VARCHAR(50),
+    @Phone VARCHAR(20)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
-    BEGIN
-        SELECT 'Error: Employee not found.' AS Message;
-        RETURN;
-    END;
-
-    IF EXISTS (SELECT 1 FROM Employee WHERE email = @Email AND employee_id <> @EmployeeID)
-    BEGIN
-        SELECT 'Error: This email is already used by another employee.' AS Message;
-        RETURN;
-    END;
-
     UPDATE Employee
-    SET email = @Email,
-        phone = @Phone,
-        address = @Address,
-        profile_image = @ProfileImage
+    SET 
+        emergency_contact_name = @ContactName,
+        relationship = @Relation,
+        emergency_contact_phone = @Phone
     WHERE employee_id = @EmployeeID;
-
-    SELECT 'Employee information updated successfully' AS ConfirmationMessage;
-END;
+END
 GO
 
 

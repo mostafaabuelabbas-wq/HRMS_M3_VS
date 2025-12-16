@@ -1,6 +1,7 @@
 ﻿using HRMS_M3_VS.Areas.Employee.Models;
 using HRMS_M3_VS.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Linq;
 
 namespace HRMS_M3_VS.Areas.Employee.Services
 {
@@ -15,6 +16,13 @@ namespace HRMS_M3_VS.Areas.Employee.Services
 
         public Task<IEnumerable<ContractDto>> GetAllContractsAsync()
             => _db.QueryAsync<ContractDto>("GetAllContracts", null);
+
+        public async Task<IEnumerable<ContractDto>> GetExpiringContractsAsync()
+        {
+            var all = await GetAllContractsAsync();
+            // Filter in memory for simplicity, or use a new SP "GetExpiringContracts"
+            return all.Where(c => c.EndDate.HasValue && c.EndDate.Value <= DateTime.Today.AddDays(30)); 
+        }
 
         public Task<IEnumerable<ContractDto>> GetEmployeeContractsAsync(int employeeId)
             => _db.QueryAsync<ContractDto>("GetEmployeeContracts", new { EmployeeID = employeeId });
@@ -34,8 +42,9 @@ namespace HRMS_M3_VS.Areas.Employee.Services
                 vm.EndDate
             });
 
-        public Task UpdateContractAsync(ContractEditViewModel vm)
-            => _db.ExecuteAsync("UpdateContract", new
+        public async Task UpdateContractAsync(ContractEditViewModel vm)
+        {
+            await _db.ExecuteAsync("UpdateContract", new
             {
                 vm.ContractId,
                 vm.Type,
@@ -43,6 +52,13 @@ namespace HRMS_M3_VS.Areas.Employee.Services
                 vm.EndDate,
                 vm.CurrentState
             });
+
+            // Send notification
+            await _db.ExecuteAsync("SendContractUpdateNotification", new
+            {
+                ContractID = vm.ContractId
+            });
+        }
 
         public async Task<int> RenewContractAsync(ContractRenewViewModel vm)
         {
