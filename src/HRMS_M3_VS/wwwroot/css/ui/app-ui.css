@@ -83,6 +83,7 @@ strong {
     border-radius: 14px;
     overflow: hidden;
 }
+
     .table td,
     .table th {
         color: #e5e7eb;
@@ -93,6 +94,7 @@ strong {
     margin-bottom: 20px;
     font-weight: 600;
 }
+
 .main-content h2 {
     padding-bottom: 12px;
     border-bottom: 1px solid #2e3443;
@@ -110,17 +112,17 @@ strong {
 }
 /* Base table styling */
 .table {
-  background-color: transparent;
-  color: #e5e7eb;
-  margin-bottom: 0;
+    background-color: transparent;
+    color: #e5e7eb;
+    margin-bottom: 0;
 }
 
-.table th,
-.table td {
-  padding: 14px 16px;
-  vertical-align: middle;
-  border-color: #2e3443;
-}
+    .table th,
+    .table td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-color: #2e3443;
+    }
     /* Table header */
     .table thead th {
         background: #1f2937;
@@ -180,9 +182,11 @@ strong {
     .table tfoot {
         background-color: #111827 !important;
     }
+
     .table-striped > tbody > tr:nth-of-type(odd) {
         background-color: #0f172a !important;
     }
+
     .table td,
     .table th {
         color: #e5e7eb !important;
@@ -605,3 +609,52 @@ h1 {
         background-color: #064e3b !important;
         color: #a7f3d0 !important;
     }
+/* ================================
+   GLOBAL DARK TABLE FIX
+   ================================ */
+
+.table,
+.table thead,
+.table tbody,
+.table tr,
+.table th,
+.table td {
+    background-color: #0f172a !important; /* dark navy */
+    color: #e5e7eb !important; /* light text */
+    border-color: #1f2937 !important;
+}
+
+    /* Header */
+    .table thead th {
+        background-color: #020617 !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+/* Row hover */
+.table-hover tbody tr:hover {
+    background-color: #1e293b !important;
+}
+
+/* Status badges inside tables */
+.table .badge,
+.table .status,
+.table .pill {
+    background-color: #1f2937 !important;
+    color: #ffffff !important;
+}
+
+.card,
+.card-body,
+.table-container {
+    background-color: #020617 !important;
+    color: #e5e7eb !important;
+}
+
+.mission-row,
+.mission-item,
+.list-row,
+.data-row {
+    background-color: #0f172a !important;
+    color: #e5e7eb !important;
+}

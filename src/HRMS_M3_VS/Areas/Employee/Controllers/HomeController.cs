@@ -17,6 +17,8 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
             _env = env;
         }
 
+        // DIRECTORY: HR Admin & System Admin Only
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "HRAdmin,SystemAdmin")]
         public async Task<IActionResult> Index()
         {
             var employees = await _service.GetAllEmployeesAsync();
@@ -40,15 +42,30 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
 
             return RedirectToAction("Profile", new { id = userId });
         }
+
+        // VIEW PROFILE: Self OR Admin/Manager
         public async Task<IActionResult> Profile(int id)
         {
+            // SECURITY CHECK: Who is the viewer?
+            var viewerIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(viewerIdString)) return Challenge();
+
+            int viewerId = int.Parse(viewerIdString);
+            bool isPrivileged = User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin") || User.IsInRole("Manager");
+
+            // If not privileged and not viewing self -> BLOCK
+            if (!isPrivileged && viewerId != id)
+            {
+                return Forbid();
+            }
+
             var emp = await _service.GetEmployeeByIdAsync(id);
 
             if (emp == null)
             {
-                // Bonus: Return a "User Not Found" view or redirect with a generic error
                 TempData["Error"] = "Employee not found.";
-                return RedirectToAction("Index", "Home");
+                // Redirect home (which might be denied if Index is restricted, so redirect to MyProfile)
+                return RedirectToAction("MyProfile");
             }
 
             return View(emp);

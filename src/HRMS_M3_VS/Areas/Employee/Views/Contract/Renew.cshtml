@@ -5,39 +5,58 @@
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    <div class="alert alert-danger bg-danger bg-opacity-25 text-white border-0 shadow-sm rounded-3">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+    </div>
 }
 
-<div class="card">
-    <div class="card-header bg-success text-white">
-        <h4 class="mb-0">Renew Contract #@Model.ContractId</h4>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-info mb-4">
-            <h5>Current Contract Information</h5>
-            <p><strong>Employee:</strong> @Model.EmployeeName</p>
-            <p><strong>Type:</strong> @Model.CurrentType</p>
-            <p><strong>Current End Date:</strong> @Model.CurrentEndDate?.ToString("dd MMM yyyy")</p>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border border-secondary rounded-4" style="background-color: #1E293B;">
+                <div class="card-header bg-transparent border-bottom border-secondary py-4">
+                    <h4 class="mb-0 fw-bold text-white"><i class="fas fa-sync-alt me-2 text-success"></i>Renew Contract #@Model.ContractId</h4>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    
+                    <div class="alert bg-info bg-opacity-10 border border-info border-opacity-25 text-info rounded-3 mb-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Current Contract Information</h5>
+                        <p class="mb-1"><strong>Employee:</strong> @Model.EmployeeName</p>
+                        <p class="mb-1"><strong>Type:</strong> @Model.CurrentType</p>
+                        <p class="mb-0"><strong>Current End Date:</strong> @Model.CurrentEndDate?.ToString("dd MMM yyyy")</p>
+                    </div>
+
+                    <form asp-action="Renew" method="post">
+                        <input asp-for="ContractId" type="hidden" />
+                        
+                        <div class="row g-4 mb-5">
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="NewEndDate" class="form-label fw-bold text-secondary text-uppercase small">New End Date</label>
+                                    <input asp-for="NewEndDate" type="date" class="form-control bg-dark text-white border-secondary" />
+                                    <span asp-validation-for="NewEndDate" class="text-danger small fw-bold"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="Notes" class="form-label fw-bold text-secondary text-uppercase small">Renewal Notes (Optional)</label>
+                                    <textarea asp-for="Notes" class="form-control bg-dark text-white border-secondary" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-3 pt-3 border-top border-secondary">
+                            <a asp-action="Details" asp-route-id="@Model.ContractId" class="btn btn-outline-light rounded-pill px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-lg">
+                                <i class="fas fa-check-circle me-2"></i>Confirm Renewal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <form asp-action="Renew" method="post" class="row g-3">
-            <input asp-for="ContractId" type="hidden" />
-            
-            <div class="col-md-6">
-                <label asp-for="NewEndDate" class="form-label">New End Date</label>
-                <input asp-for="NewEndDate" type="date" class="form-control" />
-                <span asp-validation-for="NewEndDate" class="text-danger"></span>
-            </div>
-
-            <div class="col-12">
-                <label asp-for="Notes" class="form-label">Renewal Notes (Optional)</label>
-                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
-            </div>
-
-            <div class="col-12 mt-4">
-                <button type="submit" class="btn btn-success">Confirm Renewal</button>
-                <a asp-action="Details" asp-route-id="@Model.ContractId" class="btn btn-secondary">Cancel</a>
-            </div>
-        </form>
     </div>
 </div>

@@ -1,16 +1,20 @@
 ﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.EmployeeDto>
 
+@{
+    ViewData["Title"] = "Employee Directory";
+}
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <!-- Optional: Dynamic Title to match the Sidebar -->
-        <h2 class="fw-bold text-dark">
+        <!-- Dynamic Title -->
+        <h2 class="fw-bold text-white mb-0">
+            <i class="fas fa-users me-2 text-primary"></i>
             @if (User.IsInRole("HRAdmin"))
             {
                 <text>All Employees</text>
             }
             else
             {
-
                 <text>Employee Directory</text>
             }
         </h2>
@@ -19,64 +23,72 @@
     <!-- SEARCH BAR: Only visible for HR Admins (The "All Employees" Tab) -->
     @if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
     {
-        <div class="input-group mb-3 shadow-sm">
-            <span class="input-group-text bg-white border-end-0">
-                <i class="fas fa-search text-muted"></i>
+        <div class="input-group mb-4 shadow-sm">
+            <span class="input-group-text border-0 text-white" style="background-color: #1E293B;">
+                <i class="fas fa-search text-secondary"></i>
             </span>
             <input type="text"
                    id="searchInput"
-                   class="form-control border-start-0"
+                   class="form-control border-0 text-white"
+                   style="background-color: #1E293B;"
                    placeholder="Search by Name, Department, or Position..."
                    onkeyup="filterTable()">
         </div>
     }
 
     <!-- The Card Container for the Table -->
-    <div class="card shadow border-0 rounded-3 overflow-hidden">
+    <div class="card shadow-lg border border-secondary rounded-4 overflow-hidden" style="background-color: #1E293B;">
         <div class="card-body p-0">
-            <!-- IMPORTANT: I added id="employeeTable" so the JS can find this table -->
-            <table class="table table-hover table-striped align-middle mb-0" id="employeeTable">
-                <thead class="bg-dark text-white">
-                    <tr>
-                        <th class="py-3 ps-4">Full Name</th>
-                        <th class="py-3">Department</th>
-                        <th class="py-3">Position</th>
-                        <th class="py-3">Status</th>
-                        <th class="py-3 text-end pe-4">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-white" id="employeeTable">
+                    <thead class="text-secondary text-uppercase small" style="background-color: rgba(255,255,255,0.05); border-bottom: 1px solid #334155;">
                         <tr>
-                            <td class="ps-4 fw-semibold text-primary">
-                                @item.Full_Name
-                            </td>
-                            <td>
-                                @(item.Department ?? "Not Assigned")
-                            </td>
-                            <td>
-                                @(item.Position ?? "Not Assigned")
-                            </td>
-                            <td>
-                                <span class="badge bg-info text-dark">
-                                    @(item.Employment_Status ?? "Unknown")
-                                </span>
-                            </td>
-                            <td class="text-end pe-4">
-                                <!-- Link to Profile -->
-                                <a asp-area="Employee"
-                                   asp-controller="Home"
-                                   asp-action="Profile"
-                                   asp-route-id="@item.Employee_Id"
-                                   class="btn btn-sm btn-primary shadow-sm">
-                                    View Profile
-                                </a>
-                            </td>
+                            <th class="py-3 ps-4 border-0">Full Name</th>
+                            <th class="py-3 border-0">Department</th>
+                            <th class="py-3 border-0">Position</th>
+                            <th class="py-3 border-0">Status</th>
+                            <th class="py-3 text-end pe-4 border-0">Action</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td class="ps-4 fw-bold text-white border-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex justify-content-center align-items-center me-3 fw-bold" 
+                                             style="width: 40px; height: 40px; font-size: 1.1em;">
+                                            @item.Full_Name.Substring(0, 1)
+                                        </div>
+                                        @item.Full_Name
+                                    </div>
+                                </td>
+                                <td class="text-secondary border-0">
+                                    @(item.Department ?? "Not Assigned")
+                                </td>
+                                <td class="text-secondary border-0">
+                                    @(item.Position ?? "Not Assigned")
+                                </td>
+                                <td class="border-0">
+                                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                                        @(item.Employment_Status ?? "Unknown")
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4 border-0">
+                                    <!-- Link to Profile -->
+                                    <a asp-area="Employee"
+                                       asp-controller="Home"
+                                       asp-action="Profile"
+                                       asp-route-id="@item.Employee_Id"
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm visited-transition">
+                                        View Profile
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

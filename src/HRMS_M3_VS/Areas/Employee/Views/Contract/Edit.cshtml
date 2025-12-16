@@ -5,61 +5,75 @@
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="alert alert-danger bg-danger bg-opacity-25 text-white border-0 shadow-sm rounded-3 alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     </div>
 }
 
 <div class="container mt-4">
-    <div class="card shadow border-0 rounded-3">
-        <div class="card-header bg-warning text-dark">
-            <h4 class="mb-0"><i class="fas fa-pen"></i> Edit Contract #@Model.ContractId</h4>
-        </div>
-        <div class="card-body">
-            <form asp-action="Edit" method="post">
-                <input asp-for="ContractId" type="hidden" />
-
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label asp-for="Type" class="form-label fw-bold">Contract Type</label>
-                        <input asp-for="Type" class="form-control" placeholder="e.g., FullTime, PartTime" />
-                        <span asp-validation-for="Type" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label asp-for="StartDate" class="form-label fw-bold">Start Date</label>
-                        <input asp-for="StartDate" type="date" class="form-control" />
-                        <span asp-validation-for="StartDate" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label asp-for="EndDate" class="form-label fw-bold">End Date</label>
-                        <input asp-for="EndDate" type="date" class="form-control" />
-                        <span asp-validation-for="EndDate" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label asp-for="CurrentState" class="form-label fw-bold">Status</label>
-                        <select asp-for="CurrentState" class="form-select">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                            <option value="Expired">Expired</option>
-                            <option value="Terminated">Terminated</option>
-                        </select>
-                        <span asp-validation-for="CurrentState" class="text-danger"></span>
-                    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border border-secondary rounded-4" style="background-color: #1E293B;">
+                <div class="card-header bg-transparent border-bottom border-secondary py-4">
+                    <h4 class="mb-0 fw-bold text-white"><i class="fas fa-pen me-2 text-warning"></i>Edit Contract #@Model.ContractId</h4>
                 </div>
+                <div class="card-body p-4 p-md-5">
+                    
+                    <form asp-action="Edit" method="post">
+                        <input asp-for="ContractId" type="hidden" />
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary shadow-sm">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                    <a asp-action="Details" asp-route-id="@Model.ContractId" class="btn btn-secondary shadow-sm">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
+                        <div class="row g-4 mb-5">
+                             <div class="col-md-6">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="Type" class="form-label fw-bold text-secondary text-uppercase small">Contract Type</label>
+                                    <input asp-for="Type" class="form-control bg-dark text-white border-secondary" placeholder="e.g., FullTime, PartTime" />
+                                    <span asp-validation-for="Type" class="text-danger small fw-bold"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="CurrentState" class="form-label fw-bold text-secondary text-uppercase small">Status</label>
+                                    <select asp-for="CurrentState" class="form-select bg-dark text-white border-secondary">
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                        <option value="Expired">Expired</option>
+                                        <option value="Terminated">Terminated</option>
+                                    </select>
+                                    <span asp-validation-for="CurrentState" class="text-danger small fw-bold"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="StartDate" class="form-label fw-bold text-secondary text-uppercase small">Start Date</label>
+                                    <input asp-for="StartDate" type="date" class="form-control bg-dark text-white border-secondary" />
+                                    <span asp-validation-for="StartDate" class="text-danger small fw-bold"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="EndDate" class="form-label fw-bold text-secondary text-uppercase small">End Date</label>
+                                    <input asp-for="EndDate" type="date" class="form-control bg-dark text-white border-secondary" />
+                                    <span asp-validation-for="EndDate" class="text-danger small fw-bold"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-3 pt-3 border-top border-secondary">
+                            <a asp-action="Details" asp-route-id="@Model.ContractId" class="btn btn-outline-light rounded-pill px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-lg">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

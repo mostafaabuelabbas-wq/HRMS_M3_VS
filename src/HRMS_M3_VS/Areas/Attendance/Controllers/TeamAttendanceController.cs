@@ -5,6 +5,7 @@ using System.Security.Claims;
 namespace HRMS_M3_VS.Areas.Attendance.Controllers
 {
     [Area("Attendance")]
+    [Microsoft.AspNetCore.Authorization.Authorize] // Require login broadly
     public class TeamAttendanceController : Controller
     {
         private readonly TeamAttendanceService _service;
