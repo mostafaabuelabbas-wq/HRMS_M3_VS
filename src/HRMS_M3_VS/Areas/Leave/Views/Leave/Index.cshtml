@@ -70,7 +70,29 @@
                                     <span class="badge bg-light text-dark border">@item.LeaveType</span>
                                 </div>
                                 <div class="ms-auto">
-                                    <span class="badge bg-warning text-dark rounded-pill shadow-sm">Pending</span>
+                                    @if (item.Status == "Pending")
+                                    {
+                                        <span class="badge bg-warning text-dark rounded-pill shadow-sm">Pending</span>
+                                    }
+                                    else if (item.Status == "Approved" || item.Status?.Contains("Approved") == true)
+                                    {
+                                        <span class="badge bg-success text-white rounded-pill shadow-sm">
+                                            @item.Status
+                                        </span>
+                                    }
+                                    else if (item.Status == "Rejected" || item.Status?.Contains("Rejected") == true)
+                                    {
+                                        <span class="badge bg-danger text-white rounded-pill shadow-sm">
+                                            @item.Status
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary text-white rounded-pill shadow-sm">
+                                            @item.Status
+                                        </span>
+                                    }
+                                 
                                 </div>
                             </div>
 
@@ -93,30 +115,43 @@
 
                             <!-- Buttons -->
                             <div class="d-grid gap-2 d-flex">
-                                
-                                <!-- APPROVE FORM -->
-                                <form action="/Leave/Leave/Approve" method="post" class="flex-grow-1">
-                                    <!-- SECURITY TOKEN FIX -->
-                                    @Html.AntiForgeryToken() 
-                                    <input type="hidden" name="id" value="@item.RequestId" />
-                                    <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">
-                                        <i class="fas fa-check me-2"></i> Approve
+
+                                <!-- ? MANAGER ONLY: Approve, Reject, Flag -->
+                                @if (User.IsInRole("Manager"))
+                                {
+                                    <!-- APPROVE -->
+                                    <form action="/Leave/Leave/Approve" method="post" class="flex-grow-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.RequestId" />
+                                        <button type="submit" class="btn btn-success w-100 fw-bold shadow-sm">
+                                            <i class="fas fa-check me-2"></i> Approve
+                                        </button>
+                                    </form>
+
+                                    <!-- REJECT -->
+                                    <button type="button" class="btn btn-outline-danger fw-bold shadow-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#rejectModal-@item.RequestId">
+                                        <i class="fas fa-times"></i>
                                     </button>
-                                </form>
 
-                                <!-- REJECT (Trigger Modal) -->
-                                <button type="button" class="btn btn-outline-danger fw-bold shadow-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#rejectModal-@item.RequestId">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                    <!-- FLAG -->
+                                    <button type="button" class="btn btn-outline-warning fw-bold shadow-sm text-dark"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#flagModal-@item.RequestId">
+                                        <i class="fas fa-flag"></i>
+                                    </button>
+                                }
 
-                                <!-- FLAG (Trigger Modal) -->
-                                <button type="button" class="btn btn-outline-warning fw-bold shadow-sm text-dark"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#flagModal-@item.RequestId">
-                                    <i class="fas fa-flag"></i>
-                                </button>
+                                <!-- ? HR ADMIN ONLY: Override -->
+                                @if (User.IsInRole("HRAdmin"))
+                                {
+                                    <a href="@Url.Action("OverrideDecision", "Leave", new { area = "Leave", id = item.RequestId })"
+                                       class="btn btn-outline-danger fw-bold shadow-sm w-100">
+                                        <i class="fas fa-gavel me-1"></i> Override
+                                    </a>
+                                }
+
                             </div>
 
                         </div>

@@ -1664,6 +1664,7 @@ END;
 GO
 
 -- 2. Requirement #5.1: Submit Leave Request (Employee)
+/*
 CREATE OR ALTER PROCEDURE SubmitLeaveRequest
     @EmployeeID INT,
     @LeaveTypeID INT,
@@ -1686,21 +1687,55 @@ BEGIN
     SELECT 'Leave request submitted successfully.' AS Message;
 END;
 GO
+*/
+-- it is already in employee procedures file
+
 
 -- 3. Requirement #5.2: Get Leave Balance
 CREATE OR ALTER PROCEDURE GetLeaveBalance
     @EmployeeID INT
 AS
 BEGIN
-    -- Joins LeaveEntitlement with Leave Type name
-    SELECT 
-        l.leave_type, 
-        le.entitlement AS RemainingDays
-    FROM LeaveEntitlement le
-    INNER JOIN [Leave] l ON le.leave_type_id = l.leave_id
-    WHERE le.employee_id = @EmployeeID;
+    SET NOCOUNT ON;
+
+    DECLARE @VacationID INT = 1;      -- leave_id = 1 → Vacation
+    DECLARE @DefaultEntitlement INT = 30;
+
+    /* =====================================================
+       1. VACATION (BANKED – DEFAULT 30, HR OVERRIDE WORKS)
+       ===================================================== */
+    SELECT
+        l.leave_type,
+        ISNULL(le.entitlement, @DefaultEntitlement) AS entitlement,
+        ISNULL(SUM(lr.duration), 0) AS days_used,
+        ISNULL(le.entitlement, @DefaultEntitlement)
+            - ISNULL(SUM(lr.duration), 0) AS remaining_balance
+    FROM [Leave] l
+    LEFT JOIN LeaveEntitlement le
+        ON le.employee_id = @EmployeeID
+       AND le.leave_type_id = @VacationID
+    LEFT JOIN LeaveRequest lr
+        ON lr.employee_id = @EmployeeID
+       AND lr.leave_id = @VacationID
+       AND lr.status IN ('Approved', 'Pending')
+    WHERE l.leave_id = @VacationID
+    GROUP BY l.leave_type, le.entitlement
+
+    UNION ALL
+
+    /* =====================================================
+       2. POLICY LEAVES (SICK / HOLIDAY / PROBATION)
+       ===================================================== */
+    SELECT
+        l.leave_type,
+        0 AS entitlement,
+        0 AS days_used,
+        0 AS remaining_balance
+    FROM [Leave] l
+    WHERE l.leave_id <> @VacationID;
 END;
 GO
+
 
 -- 4. Helper: Get Employee's Request History
 CREATE OR ALTER PROCEDURE ViewLeaveHistory

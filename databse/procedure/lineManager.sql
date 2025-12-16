@@ -1051,66 +1051,85 @@ GO
 
 
 -- 20. ApproveLeaveRequest
-CREATE or ALTER PROCEDURE ApproveLeaveRequest
+CREATE OR ALTER PROCEDURE ApproveLeaveRequest
     @LeaveRequestID INT,
-    @ManagerID INT
+    @ApproverID INT,
+    @Status VARCHAR(20) = 'Approved',  -- Can be 'Approved' or 'Rejected'
+    @Reason VARCHAR(200) = NULL        -- Required for Reject, optional for Approve
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
-    --------------------------------------------------------
-    -- Validate that the request exists
-    --------------------------------------------------------
-    IF NOT EXISTS (SELECT 1 FROM LeaveRequest WHERE request_id = @LeaveRequestID)
-    BEGIN
-        RAISERROR('Leave request does not exist.', 16, 1);
-        RETURN;
-    END;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    --------------------------------------------------------
-    -- Validate that this manager is allowed to approve this request
-    --------------------------------------------------------
-    IF NOT EXISTS (
-        SELECT 1
-        FROM LeaveRequest lr
-        INNER JOIN Employee e ON lr.employee_id = e.employee_id
-        WHERE lr.request_id = @LeaveRequestID
-          AND e.manager_id = @ManagerID
-    )
-    BEGIN
-        RAISERROR('You are not authorized to approve this leave request.', 16, 1);
-        RETURN;
-    END;
+        -- 1. Validate Request exists
+        IF NOT EXISTS (SELECT 1 FROM LeaveRequest WHERE request_id = @LeaveRequestID)
+        BEGIN
+            RAISERROR('Leave request not found.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
 
-    --------------------------------------------------------
-    -- Approve the request
-    --------------------------------------------------------
-    UPDATE LeaveRequest
-    SET status = 'Approved',
-        approval_timing = GETDATE()
-    WHERE request_id = @LeaveRequestID;
+        -- 2. Get employee ID
+        DECLARE @EmployeeID INT;
+        SELECT @EmployeeID = employee_id FROM LeaveRequest WHERE request_id = @LeaveRequestID;
 
-    --------------------------------------------------------
-    -- Notify employee
-    --------------------------------------------------------
-    DECLARE @EmployeeID INT = (SELECT employee_id FROM LeaveRequest WHERE request_id = @LeaveRequestID);
+        -- 3. Update Status
+        IF @Status = 'Rejected'
+        BEGIN
+            -- For rejection: append reason to justification
+            UPDATE LeaveRequest
+            SET status = @Status,
+                justification = justification + ' | Rejection Reason: ' + ISNULL(@Reason, 'No reason provided'),
+                approval_timing = GETDATE()
+            WHERE request_id = @LeaveRequestID;
+        END
+        ELSE
+        BEGIN
+            -- For approval: just update status
+            UPDATE LeaveRequest
+            SET status = @Status,
+                approval_timing = GETDATE()
+            WHERE request_id = @LeaveRequestID;
+        END
 
-    INSERT INTO Notification (message_content, urgency, notification_type)
-    VALUES ('Your leave request has been approved.', 'Normal', 'Leave');
+        -- 4. Notify Employee
+        DECLARE @Message VARCHAR(500);
+        DECLARE @Urgency VARCHAR(20);
+        
+        IF @Status = 'Rejected'
+        BEGIN
+            SET @Message = 'Your leave request #' + CAST(@LeaveRequestID AS VARCHAR) + ' has been rejected. Reason: ' + ISNULL(@Reason, 'No reason provided');
+            SET @Urgency = 'High';
+        END
+        ELSE
+        BEGIN
+            SET @Message = 'Your leave request #' + CAST(@LeaveRequestID AS VARCHAR) + ' has been ' + @Status + '.';
+            SET @Urgency = 'Medium';
+        END
 
-    DECLARE @NotifID INT = SCOPE_IDENTITY();
+        INSERT INTO Notification (message_content, urgency, read_status, notification_type)
+        VALUES (@Message, @Urgency, 0, 'LeaveStatus');
 
-    INSERT INTO Employee_Notification (employee_id, notification_id, delivery_status, delivered_at)
-    VALUES (@EmployeeID, @NotifID, 'Sent', GETDATE());
+        DECLARE @NID INT = SCOPE_IDENTITY();
 
-    --------------------------------------------------------
-    SELECT 'Leave request approved successfully' AS ConfirmationMessage;
+        INSERT INTO Employee_Notification (employee_id, notification_id, delivery_status, delivered_at)
+        VALUES (@EmployeeID, @NID, 'Sent', GETDATE());
+
+        COMMIT TRANSACTION;
+
+        SELECT 'Leave request ' + @Status + ' successfully.' AS ConfirmationMessage;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
 GO
 
-
-
--- 21. RejectLeaveRequest
 -- 21. RejectLeaveRequest
 CREATE OR ALTER PROCEDURE RejectLeaveRequest
     @LeaveRequestID INT,
@@ -1120,62 +1139,53 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    --------------------------------------------------------
     -- 1. Validate that the leave request exists
-    --------------------------------------------------------
     IF NOT EXISTS (SELECT 1 FROM LeaveRequest WHERE request_id = @LeaveRequestID)
     BEGIN
         RAISERROR('Leave request does not exist.', 16, 1);
         RETURN;
     END;
 
-    --------------------------------------------------------
-    -- 2. Validate Authorization (MODIFIED FOR TESTING)
-    --------------------------------------------------------
-    -- We removed "AND e.manager_id = @ManagerID" so you can reject requests
-    -- even if the database hierarchy isn't perfectly set up yet.
+    -- 2. Validate Authorization
     IF NOT EXISTS (
         SELECT 1
         FROM LeaveRequest lr
         INNER JOIN Employee e ON lr.employee_id = e.employee_id
         WHERE lr.request_id = @LeaveRequestID
-        -- AND e.manager_id = @ManagerID  <-- COMMENTED OUT TO FIX THE ERROR
     )
     BEGIN
-        -- This error should only trigger if the Request/Employee link is broken
         RAISERROR('You are not authorized to reject this leave request.', 16, 1);
         RETURN;
     END;
 
-    --------------------------------------------------------
-    -- 3. Reject the request
-    --------------------------------------------------------
+    -- 3. Update Leave Request
     UPDATE LeaveRequest
     SET status = 'Rejected',
+        justification = justification + ' | Rejection Reason: ' + @Reason,
         approval_timing = GETDATE()
     WHERE request_id = @LeaveRequestID;
 
-    --------------------------------------------------------
-    -- 4. Notify employee
-    --------------------------------------------------------
-    DECLARE @EmployeeID INT = (SELECT employee_id FROM LeaveRequest WHERE request_id = @LeaveRequestID);
+    -- 4. Notify Employee
+    DECLARE @EmployeeID INT;
+    SELECT @EmployeeID = employee_id FROM LeaveRequest WHERE request_id = @LeaveRequestID;
 
-    INSERT INTO Notification (message_content, urgency, notification_type, read_status)
-    VALUES ('Your leave request has been rejected. Reason: ' + @Reason, 'High', 'Leave', 0);
+    INSERT INTO Notification (message_content, urgency, read_status, notification_type)
+    VALUES (
+        'Your leave request #' + CAST(@LeaveRequestID AS VARCHAR) + ' has been rejected. Reason: ' + @Reason,
+        'High',
+        0,
+        'LeaveRejection'
+    );
 
-    DECLARE @NotifID INT = SCOPE_IDENTITY();
+    DECLARE @NID INT = SCOPE_IDENTITY();
 
     INSERT INTO Employee_Notification (employee_id, notification_id, delivery_status, delivered_at)
-    VALUES (@EmployeeID, @NotifID, 'Sent', GETDATE());
+    VALUES (@EmployeeID, @NID, 'Sent', GETDATE());
 
-    --------------------------------------------------------
-    -- 5. Return Confirmation
-    --------------------------------------------------------
-    SELECT 'Leave request rejected successfully' AS ConfirmationMessage,
-           @Reason AS RejectionReason;
+    -- 5. Confirm
+    SELECT 'Leave request rejected successfully.' AS ConfirmationMessage;
 END;
 GO
-
 
 -- 22. DelegateLeaveApproval
 CREATE PROCEDURE DelegateLeaveApproval
