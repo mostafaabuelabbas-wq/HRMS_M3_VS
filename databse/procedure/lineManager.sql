@@ -1111,7 +1111,6 @@ GO
 
 
 -- 21. RejectLeaveRequest
--- 21. RejectLeaveRequest
 CREATE OR ALTER PROCEDURE RejectLeaveRequest
     @LeaveRequestID INT,
     @ManagerID INT,
@@ -1139,7 +1138,7 @@ BEGIN
         FROM LeaveRequest lr
         INNER JOIN Employee e ON lr.employee_id = e.employee_id
         WHERE lr.request_id = @LeaveRequestID
-        -- AND e.manager_id = @ManagerID  <-- COMMENTED OUT TO FIX THE ERROR
+        AND e.manager_id = @ManagerID
     )
     BEGIN
         -- This error should only trigger if the Request/Employee link is broken
@@ -1266,6 +1265,14 @@ BEGIN
             ROLLBACK TRANSACTION;
             RETURN;
         END
+        
+        -- 3. Validate hierarchy (Manager must manage Employee)
+        IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID AND manager_id = @ManagerID)
+        BEGIN
+             RAISERROR('Manager is not authorized to flag this employee.', 16, 1);
+             ROLLBACK TRANSACTION;
+             RETURN;
+        END
 
         -- 3. Create Notification (Your Original Logic)
         INSERT INTO Notification (message_content, urgency, read_status, notification_type)
@@ -1387,5 +1394,32 @@ BEGIN
     -- Link to employee
     INSERT INTO Employee_Notification (employee_id, notification_id, delivery_status, delivered_at)
     VALUES (@EmployeeID, @NotifID, 'Pending', GETDATE());
+END;
+GO
+-- ALTERED Procedure: GetPendingLeaveRequests
+-- Added Join to LeaveDocument to retrieve Attachment Path
+CREATE OR ALTER PROCEDURE GetPendingLeaveRequests
+    @ManagerID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        lr.request_id AS RequestId,
+        lr.employee_id AS EmployeeId,
+        e.full_name AS EmployeeName,
+        l.leave_type AS LeaveType,
+        lr.justification AS Justification,
+        lr.duration AS Duration,
+        lr.status AS Status,
+        lr.approval_timing AS ApprovalTiming,
+        ld.file_path AS AttachmentPath -- Added Column
+    FROM LeaveRequest lr
+    INNER JOIN Employee e ON lr.employee_id = e.employee_id
+    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
+    LEFT JOIN LeaveDocument ld ON lr.request_id = ld.leave_request_id -- Join for attachment
+    WHERE lr.status = 'Pending'
+      AND e.manager_id = @ManagerID 
+    ORDER BY lr.request_id DESC;
 END;
 GO

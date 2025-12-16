@@ -1800,21 +1800,23 @@ BEGIN
         -- UPDATE existing row
         UPDATE LeavePolicy
         SET notice_period = @NoticePeriod,
-            -- We append MaxDuration to purpose to avoid overwriting eligibility_rules
-            purpose = 'Rules: MaxDuration=' + CAST(@MaxDuration AS VARCHAR(10)) + ';Workflow=' + @WorkflowType
+            max_duration = @MaxDuration,
+            -- Update purpose to be a description or workflow related
+            purpose = 'Policy for ' + @LeaveType + '. Workflow: ' + @WorkflowType
         WHERE special_leave_type = @LeaveType;
     END
     ELSE
     BEGIN
         -- INSERT new row
-        INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year)
+        INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year, max_duration)
         VALUES (
             @LeaveType + ' Policy',
-            'Rules: MaxDuration=' + CAST(@MaxDuration AS VARCHAR(10)) + ';Workflow=' + @WorkflowType,
+            'Policy for ' + @LeaveType + '. Workflow: ' + @WorkflowType,
             'All', -- Default eligibility
             @NoticePeriod,
             @LeaveType,
-            1
+            1,
+            @MaxDuration
         );
     END
 
@@ -2180,7 +2182,9 @@ GO
 -- PROCEDURE: OverrideLeaveDecision
 CREATE PROCEDURE OverrideLeaveDecision
     @LeaveRequestID INT,
-    @Reason VARCHAR(200)
+    @NewStatus VARCHAR(20), -- 'Approved' or 'Rejected'
+    @Reason VARCHAR(200),
+    @AdminID INT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -2188,68 +2192,71 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        --------------------------------------------------------
-        -- 1. Validate request exists and retrieve required fields
-        --------------------------------------------------------
+        -- 1. Validate Request
         DECLARE @CurrentStatus VARCHAR(50);
         DECLARE @Justification VARCHAR(MAX);
+        DECLARE @EmployeeID INT;
 
         SELECT 
             @CurrentStatus = status,
-            @Justification = justification
+            @Justification = justification,
+            @EmployeeID = employee_id
         FROM LeaveRequest
         WHERE request_id = @LeaveRequestID;
 
         IF @CurrentStatus IS NULL
         BEGIN
-            RAISERROR('Leave request does not exist.', 16, 1);
+            RAISERROR('Leave request not found.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
         END;
 
-        --------------------------------------------------------
-        -- 2. Only approved or rejected requests may be overridden
-        --------------------------------------------------------
-        IF @CurrentStatus NOT IN ('Approved', 'Rejected')
+        -- 2. Update Status
+        DECLARE @FinalStatus VARCHAR(50);
+        
+        IF @NewStatus = 'Approved'
         BEGIN
-            RAISERROR('Only Approved or Rejected requests can be overridden.', 16, 1);
-            ROLLBACK TRANSACTION;
-            RETURN;
-        END;
-
-        --------------------------------------------------------
-        -- 3. Ensure justification is not NULL
-        --------------------------------------------------------
-        SET @Justification = ISNULL(@Justification, '');
-
-        --------------------------------------------------------
-        -- 4. Perform the override logic
-        --------------------------------------------------------
-        IF @CurrentStatus = 'Rejected'
-        BEGIN
+            SET @FinalStatus = 'Approved - Override';
             UPDATE LeaveRequest
-            SET status = 'Approved - Override',
-                justification = @Justification + ' | Override Reason: ' + @Reason
+            SET status = @FinalStatus,
+                justification = @Justification + ' | Override Reason: ' + @Reason,
+                approval_timing = GETDATE()
             WHERE request_id = @LeaveRequestID;
         END
-        ELSE IF @CurrentStatus = 'Approved'
+        ELSE
         BEGIN
+            SET @FinalStatus = 'Rejected - Override';
             UPDATE LeaveRequest
-            SET status = 'Rejected - Override',
-                justification = @Justification + ' | Override Reason: ' + @Reason
+            SET status = @FinalStatus,
+                justification = @Justification + ' | Override Reason: ' + @Reason,
+                approval_timing = GETDATE()
             WHERE request_id = @LeaveRequestID;
-        END;
+        END
+
+        -- 3. Sync Attendance (Only if Approved)
+        IF @NewStatus = 'Approved'
+        BEGIN
+            -- Call the Sync Procedure (now handles 'Approved - Override')
+            EXEC SyncLeaveToAttendance @LeaveRequestID;
+        END
+
+        -- 4. Notify Employee
+        INSERT INTO Notification (message_content, urgency, read_status, notification_type)
+        VALUES ('Your leave request #' + CAST(@LeaveRequestID AS VARCHAR) + ' has been overridden to: ' + @NewStatus + '.', 'High', 0, 'LeaveOverride');
+        
+        DECLARE @NID INT = SCOPE_IDENTITY();
+        INSERT INTO Employee_Notification (employee_id, notification_id, delivery_status, delivered_at)
+        VALUES (@EmployeeID, @NID, 'Sent', GETDATE());
 
         COMMIT TRANSACTION;
 
-        SELECT 'Leave decision overridden successfully.' AS ConfirmationMessage;
+        SELECT 'Leave overridden successfully.' AS ConfirmationMessage;
 
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
         THROW;
     END CATCH
-
 END;
 GO
 
@@ -2556,6 +2563,7 @@ GO
 
 -- 43 SyncLeaveToAttendance
 -- PROCEDURE: SyncLeaveToAttendance
+-- PROCEDURE: SyncLeaveToAttendance
 CREATE OR ALTER PROCEDURE SyncLeaveToAttendance
     @LeaveRequestID INT
 AS
@@ -2567,15 +2575,14 @@ BEGIN
 
         -- 1. Read Request Details
         DECLARE @EmployeeID INT, @LeaveType VARCHAR(50), @Duration INT, 
-                @Status VARCHAR(50), @StartDate DATE, @EndDate DATE;
+                @Status VARCHAR(50), @Justification VARCHAR(255), @StartDate DATE;
 
         SELECT 
             @EmployeeID = lr.employee_id,
             @LeaveType = l.leave_type,
             @Duration = lr.duration,
             @Status = lr.status,
-            @StartDate = lr.approval_timing, 
-            @EndDate = DATEADD(DAY, lr.duration - 1, lr.approval_timing)
+            @Justification = lr.justification
         FROM LeaveRequest lr
         JOIN [Leave] l ON lr.leave_id = l.leave_id
         WHERE lr.request_id = @LeaveRequestID;
@@ -2588,14 +2595,37 @@ BEGIN
             RETURN;
         END
 
-        IF @Status NOT IN ('Approved', 'Finalized', 'Approved - Balance Updated')
+        IF @Status NOT IN ('Approved', 'Finalized', 'Approved - Balance Updated', 'Approved - Override')
         BEGIN
             RAISERROR('Only approved leaves can be synced.', 16, 1);
             ROLLBACK TRANSACTION;
             RETURN;
         END
 
-        -- 3. LOOP: Process Each Day
+        -- 3. PARSE START DATE from Justification
+        -- Format expected: "... (From: YYYY-MM-DD To: ...)"
+        DECLARE @FromIndex INT = CHARINDEX('(From: ', @Justification);
+        
+        IF @FromIndex > 0
+        BEGIN
+            DECLARE @DateStr VARCHAR(10) = SUBSTRING(@Justification, @FromIndex + 7, 10);
+            TRY_CAST(@DateStr AS DATE); -- Check if valid
+            SET @StartDate = CAST(@DateStr AS DATE);
+        END
+        ELSE
+        BEGIN
+             -- Fallback: Use Approval Timing if parsing fails (Legacy support)
+             SELECT @StartDate = approval_timing FROM LeaveRequest WHERE request_id = @LeaveRequestID;
+        END
+
+        IF @StartDate IS NULL
+        BEGIN
+            RAISERROR('Could not determine start date from justification.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        -- 4. LOOP: Process Each Day
         DECLARE @i INT = 0;
         DECLARE @CurrentDate DATE;
         DECLARE @ShiftID INT;
@@ -2968,5 +2998,30 @@ BEGIN
     SELECT employee_id, full_name 
     FROM Employee
     ORDER BY full_name;
+END;
+GO
+
+-- 15. GetManagerNotes
+CREATE OR ALTER PROCEDURE GetManagerNotes
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        mn.note_id AS NoteId,
+        
+        e_subj.employee_id AS EmployeeId,
+        e_subj.full_name AS EmployeeName,
+        
+        mn.manager_id AS ManagerId,
+        e_mgr.full_name AS ManagerName,
+        
+        mn.note_content AS NoteContent,
+        mn.created_at AS CreatedAt
+    FROM ManagerNotes mn
+    INNER JOIN Employee e_subj ON mn.employee_id = e_subj.employee_id
+    INNER JOIN Employee e_mgr ON mn.manager_id = e_mgr.employee_id
+    WHERE mn.is_archived = 0 OR mn.is_archived IS NULL
+    ORDER BY mn.created_at DESC;
 END;
 GO

@@ -147,13 +147,7 @@
                 </a>
             }
 
-            <!-- Leave Configuration (HR only) -->
-            @if (User.IsInRole("HRAdmin"))
-            {
-                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
-                    <i class="fas fa-cogs"></i> Leave Config
-                </a>
-            }
+
 
             <!-- 5. MISSIONS (Everyone) -->
             <a class="nav-link" asp-area="Employee" asp-controller="Mission" asp-action="Index">
@@ -185,16 +179,21 @@
                 <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
                     <i class="fas fa-file-contract me-2"></i> Contracts
                 </a>
-                @if (User.IsInRole("HRAdmin"))
-{
-    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
-        <i class="fas fa-cogs"></i> Leave Config
-    </a>
+                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
+                    <i class="fas fa-cogs"></i> Leave Config
+                </a>
 
-    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="AssignEntitlement">
-        <i class="fas fa-user-edit"></i> Leave Entitlements
-    </a>
-}
+                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="AssignEntitlement">
+                    <i class="fas fa-user-edit"></i> Leave Entitlements
+                </a>
+                
+                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ViewFlags">
+                    <i class="fas fa-exclamation-triangle"></i> View Flags
+                </a>
+                
+                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageRequests">
+                    <i class="fas fa-tasks"></i> Manage Requests
+                </a>
             }
 
             <!-- SYSTEM ADMIN ONLY -->

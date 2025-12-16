@@ -13,5 +13,6 @@ namespace HRMS_M3_VS.Areas.Leave.Models
         // Needed for the Card UI
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public string AttachmentPath { get; set; } = string.Empty;
     }
 }

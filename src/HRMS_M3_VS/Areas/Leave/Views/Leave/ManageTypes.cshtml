@@ -5,173 +5,146 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid p-4">
-
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid p-5" style="background-color: #f8f9fa;">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h3 class="text-dark fw-bold mb-1">
-                Leave Policies
-            </h3>
-            <p class="text-muted small mb-0">Configure leave types, rules, and eligibility.</p>
+            <h2 class="fw-bold text-dark mb-2">Leave Configuration</h2>
+            <p class="text-muted mb-0">Define leave types, accrual rules, and eligibility criteria.</p>
         </div>
-
-        <!-- Create Button - Direct URL approach if tag helpers fail -->
-        <a href="/Leave/Leave/EditType"
-           class="btn btn-primary rounded-pill px-4 shadow-sm">
-            <i class="fa fa-plus me-2"></i>Create New Policy
+        <a href="/Leave/Leave/EditType" class="btn btn-dark rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2">
+            <i class="fas fa-plus-circle"></i> Create New Policy
         </a>
     </div>
 
-    <!-- MESSAGES -->
+    <!-- Feedback Alerts -->
     @if (TempData["Success"] != null)
     {
-        <div class="alert alert-success border-0 shadow-sm small mb-4">
-            <i class="fa fa-check-circle me-2"></i>@TempData["Success"]
+        <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center">
+            <i class="fas fa-check-circle fs-4 me-3"></i>
+            <div>@TempData["Success"]</div>
         </div>
     }
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger border-0 shadow-sm small mb-4">
-            <i class="fa fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+            <div>@TempData["Error"]</div>
         </div>
     }
 
-    <!-- DATA TABLE -->
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr class="text-uppercase small text-muted">
-                        <th class="ps-4 py-3" style="width: 15%;">LEAVE TYPE</th>
-                        <th style="width: 25%;">DESCRIPTION</th>
-                        <th style="width: 20%;">RULES</th>
-                        <th style="width: 25%;">ELIGIBILITY RULES</th>
-                        <th class="text-end pe-4">ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Any())
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="fa fa-folder-open fa-2x mb-3 opacity-25"></i>
-                                <p>No leave policies found.</p>
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <!-- 1. TYPE -->
-                                <td class="ps-4">
-                                    <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold">
-                                        @item.leave_type
-                                    </span>
-                                </td>
-
-                                <!-- 2. DESCRIPTION -->
-                                <td class="text-secondary small">
-                                    @(string.IsNullOrWhiteSpace(item.leave_description) ? "-" : item.leave_description)
-                                </td>
-
-                                <!-- 3. RULES (Notice & Max Duration) -->
-                                <td class="small">
-                                    <div class="d-flex flex-column gap-1">
-                                        <div>
-                                            <span class="fw-bold text-dark">@item.notice_period days</span> notice
-                                        </div>
-                                        <div class="text-muted">
-                                            Max <span class="fw-bold">@item.max_duration days</span>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <!-- 4. ELIGIBILITY RULES (Plain Text) -->
-                                <td class="small text-dark">
-                                    @{
-                                        var eligibility = item.eligibility_rules;
-
-                                        // Clean up the eligibility text
-                                        if (string.IsNullOrWhiteSpace(eligibility) || eligibility == "All")
-                                        {
-                                            <span class="text-muted fst-italic">All</span>
-                                        }
-                                        else
-                                        {
-                                            // Extract only the Type value and ignore MinTenure
-                                            string displayText = eligibility;
-
-                                            if (eligibility.Contains("Type="))
-                                            {
-                                                // Extract just the Type value
-                                                var typeMatch = System.Text.RegularExpressions.Regex.Match(eligibility, @"Type=([^;]+)");
-                                                if (typeMatch.Success)
-                                                {
-                                                    displayText = typeMatch.Groups[1].Value.Trim();
-                                                }
-                                            }
-
-                                            // Remove MinTenure references
-                                            displayText = System.Text.RegularExpressions.Regex.Replace(displayText, @"MinTenure=\d+;?", "").Trim();
-                                            displayText = displayText.TrimEnd(';');
-
-                                            if (!string.IsNullOrWhiteSpace(displayText))
-                                            {
-                                                <span class="badge bg-light text-dark border px-3 py-2">
-                                                    @displayText
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted fst-italic">None</span>
-                                            }
-                                        }
-                                    }
-                                </td>
-
-                                <!-- 5. ACTIONS -->
-                                <td class="text-end pe-4">
-                                    <a href="/Leave/Leave/EditType?id=@item.leave_type"
-                                       class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                        <i class="fa fa-edit me-1"></i>Edit
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Info Card -->
-    <div class="mt-4">
-        <div class="alert alert-info border-0 shadow-sm d-flex align-items-start">
-            <i class="fa fa-info-circle me-3 mt-1"></i>
-            <div class="small">
-                <strong>Policy Management Tips:</strong>
-                <ul class="mb-0 mt-2">
-                    <li>Notice period determines how far in advance employees must request leave</li>
-                    <li>Max duration sets the maximum days for a single leave request</li>
-                    <li>Eligibility rules define who can use this leave type</li>
-                </ul>
+    <!-- Cards Grid -->
+    <div class="row g-4">
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <div class="mb-3 opacity-25">
+                    <i class="fas fa-clipboard-list fa-4x"></i>
+                </div>
+                <h5 class="text-muted fw-normal">No leave policies have been configured yet.</h5>
+                <p class="text-muted small">Click "Create New Policy" to get started.</p>
             </div>
-        </div>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition-all rounded-4 overflow-hidden">
+                        <!-- Card Header using specific colors based on leave type -->
+                        <div class="card-header border-0 py-3 px-4 d-flex justify-content-between align-items-center" 
+                             style="background: @GetHeaderColor(item.leave_type);">
+                            <h5 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+                                <i class="@GetIcon(item.leave_type)"></i> @item.leave_type
+                            </h5>
+                            <span class="badge bg-white text-dark bg-opacity-25 rounded-pill px-3">Active</span>
+                        </div>
+
+                        <div class="card-body p-4 d-flex flex-column">
+                            <p class="text-muted small mb-4 flex-grow-1">
+                                @(string.IsNullOrWhiteSpace(item.leave_description) ? "No description provided." : item.leave_description)
+                            </p>
+
+                            <!-- Rules Grid -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded-3 text-center h-100 border border-light-subtle">
+                                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.7rem;">Notice Period</div>
+                                        <div class="fw-bold text-dark fs-5">@item.notice_period <span class="fs-6 text-muted fw-normal">days</span></div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-light rounded-3 text-center h-100 border border-light-subtle">
+                                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.7rem;">Max Duration</div>
+                                        <div class="fw-bold text-dark fs-5">@item.max_duration <span class="fs-6 text-muted fw-normal">days</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Eligibility -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fas fa-users-cog text-secondary"></i>
+                                    <span class="small fw-bold text-uppercase text-secondary">Eligibility</span>
+                                </div>
+                                <div>
+                                    @if(item.eligibility_rules == "All" || string.IsNullOrWhiteSpace(item.eligibility_rules))
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Everyone</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 text-wrap text-start lh-sm">
+                                            @item.eligibility_rules
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <!-- Action Button -->
+                            <a href="/Leave/Leave/EditType?id=@item.leave_type" class="btn btn-outline-dark w-100 rounded-pill mt-auto">
+                                <i class="fas fa-cog me-2"></i> Configure Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
 
 <style>
-    /* Ensure consistent badge sizing */
-    .badge {
-        font-size: 0.875rem;
-        letter-spacing: 0.3px;
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
     }
-
-    /* Hover effect for table rows */
-    tbody tr:hover {
-        background-color: #f8f9fa;
+    .transition-all {
+        transition: all 0.3s ease;
     }
 </style>
+
+@functions {
+    public string GetHeaderColor(string type)
+    {
+        return type.ToLower() switch
+        {
+            "vacation" => "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", /* Blue */
+            "sick" => "linear-gradient(135deg, #ef4444 0%, #f43f5e 100%)", /* Red */
+            "maternity" => "linear-gradient(135deg, #d946ef 0%, #ec4899 100%)", /* Pink */
+            "probation" => "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", /* Orange */
+            _ => "linear-gradient(135deg, #334155 0%, #475569 100%)" /* Slate */
+        };
+    }
+
+    public string GetIcon(string type)
+    {
+        return type.ToLower() switch
+        {
+            "vacation" => "fas fa-plane",
+            "sick" => "fas fa-first-aid",
+            "maternity" => "fas fa-baby",
+            "probation" => "fas fa-user-check",
+            _ => "fas fa-calendar-alt"
+        };
+    }
+}

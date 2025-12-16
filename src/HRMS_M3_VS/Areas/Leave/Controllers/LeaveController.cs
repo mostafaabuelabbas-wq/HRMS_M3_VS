@@ -102,7 +102,8 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
         {
             try
             {
-                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown();
+                int employeeId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "1");
+                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown(employeeId);
                 return View(new LeaveApplyDto());
             }
             catch (Exception ex)
@@ -116,13 +117,13 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(LeaveApplyDto model)
         {
+            int employeeId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "1");
+
             if (!ModelState.IsValid)
             {
-                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown();
+                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown(employeeId);
                 return View(model);
             }
-
-            int employeeId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "1");
 
             try
             {
@@ -133,7 +134,7 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] = "Error: " + ex.Message;
-                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown();
+                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown(employeeId);
                 return View(model);
             }
         }
@@ -211,7 +212,10 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
                 ViewBag.Employees = await _leaveService.GetAllEmployees();
                 
                 // 2. Load Leave Types for Dropdown
-                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown();
+                // Pass 0 to get all types (Admin View)
+                var allTypes = await _leaveService.GetLeaveTypesForDropdown(0);
+                // Allow assignment for all types EXCEPT Probation/Holiday (as requested they shouldn't have balance)
+                ViewBag.LeaveTypes = allTypes.Where(x => x.leave_type != "Probation" && x.leave_type != "Holiday");
                 
                 return View(new AssignEntitlementDto());
             }
@@ -232,7 +236,8 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             {
                 // Reload dropdowns if validation fails
                 ViewBag.Employees = await _leaveService.GetAllEmployees();
-                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown();
+                var allTypes = await _leaveService.GetLeaveTypesForDropdown(0);
+                ViewBag.LeaveTypes = allTypes.Where(x => x.leave_type != "Probation" && x.leave_type != "Holiday");
                 return View(model);
             }
 
@@ -250,8 +255,114 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
                 
                 // Reload dropdowns on error
                 ViewBag.Employees = await _leaveService.GetAllEmployees();
-                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown();
+                ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown(0);
                 return View(model);
+            }
+        }
+
+        // GET: Leave/Leave/ViewFlags
+        [Authorize(Roles = "HRAdmin,SystemAdmin")]
+        public async Task<IActionResult> ViewFlags()
+        {
+            try
+            {
+                var flags = await _leaveService.GetManagerNotes();
+                return View(flags);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading flags: " + ex.Message;
+                return View(new List<ManagerNoteDto>());
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "HRAdmin,SystemAdmin")]
+        public async Task<IActionResult> ArchiveFlag(int id)
+        {
+            try
+            {
+                var message = await _leaveService.ArchiveManagerNote(id);
+                TempData["Success"] = message;
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error archiving flag: " + ex.Message;
+            }
+            return RedirectToAction(nameof(ViewFlags));
+        }
+
+        // ==========================================================
+        // HR ADMIN: OVERRIDE DECISION
+        // ==========================================================
+        
+        [Authorize(Roles = "HRAdmin,SystemAdmin")]
+        public async Task<IActionResult> OverrideDecision(int id)
+        {
+            try
+            {
+                // Reuse existing method to get history/details. 
+                // Since we don't have a specific "GetOneRequest", we can filter from All History or similar.
+                // Or better, let's just make a simple DTO query here or in service.
+                // For simplicity/speed matching requirements: Reuse "GetEmployeeHistory" logic or similar.
+                // Wait, we need "Read-Only Details". 
+                // Let's assume we can fetch it. If not, I'll add a helper in Service.
+                
+                // Hack: We can use GetEmployeeHistory but we need to know the EmployeeID.
+                // Let's create a quick helper in Service for "GetLeaveRequestDetail".
+                
+                var details = await _leaveService.GetLeaveRequestDetail(id);
+                return View(details);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading request: " + ex.Message;
+                return RedirectToAction("ManageTypes"); // Fallback
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "HRAdmin,SystemAdmin")]
+        public async Task<IActionResult> OverrideDecision(int id, string status, string reason)
+        {
+            int adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "1");
+            try
+            {
+                // Validation
+                if (string.IsNullOrWhiteSpace(reason) || string.IsNullOrWhiteSpace(status))
+                {
+                    TempData["Error"] = "Status and Reason are required.";
+                    return RedirectToAction(nameof(OverrideDecision), new { id = id });
+                }
+
+                var message = await _leaveService.OverrideLeaveDecision(id, status, reason, adminId);
+                TempData["Success"] = message;
+                return RedirectToAction("ManageRequests"); // Redirect to list
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Override failed: " + ex.Message;
+                return RedirectToAction(nameof(OverrideDecision), new { id = id });
+            }
+        }
+
+        // ==========================================================
+        // HR ADMIN: MANAGE ALL REQUESTS
+        // ==========================================================
+        [Authorize(Roles = "HRAdmin,SystemAdmin")]
+        public async Task<IActionResult> ManageRequests()
+        {
+            try
+            {
+                var requests = await _leaveService.GetAllLeaveRequests();
+                return View(requests);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading requests: " + ex.Message;
+                return View(new List<LeaveRequestDetailDto>());
             }
         }
     }

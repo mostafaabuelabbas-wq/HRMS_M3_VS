@@ -4,23 +4,15 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "My Leave";
 
-    // --- LOGIC EXTRACTION (FIXED) ---
+    // --- LOGIC EXTRACTION (Strict Categorization) ---
+    // 1. Annual (Vacation)
+    var annualLeave = Model.Balances.FirstOrDefault(b => b.category == "Annual");
 
-    // 1. Identify "Banked" Leaves (Leaves where entitlement > 0)
-    // We assume any leave with a positive entitlement is part of the "Annual Pool"
-    // unless you have specific logic otherwise.
-    var bankedLeaves = Model.Balances.Where(b => b.entitlement > 0).ToList();
+    // 2. Entitled (Sick, etc.)
+    var entitledLeaves = Model.Balances.Where(b => b.category == "Entitled").ToList();
 
-    // 2. Calculate Totals dynamically
-    decimal totalEntitlement = bankedLeaves.Sum(b => b.entitlement);
-    decimal totalUsed = bankedLeaves.Sum(b => b.days_used);
-    decimal totalRemaining = bankedLeaves.Sum(b => b.remaining_balance);
-
-    // 3. Percentage for Progress Bar
-    decimal progressPercent = totalEntitlement > 0 ? (totalRemaining / totalEntitlement) * 100 : 0;
-    
-    // 4. Color Logic (Red = Low Balance)
-    string progressColor = progressPercent < 20 ? "bg-danger" : (progressPercent < 50 ? "bg-warning" : "bg-success");
+    // 3. Policy (Probation, Holiday)
+    var policyLeaves = Model.Balances.Where(b => b.category == "Policy").ToList();
 }
 
 <div class="container-fluid py-4">
@@ -29,7 +21,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">My Leave Dashboard</h2>
-            <p class="text-muted mb-0">Overview of your annual entitlement and usage.</p>
+            <p class="text-muted mb-0">Manage your leave requests and entitlement.</p>
         </div>
         <a href="/Leave/Leave/Create" class="btn btn-primary shadow-sm rounded-pill px-4 fw-bold">
             <i class="fas fa-plus-circle me-2"></i> Apply for Leave
@@ -50,71 +42,98 @@
         </div>
     }
 
-    <!-- SECTION 1: ANNUAL ENTITLEMENT (DYNAMIC POOL) -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-                <div class="card-body p-4">
-                    <div class="row align-items-center">
-                        <!-- Main Balance Circle -->
-                        <div class="col-md-3 text-center border-end">
-                            <h6 class="text-uppercase text-secondary fw-bold small">Total Balance</h6>
-                            <h1 class="display-4 fw-bold text-dark mb-0">@totalRemaining.ToString("0.##")</h1>
-                            <span class="badge bg-light text-dark border rounded-pill mt-2">Days Remaining</span>
-                        </div>
-                        
-                        <!-- Progress & Breakdown -->
-                        <div class="col-md-9 ps-md-5">
-                            <div class="d-flex justify-content-between align-items-end mb-2">
-                                <div>
-                                    <h5 class="fw-bold text-dark mb-1">Annual Leave Pool</h5>
-                                    <p class="text-muted small mb-0">Combined Balance (@totalEntitlement Days Total)</p>
-                                </div>
-                                <span class="fw-bold text-dark">@totalUsed.ToString("0.##") / @totalEntitlement Used</span>
+    <!-- SECTION 1: ANNUAL LEAVE BALANCE (Progress Bar) -->
+    @if (annualLeave != null)
+    {
+        decimal progressPercent = annualLeave.entitlement > 0 
+            ? (annualLeave.remaining_balance / annualLeave.entitlement) * 100 
+            : 0;
+            
+        string progressColor = progressPercent < 20 ? "bg-danger" : (progressPercent < 50 ? "bg-warning" : "bg-success");
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <!-- Main Balance Circle -->
+                            <div class="col-md-3 text-center border-end">
+                                <h6 class="text-uppercase text-secondary fw-bold small">Annual Balance</h6>
+                                <h1 class="display-4 fw-bold text-dark mb-0">@annualLeave.remaining_balance.ToString("0.##")</h1>
+                                <span class="badge bg-light text-dark border rounded-pill mt-2">Days Remaining</span>
+                                @if (annualLeave.days_pending > 0)
+                                {
+                                    <div class="mt-2 text-warning fw-bold small">
+                                        <i class="fas fa-clock"></i> @annualLeave.days_pending Pending
+                                    </div>
+                                }
                             </div>
                             
-                            <!-- Main Progress Bar -->
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar @progressColor" role="progressbar" style="width: @progressPercent%"></div>
-                            </div>
-
-                            <!-- Usage Breakdown (Dynamic Loop) -->
-                            <div class="row mt-4 g-3">
-                                @foreach (var leaf in bankedLeaves)
-                                {
-                                    <div class="col-sm-6 col-lg-4">
-                                        <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="fas fa-calendar-check text-primary me-2"></i>
-                                                <span class="fw-bold text-secondary">@leaf.leave_type</span>
-                                            </div>
-                                            <div class="text-end">
-                                                <div class="fw-bold text-dark">@leaf.remaining_balance Left</div>
-                                                <small class="text-muted">of @leaf.entitlement</small>
-                                            </div>
-                                        </div>
+                            <!-- Progress -->
+                            <div class="col-md-9 ps-md-5">
+                                <div class="d-flex justify-content-between align-items-end mb-2">
+                                    <div>
+                                        <h5 class="fw-bold text-dark mb-1">@annualLeave.leave_type</h5>
+                                        <p class="text-muted small mb-0">Standard Annual Entitlement</p>
                                     </div>
-                                }
-                                @if (!bankedLeaves.Any())
-                                {
-                                    <div class="col-12">
-                                        <div class="alert alert-warning mb-0">
-                                            <i class="fas fa-info-circle me-2"></i> No leave entitlements have been assigned to you yet. Please contact HR.
-                                        </div>
-                                    </div>
-                                }
+                                    <span class="fw-bold text-dark">
+                                        @annualLeave.days_used.ToString("0.##") Used / @annualLeave.entitlement.ToString("0.##") Total
+                                    </span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar @progressColor" role="progressbar" style="width: @progressPercent%"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
 
-    <!-- SECTION 2: OTHER LEAVE TYPES (Policy Based / Unlimited) -->
+    <!-- SECTION 2: OTHER ENTITLED LEAVES (Sick, etc. - Separate Cards) -->
+    @if (entitledLeaves.Any())
+    {
+        <h5 class="fw-bold text-dark mb-3">Other Entitled Leaves</h5>
+        <div class="row g-4 mb-4">
+            @foreach (var item in entitledLeaves)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm h-100 rounded-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">@item.leave_type</h6>
+                                    <small class="text-muted">Separate Entitlement</small>
+                                </div>
+                                <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle">
+                                    <i class="fas fa-notes-medical"></i>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-end">
+                                <div>
+                                    <h3 class="fw-bold text-dark mb-0">@item.remaining_balance.ToString("0.##")</h3>
+                                    <small class="text-muted">Days Left</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small fw-bold">@item.days_used Used</div>
+                                    <div class="small text-muted">of @item.entitlement</div>
+                                    @if(item.days_pending > 0) {
+                                        <span class="badge bg-warning text-dark mt-1">@item.days_pending Pending</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- SECTION 3: POLICY BASED LEAVES (Informational) -->
     <h5 class="fw-bold text-dark mb-3">Policy Based Leaves</h5>
     <div class="row g-4 mb-5">
-        @foreach (var item in Model.Balances.Where(b => b.entitlement == 0))
+        @foreach (var item in policyLeaves)
         {
             <div class="col-md-6 col-xl-3">
                 <div class="card border-0 shadow-sm h-100 rounded-4">
@@ -124,7 +143,10 @@
                         </div>
                         <div>
                             <h6 class="fw-bold text-dark mb-1">@item.leave_type</h6>
-                            <small class="text-muted">Policy Based / HR Controlled</small>
+                            <small class="text-muted">HR Controlled / No Balance</small>
+                            @if(item.days_pending > 0) {
+                                <div class="mt-1 badge bg-warning text-dark">@item.days_pending Pending</div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -132,7 +154,7 @@
         }
     </div>
 
-    <!-- SECTION 3: REQUEST HISTORY -->
+    <!-- SECTION 4: REQUEST HISTORY -->
     <h5 class="fw-bold text-dark mb-3">Request History</h5>
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
@@ -162,8 +184,8 @@
                                     </td>
                                     <td>
                                         @if (row.status == "Pending") { <span class="badge bg-warning text-dark bg-opacity-25 rounded-pill px-3">Pending</span> }
-                                        else if (row.status == "Approved") { <span class="badge bg-success text-success-emphasis bg-opacity-25 rounded-pill px-3">Approved</span> }
-                                        else { <span class="badge bg-danger text-danger-emphasis bg-opacity-25 rounded-pill px-3">Rejected</span> }
+                                        else if (row.status.Contains("Approved")) { <span class="badge bg-success text-success-emphasis bg-opacity-25 rounded-pill px-3">@row.status</span> }
+                                        else { <span class="badge bg-danger text-danger-emphasis bg-opacity-25 rounded-pill px-3">@row.status</span> }
                                     </td>
                                     <td class="text-muted small fw-bold">
                                         @(row.approval_timing?.ToString("yyyy-MM-dd") ?? "-")

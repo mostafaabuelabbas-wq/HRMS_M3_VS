@@ -189,7 +189,7 @@ BEGIN
 END;
 GO
 -- 3 RecordAttendance
-CREATE PROCEDURE RecordAttendance
+CREATE OR ALTER PROCEDURE RecordAttendance
     @EmployeeID INT,
     @ShiftID INT,
     @EntryTime TIME,
@@ -261,7 +261,7 @@ END;
 GO
 
 -- 4 SubmitReimbursement
-CREATE PROCEDURE SubmitReimbursement
+CREATE OR ALTER PROCEDURE SubmitReimbursement
     @EmployeeID INT,
     @ExpenseType VARCHAR(50),
     @Amount DECIMAL(10,2)
@@ -334,7 +334,7 @@ END;
 GO
 
 --5 AddEmployeeSkill
-CREATE PROCEDURE AddEmployeeSkill
+CREATE OR ALTER PROCEDURE AddEmployeeSkill
     @EmployeeID INT,
     @SkillName VARCHAR(50)
 AS
@@ -433,7 +433,7 @@ END;
 GO
 
 --7 ViewMyContracts
-CREATE PROCEDURE ViewMyContracts
+CREATE OR ALTER PROCEDURE ViewMyContracts
     @EmployeeID INT
 AS
 BEGIN
@@ -490,7 +490,7 @@ GO
 
 
 -- 8. ViewMyPayroll
-CREATE PROCEDURE ViewMyPayroll
+CREATE OR ALTER PROCEDURE ViewMyPayroll
     @EmployeeID INT
 AS
 BEGIN
@@ -527,7 +527,7 @@ GO
 
 
 -- 9. UpdatePersonalDetails
-CREATE PROCEDURE UpdatePersonalDetails
+CREATE OR ALTER PROCEDURE UpdatePersonalDetails
     @EmployeeID INT,
     @Phone VARCHAR(20),
     @Address VARCHAR(150)
@@ -560,7 +560,7 @@ GO
 
 
 -- 10. ViewMyMissions
-CREATE PROCEDURE ViewMyMissions
+CREATE OR ALTER PROCEDURE ViewMyMissions
     @EmployeeID INT
 AS
 BEGIN
@@ -594,7 +594,7 @@ GO
 
 
 -- 11. ViewEmployeeProfile
-CREATE PROCEDURE ViewEmployeeProfile
+CREATE OR ALTER PROCEDURE ViewEmployeeProfile
     @EmployeeID INT
 AS
 BEGIN
@@ -645,7 +645,7 @@ GO
 
 
 -- 12. UpdateContactInformation
-CREATE PROCEDURE UpdateContactInformation
+CREATE OR ALTER PROCEDURE UpdateContactInformation
     @EmployeeID INT,
     @RequestType VARCHAR(50),
     @NewValue VARCHAR(100)
@@ -693,7 +693,7 @@ GO
 
 
 -- 13. ViewEmploymentTimeline
-CREATE PROCEDURE ViewEmploymentTimeline
+CREATE OR ALTER PROCEDURE ViewEmploymentTimeline
     @EmployeeID INT
 AS
 BEGIN
@@ -769,7 +769,7 @@ GO
 
 
 -- 15. RequestHRDocument
-CREATE PROCEDURE RequestHRDocument
+CREATE OR ALTER PROCEDURE RequestHRDocument
     @EmployeeID INT,
     @DocumentType VARCHAR(50)
 AS
@@ -821,7 +821,7 @@ GO
 
 
 -- 16. NotifyProfileUpdate
-CREATE PROCEDURE NotifyProfileUpdate
+CREATE OR ALTER PROCEDURE NotifyProfileUpdate
     @EmployeeID INT,
     @notificationType VARCHAR(50)
 AS
@@ -870,7 +870,7 @@ END;
 GO
 
 -- 17. LogFlexibleAttendance
-CREATE PROCEDURE LogFlexibleAttendance
+CREATE OR ALTER PROCEDURE LogFlexibleAttendance
     @EmployeeID INT,
     @Date DATE,
     @CheckIn TIME,
@@ -942,7 +942,7 @@ END;
 GO
 
  --18. NotifyMissedPunch
-CREATE PROCEDURE NotifyMissedPunch
+CREATE OR ALTER PROCEDURE NotifyMissedPunch
     @EmployeeID INT,
     @Date DATE
 AS
@@ -984,7 +984,7 @@ GO
 
 
 -- 19. RecordMultiplePunches
-CREATE PROCEDURE RecordMultiplePunches
+CREATE OR ALTER PROCEDURE RecordMultiplePunches
     @EmployeeID INT,
     @ClockInOutTime DATETIME,
     @Type VARCHAR(10)
@@ -1080,7 +1080,7 @@ GO
 
 
 -- 20. SubmitCorrectionRequest
-CREATE PROCEDURE SubmitCorrectionRequest
+CREATE OR ALTER PROCEDURE SubmitCorrectionRequest
     @EmployeeID INT,
     @Date DATE,
     @CorrectionType VARCHAR(50),
@@ -1137,7 +1137,7 @@ GO
 
 
 -- 21. ViewRequestStatus
-CREATE PROCEDURE ViewRequestStatus
+CREATE OR ALTER PROCEDURE ViewRequestStatus
     @EmployeeID INT
 AS
 BEGIN
@@ -1169,7 +1169,7 @@ END;
 GO
 
 -- 23. AttachLeaveDocuments
-CREATE PROCEDURE AttachLeaveDocuments
+CREATE OR ALTER PROCEDURE AttachLeaveDocuments
     @LeaveRequestID INT,
     @FilePath VARCHAR(200)
 AS
@@ -1206,7 +1206,7 @@ GO
 
 
 -- 24. ModifyLeaveRequest
-CREATE PROCEDURE ModifyLeaveRequest
+CREATE OR ALTER PROCEDURE ModifyLeaveRequest
     @LeaveRequestID INT,
     @StartDate DATE,
     @EndDate DATE,
@@ -1262,7 +1262,7 @@ GO
 
 
 -- 25. CancelLeaveRequest
-CREATE PROCEDURE CancelLeaveRequest
+CREATE OR ALTER PROCEDURE CancelLeaveRequest
     @LeaveRequestID INT
 AS
 BEGIN
@@ -1331,7 +1331,7 @@ GO
 
 
 -- 26. ViewLeaveBalance
-CREATE PROCEDURE ViewLeaveBalance
+CREATE OR ALTER PROCEDURE ViewLeaveBalance
     @EmployeeID INT
 AS
 BEGIN
@@ -1388,7 +1388,7 @@ END;
 GO
 
 --28. SubmitLeaveAfterAbsence
-CREATE PROCEDURE SubmitLeaveAfterAbsence
+CREATE OR ALTER PROCEDURE SubmitLeaveAfterAbsence
     @EmployeeID INT,
     @LeaveTypeID INT,
     @StartDate DATE,
@@ -1479,7 +1479,7 @@ GO
 
 
 --29. NotifyLeaveStatusChange
-CREATE PROCEDURE NotifyLeaveStatusChange
+CREATE OR ALTER PROCEDURE NotifyLeaveStatusChange
     @EmployeeID INT,
     @RequestID INT,
     @Status VARCHAR(20)
@@ -1556,7 +1556,7 @@ GO
 
 -- GetAllContracts: returns all contracts with employee info + subtype details where available
 
-CREATE PROCEDURE GetAllContracts
+CREATE OR ALTER PROCEDURE GetAllContracts
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1590,7 +1590,7 @@ GO
 
 GO
 -- GetEmployeeContracts: all contracts for a given employee (history)
-CREATE PROCEDURE GetEmployeeContracts
+CREATE OR ALTER PROCEDURE GetEmployeeContracts
     @EmployeeID INT
 AS
 BEGIN
@@ -1655,7 +1655,7 @@ END;
 GO
 
 -- UpdateContract: update core contract fields (HR Admin)
-CREATE PROCEDURE UpdateContract
+CREATE OR ALTER PROCEDURE UpdateContract
     @ContractID INT,
     @Type VARCHAR(50),
     @StartDate DATE,
@@ -1752,5 +1752,156 @@ BEGIN
     WHERE e.email = @Email; 
     
     -- If this returns a row, Login Success.
+END;
+GO
+-- MOVED Procedure: InsertLeaveDocument
+-- Previously in hasan.sql, consolidated here for Component 3.
+CREATE OR ALTER PROCEDURE InsertLeaveDocument
+    @LeaveRequestID INT,
+    @FilePath VARCHAR(500)
+AS
+BEGIN
+    INSERT INTO LeaveDocument (leave_request_id, file_path, uploaded_at)
+    VALUES (@LeaveRequestID, @FilePath, GETDATE());
+END;
+GO
+
+-- MOVED Procedure: ViewLeaveHistory (Consolidated)
+-- Originally GetLeaveHistory in hasan.sql, renamed to match C# Service call
+CREATE OR ALTER PROCEDURE ViewLeaveHistory
+    @EmployeeID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        lr.request_id,
+        l.leave_type,
+        lr.justification, 
+        lr.duration,
+        lr.status,
+        lr.approval_timing
+    FROM LeaveRequest lr
+    JOIN [Leave] l ON lr.leave_id = l.leave_id
+    WHERE lr.employee_id = @EmployeeID
+    ORDER BY lr.request_id DESC;
+END;
+GO
+
+-- UPDATED Procedure: GetLeaveBalance
+-- Separates Used (Approved) from Pending to allow clearer UI
+CREATE OR ALTER PROCEDURE GetLeaveBalance
+    @EmployeeID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @VacationID INT = 1;
+    DECLARE @DefaultEntitlement DECIMAL(5,2) = 30.00;
+
+    /* 1. VACATION */
+    SELECT
+        l.leave_type,
+        ISNULL(le.entitlement, @DefaultEntitlement) AS entitlement,
+        
+        -- Approved Only
+        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = @VacationID AND status = 'Approved'), 0) AS days_used,
+        
+        -- Pending Only
+        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = @VacationID AND status = 'Pending'), 0) AS days_pending,
+
+        -- Remaining (Entitlement - Approved)
+        ISNULL(le.entitlement, @DefaultEntitlement) - 
+        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = @VacationID AND status = 'Approved'), 0) AS remaining_balance
+    FROM [Leave] l
+    LEFT JOIN LeaveEntitlement le ON le.employee_id = @EmployeeID AND le.leave_type_id = @VacationID
+    WHERE l.leave_id = @VacationID
+
+    UNION ALL
+
+    /* 2. HR-ASSIGNED LEAVES */
+    SELECT
+        l.leave_type,
+        le.entitlement,
+        
+        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = le.employee_id AND leave_id = le.leave_type_id AND status = 'Approved'), 0),
+        
+        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = le.employee_id AND leave_id = le.leave_type_id AND status = 'Pending'), 0),
+
+        le.entitlement - 
+        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = le.employee_id AND leave_id = le.leave_type_id AND status = 'Approved'), 0)
+    FROM LeaveEntitlement le
+    INNER JOIN [Leave] l ON le.leave_type_id = l.leave_id
+    WHERE le.employee_id = @EmployeeID AND le.leave_type_id <> @VacationID
+
+    UNION ALL
+
+    /* 3. POLICY LEAVES */
+    SELECT
+        l.leave_type,
+        0, 0, 0, 0
+    FROM [Leave] l
+    WHERE l.leave_id NOT IN (SELECT leave_type_id FROM LeaveEntitlement WHERE employee_id = @EmployeeID)
+    AND l.leave_id <> @VacationID;
+END;
+GO
+
+-- REFACTORED Procedure: GetLeaveBalance (Strict Categorization)
+-- Implements User Rules:
+-- 1. No Header IDs (Use Name Matching)
+-- 2. Categories: Annual, Entitled, Policy
+-- 3. Vacation Default = 30
+-- 4. Policy has 0 balance
+CREATE OR ALTER PROCEDURE GetLeaveBalance
+    @EmployeeID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- CTE to gather raw data
+    WITH RawBalance AS (
+        SELECT 
+            l.leave_id,
+            l.leave_type,
+            ISNULL(le.entitlement, 0) AS raw_entitlement,
+             -- Approved Usage
+            ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = l.leave_id AND status = 'Approved'), 0) AS used,
+            -- Pending Usage
+            ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = l.leave_id AND status = 'Pending'), 0) AS pending
+        FROM [Leave] l
+        LEFT JOIN LeaveEntitlement le ON l.leave_id = le.leave_type_id AND le.employee_id = @EmployeeID
+    )
+    SELECT
+        leave_type,
+        
+        -- Categorization (String-based)
+        CASE 
+            WHEN leave_type = 'Vacation' THEN 'Annual'
+            WHEN leave_type = 'Sick' THEN 'Entitled'
+            ELSE 'Policy'
+        END AS category,
+
+        -- Entitlement Logic (Vacation Default 30, Policy 0)
+        CASE 
+            WHEN leave_type = 'Vacation' AND raw_entitlement = 0 THEN 30.00 
+            WHEN leave_type IN ('Vacation', 'Sick') THEN raw_entitlement
+            ELSE 0 
+        END AS entitlement,
+
+        -- Usage (Always show real usage)
+        used AS days_used,
+        pending AS days_pending,
+
+        -- Remaining Logic (Entitlement - Used)
+        CASE 
+            WHEN leave_type = 'Vacation' AND raw_entitlement = 0 THEN 30.00 - used
+            WHEN leave_type IN ('Vacation', 'Sick') THEN raw_entitlement - used
+            ELSE 0 
+        END AS remaining_balance
+
+    FROM RawBalance
+    -- Show all configured leave types
+    -- WHERE leave_type IN ('Vacation', 'Sick', 'Probation', 'Holiday', 'Maternity', 'Special') 
+    --    OR raw_entitlement > 0
 END;
 GO

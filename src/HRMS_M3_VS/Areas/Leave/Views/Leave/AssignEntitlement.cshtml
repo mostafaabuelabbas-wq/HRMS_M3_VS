@@ -9,15 +9,21 @@
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
 
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <!-- Title & Description -->
+            <div class="text-center mb-5">
+                <h2 class="fw-bold text-dark">Leave Entitlements</h2>
+                <p class="text-muted">Manually assign or update leave balances for employees.</p>
+            </div>
 
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
                 <!-- Header -->
-                <div class="card-header text-white text-center py-4"
-                     style="background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);">
-                    <h3 class="fw-bold mb-1">Assign Leave Entitlement</h3>
-                    <p class="mb-0 text-white-50 small">
-                        Assign or adjust leave days for an employee
-                    </p>
+                <div class="card-header bg-dark text-white p-4 text-center">
+                    <div class="mb-3">
+                        <div class="d-inline-flex bg-white bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-balance-scale fs-2 text-white"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold mb-0">Adjust Entitlement</h5>
                 </div>
 
                 <div class="card-body p-4 p-md-5 bg-white">
@@ -25,97 +31,107 @@
                     <!-- Alerts -->
                     @if (TempData["Success"] != null)
                     {
-                        <div class="alert alert-success border-0 shadow-sm mb-4">
-                            @TempData["Success"]
+                        <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+                            <i class="fas fa-check-circle fs-4 me-3"></i>
+                            <div>@TempData["Success"]</div>
                         </div>
                     }
 
                     @if (TempData["Error"] != null)
                     {
-                        <div class="alert alert-danger border-0 shadow-sm mb-4">
-                            @TempData["Error"]
+                        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+                            <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+                            <div>@TempData["Error"]</div>
                         </div>
                     }
 
-                    <!-- Validation -->
-                    <div asp-validation-summary="All" class="text-danger small mb-3"></div>
-
-                    <!-- FORM -->
-                    <form action="/Leave/Leave/AssignEntitlement" method="post">
+                    <form action="/Leave/Leave/AssignEntitlement" method="post" class="needs-validation" novalidate>
                         @Html.AntiForgeryToken()
 
-                        <!-- Employee -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-secondary small text-uppercase">
-                                Employee
-                            </label>
-                            <select name="EmployeeId" class="form-select" required>
-                                <option value="">-- Select Employee --</option>
-                                @foreach (var emp in ViewBag.Employees)
-                                {
-                                    <option value="@emp.employee_id">
-                                        @emp.full_name
-                                    </option>
-                                }
-                            </select>
-                        </div>
-
-                        <!-- Leave Type -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-secondary small text-uppercase">
-                                Leave Type
-                            </label>
-                            <select name="LeaveTypeId" class="form-select" required>
-                                <option value="">-- Select Leave Type --</option>
-                                @foreach (var type in ViewBag.LeaveTypes)
-                                {
-                                    <option value="@type.leave_id">
-                                        @type.leave_type
-                                    </option>
-                                }
-                            </select>
-                        </div>
-
-                        <!-- Entitlement -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-secondary small text-uppercase">
-                                Entitlement (Days)
-                            </label>
-                            <input type="number"
-                                   name="Entitlement"
-                                   class="form-control"
-                                   min="0"
-                                   step="0.5"
-                                   placeholder="e.g. 30"
-                                   required />
-                            <div class="form-text small">
-                                This overrides the default entitlement.
+                        <!-- Information Alert -->
+                        <div class="alert alert-light border border-light-subtle rounded-3 mb-4">
+                            <div class="d-flex gap-3">
+                                <i class="fas fa-info-circle text-info mt-1"></i>
+                                <small class="text-muted">
+                                    Use this form to set the <strong>total annual entitlement</strong> (e.g., 30 days). 
+                                    This will update the "Total" balance for the selected leave type.
+                                </small>
                             </div>
                         </div>
 
-                        <hr class="my-4" />
+                        <!-- 1. Employee Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-secondary">Employee</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
+                                <select name="EmployeeId" class="form-select border-start-0 ps-0" required>
+                                    <option value="">Choose an employee...</option>
+                                    @if(ViewBag.Employees != null)
+                                    {
+                                        @foreach (var emp in ViewBag.Employees)
+                                        {
+                                            <option value="@emp.employee_id">@emp.full_name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 2. Leave Type (Row) -->
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-7">
+                                <label class="form-label fw-bold small text-uppercase text-secondary">Leave Type</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-suitcase text-muted"></i></span>
+                                    <select name="LeaveTypeId" class="form-select border-start-0 ps-0" required>
+                                        <option value="">Select type...</option>
+                                        @if(ViewBag.LeaveTypes != null)
+                                        {
+                                            @foreach (var type in ViewBag.LeaveTypes)
+                                            {
+                                                <!-- Controller Filters this to Entitled Only -->
+                                                <option value="@type.leave_id">@type.leave_type</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold small text-uppercase text-secondary">Days</label>
+                                <div class="input-group">
+                                    <input type="number" name="Entitlement" class="form-control" placeholder="30" min="0" step="0.5" required />
+                                    <span class="input-group-text bg-light text-muted">days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 border-light-subtle" />
 
                         <!-- Actions -->
                         <div class="d-grid gap-3">
-                            <button type="submit"
-                                    class="btn btn-primary btn-lg shadow-sm"
-                                    style="background-color:#2c5364;border-color:#2c5364;">
+                            <button type="submit" class="btn btn-dark btn-lg rounded-pill shadow-lg">
                                 <i class="fas fa-save me-2"></i> Save Entitlement
                             </button>
-
-                            <a href="/Leave/Leave/ManageTypes"
-                               class="btn btn-outline-secondary btn-lg border-0">
+                            <a href="/Leave/Leave/ManageTypes" class="btn btn-link text-muted text-decoration-none">
                                 Cancel
                             </a>
                         </div>
-
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
+
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: #212529;
+        box-shadow: 0 0 0 0.25rem rgba(33, 37, 41, 0.1);
+    }
+    .input-group-text {
+        background-color: #fff;
+    }
+</style>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
