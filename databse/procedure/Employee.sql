@@ -1,6 +1,6 @@
 
  --Employee
-CREATE OR ALTER PROCEDURE SubmitLeaveRequest
+ CREATE OR ALTER PROCEDURE SubmitLeaveRequest
     @EmployeeID INT,
     @LeaveTypeID INT,
     @StartDate DATE,
@@ -40,21 +40,19 @@ BEGIN
         RETURN;
     END;
 
-    -- 4. SMART CHECK: Entitlement - Used vs Requested
-    
-    -- Check Entitlement
+    -- 4. Check Entitlement
     SELECT @Entitlement = entitlement
     FROM LeaveEntitlement
     WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID;
 
-    -- Check Used Days (Approved + Pending)
+    -- ✅ FIXED: Check Used Days (ONLY Approved/Synced, NOT Pending)
     IF @Entitlement IS NOT NULL
     BEGIN
         SELECT @UsedDays = ISNULL(SUM(duration), 0)
         FROM LeaveRequest
         WHERE employee_id = @EmployeeID 
           AND leave_id = @LeaveTypeID 
-          AND status IN ('Approved', 'Pending');
+          AND status IN ('Approved', 'Synced');  -- ✅ FIXED LINE
     END
 
     -- Check Policy
@@ -63,11 +61,9 @@ BEGIN
         SET @HasPolicy = 1;
     END
 
-    -- VALIDATION LOGIC:
+    -- Validation
     IF @Entitlement IS NOT NULL
     BEGIN
-        -- Scenario A: Employee has a balance row
-        -- Formula: (Entitlement - Used) must be >= New Request Duration
         IF (@Entitlement - @UsedDays) < @Duration
         BEGIN
             SELECT 0 AS NewRequestId, 
@@ -77,12 +73,10 @@ BEGIN
     END
     ELSE IF @HasPolicy = 1
     BEGIN
-        -- Scenario B: Policy exists (Unlimited/Special), allow request
         SET @Entitlement = 999; 
     END
     ELSE
     BEGIN
-        -- Scenario C: No balance AND No policy
         SELECT 0 AS NewRequestId, 'Error: You are not eligible for this leave type.' AS ConfirmationMessage;
         RETURN;
     END;
@@ -117,7 +111,6 @@ BEGIN
     SELECT @NewID AS NewRequestId, 'Leave request submitted successfully' AS ConfirmationMessage;
 END;
 GO
-
 -- 2 GetLeaveBalance
 
 
@@ -734,37 +727,22 @@ GO
 
 
 -- 14. UpdateEmergencyContact
-CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
+CREATE OR ALTER PROCEDURE UpdateEmergencyContact
     @EmployeeID INT,
-    @Email VARCHAR(100),
-    @Phone VARCHAR(20),
-    @Address VARCHAR(150),
-    @ProfileImage VARBINARY(MAX) = NULL
+    @ContactName VARCHAR(100),
+    @Relation VARCHAR(50),
+    @Phone VARCHAR(20)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
-    BEGIN
-        SELECT 'Error: Employee not found.' AS Message;
-        RETURN;
-    END;
-
-    IF EXISTS (SELECT 1 FROM Employee WHERE email = @Email AND employee_id <> @EmployeeID)
-    BEGIN
-        SELECT 'Error: This email is already used by another employee.' AS Message;
-        RETURN;
-    END;
-
     UPDATE Employee
-    SET email = @Email,
-        phone = @Phone,
-        address = @Address,
-        profile_image = @ProfileImage
+    SET 
+        emergency_contact_name = @ContactName,
+        relationship = @Relation,
+        emergency_contact_phone = @Phone
     WHERE employee_id = @EmployeeID;
-
-    SELECT 'Employee information updated successfully' AS ConfirmationMessage;
-END;
+END
 GO
 
 
@@ -1754,8 +1732,7 @@ BEGIN
     -- If this returns a row, Login Success.
 END;
 GO
--- MOVED Procedure: InsertLeaveDocument
--- Previously in hasan.sql, consolidated here for Component 3.
+-- Procedure: InsertLeaveDocument
 CREATE OR ALTER PROCEDURE InsertLeaveDocument
     @LeaveRequestID INT,
     @FilePath VARCHAR(500)
@@ -1766,9 +1743,8 @@ BEGIN
 END;
 GO
 
--- MOVED Procedure: ViewLeaveHistory (Consolidated)
--- Originally GetLeaveHistory in hasan.sql, renamed to match C# Service call
-CREATE OR ALTER PROCEDURE ViewLeaveHistory
+-- Procedure: GetLeaveHistory
+CREATE OR ALTER PROCEDURE GetLeaveHistory
     @EmployeeID INT
 AS
 BEGIN
@@ -1777,81 +1753,24 @@ BEGIN
     SELECT 
         lr.request_id,
         l.leave_type,
-        lr.justification, 
         lr.duration,
         lr.status,
-        lr.approval_timing
+        lr.justification,
+        lr.approval_timing,
+        -- ✅ Added Attachment Count
+        COUNT(ld.document_id) AS attachment_count
     FROM LeaveRequest lr
-    JOIN [Leave] l ON lr.leave_id = l.leave_id
+    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
+    -- ✅ Join Documents to count them
+    LEFT JOIN LeaveDocument ld ON lr.request_id = ld.leave_request_id
     WHERE lr.employee_id = @EmployeeID
+    -- ✅ Group By required for COUNT aggregate
+    GROUP BY lr.request_id, l.leave_type, lr.duration, lr.status, lr.justification, lr.approval_timing
     ORDER BY lr.request_id DESC;
 END;
 GO
 
--- UPDATED Procedure: GetLeaveBalance
--- Separates Used (Approved) from Pending to allow clearer UI
-CREATE OR ALTER PROCEDURE GetLeaveBalance
-    @EmployeeID INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    DECLARE @VacationID INT = 1;
-    DECLARE @DefaultEntitlement DECIMAL(5,2) = 30.00;
-
-    /* 1. VACATION */
-    SELECT
-        l.leave_type,
-        ISNULL(le.entitlement, @DefaultEntitlement) AS entitlement,
-        
-        -- Approved Only
-        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = @VacationID AND status = 'Approved'), 0) AS days_used,
-        
-        -- Pending Only
-        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = @VacationID AND status = 'Pending'), 0) AS days_pending,
-
-        -- Remaining (Entitlement - Approved)
-        ISNULL(le.entitlement, @DefaultEntitlement) - 
-        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = @VacationID AND status = 'Approved'), 0) AS remaining_balance
-    FROM [Leave] l
-    LEFT JOIN LeaveEntitlement le ON le.employee_id = @EmployeeID AND le.leave_type_id = @VacationID
-    WHERE l.leave_id = @VacationID
-
-    UNION ALL
-
-    /* 2. HR-ASSIGNED LEAVES */
-    SELECT
-        l.leave_type,
-        le.entitlement,
-        
-        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = le.employee_id AND leave_id = le.leave_type_id AND status = 'Approved'), 0),
-        
-        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = le.employee_id AND leave_id = le.leave_type_id AND status = 'Pending'), 0),
-
-        le.entitlement - 
-        ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = le.employee_id AND leave_id = le.leave_type_id AND status = 'Approved'), 0)
-    FROM LeaveEntitlement le
-    INNER JOIN [Leave] l ON le.leave_type_id = l.leave_id
-    WHERE le.employee_id = @EmployeeID AND le.leave_type_id <> @VacationID
-
-    UNION ALL
-
-    /* 3. POLICY LEAVES */
-    SELECT
-        l.leave_type,
-        0, 0, 0, 0
-    FROM [Leave] l
-    WHERE l.leave_id NOT IN (SELECT leave_type_id FROM LeaveEntitlement WHERE employee_id = @EmployeeID)
-    AND l.leave_id <> @VacationID;
-END;
-GO
-
--- REFACTORED Procedure: GetLeaveBalance (Strict Categorization)
--- Implements User Rules:
--- 1. No Header IDs (Use Name Matching)
--- 2. Categories: Annual, Entitled, Policy
--- 3. Vacation Default = 30
--- 4. Policy has 0 balance
+-- Procedure: GetLeaveBalance (The Robust Version we built)
 CREATE OR ALTER PROCEDURE GetLeaveBalance
     @EmployeeID INT
 AS
@@ -1864,44 +1783,74 @@ BEGIN
             l.leave_id,
             l.leave_type,
             ISNULL(le.entitlement, 0) AS raw_entitlement,
-             -- Approved Usage
-            ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = l.leave_id AND status = 'Approved'), 0) AS used,
+             -- Approved Usage (Include Override)
+            ISNULL((SELECT SUM(duration) 
+                    FROM LeaveRequest 
+                    WHERE employee_id = @EmployeeID 
+                      AND leave_id = l.leave_id 
+                      AND (status = 'Approved' OR status LIKE 'Approved%')), 0) AS used,
             -- Pending Usage
-            ISNULL((SELECT SUM(duration) FROM LeaveRequest WHERE employee_id = @EmployeeID AND leave_id = l.leave_id AND status = 'Pending'), 0) AS pending
+            ISNULL((SELECT SUM(duration) 
+                    FROM LeaveRequest 
+                    WHERE employee_id = @EmployeeID 
+                      AND leave_id = l.leave_id 
+                      AND status = 'Pending'), 0) AS pending
         FROM [Leave] l
         LEFT JOIN LeaveEntitlement le ON l.leave_id = le.leave_type_id AND le.employee_id = @EmployeeID
+        WHERE l.leave_type NOT IN ('Holiday') -- Assuming Holiday is hidden or specific
     )
     SELECT
         leave_type,
         
-        -- Categorization (String-based)
+        -- DYNAMIC CATEGORIZATION
         CASE 
             WHEN leave_type = 'Vacation' THEN 'Annual'
-            WHEN leave_type = 'Sick' THEN 'Entitled'
+            -- EXPLICIT EXCLUSION: Probation and Holiday are ALWAYS Policy based
+            WHEN leave_type IN ('Probation', 'Holiday') THEN 'Policy'
+            -- Logic: If it has entitlement assigned OR is strictly 'Sick', treat as Entitled.
+            WHEN raw_entitlement > 0 OR leave_type = 'Sick' THEN 'Entitled'
             ELSE 'Policy'
         END AS category,
 
-        -- Entitlement Logic (Vacation Default 30, Policy 0)
+        -- Entitlement Logic (Probation/Holiday -> 0)
         CASE 
+            WHEN leave_type IN ('Probation', 'Holiday') THEN 0
             WHEN leave_type = 'Vacation' AND raw_entitlement = 0 THEN 30.00 
-            WHEN leave_type IN ('Vacation', 'Sick') THEN raw_entitlement
+            WHEN (raw_entitlement > 0 OR leave_type = 'Sick') THEN raw_entitlement
             ELSE 0 
         END AS entitlement,
 
         -- Usage (Always show real usage)
-        used AS days_used,
-        pending AS days_pending,
+        days_used = used,
+        days_pending = pending,
 
         -- Remaining Logic (Entitlement - Used)
         CASE 
+            WHEN leave_type IN ('Probation', 'Holiday') THEN 0
             WHEN leave_type = 'Vacation' AND raw_entitlement = 0 THEN 30.00 - used
-            WHEN leave_type IN ('Vacation', 'Sick') THEN raw_entitlement - used
+            WHEN (raw_entitlement > 0 OR leave_type = 'Sick') THEN raw_entitlement - used
             ELSE 0 
         END AS remaining_balance
 
     FROM RawBalance
-    -- Show all configured leave types
-    -- WHERE leave_type IN ('Vacation', 'Sick', 'Probation', 'Holiday', 'Maternity', 'Special') 
-    --    OR raw_entitlement > 0
+END;
+GO
+
+
+-- Procedure: GetAllEmployeesSimple
+CREATE OR ALTER PROCEDURE GetAllEmployeesSimple
+    @ManagerID INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        employee_id,
+        full_name,
+        national_id -- Helpful for distinguishing same names
+    FROM Employee
+    WHERE (@ManagerID IS NULL OR manager_id = @ManagerID)
+      AND is_active = 1 -- Good practice to only show active employees
+    ORDER BY full_name;
 END;
 GO

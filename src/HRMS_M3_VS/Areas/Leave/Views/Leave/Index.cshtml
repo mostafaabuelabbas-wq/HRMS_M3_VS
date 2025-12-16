@@ -134,31 +134,46 @@
                                 <!-- Actions Column -->
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <!-- APPROVE -->
-                                        <form action="/Leave/Leave/Approve" method="post">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@item.RequestId" />
-                                            <button type="submit" class="btn btn-outline-success btn-sm rounded-circle shadow-sm" style="width: 38px; height: 38px;" title="Approve">
-                                                <i class="fas fa-check"></i>
+                                        
+                                        @if (User.IsInRole("Manager"))
+                                        {
+                                            <!-- APPROVE -->
+                                            <form action="/Leave/Leave/Approve" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.RequestId" />
+                                                <button type="submit" class="btn btn-outline-success btn-sm rounded-circle shadow-sm" style="width: 38px; height: 38px;" title="Approve">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+
+                                            <!-- REJECT (Modal Trigger) -->
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-circle shadow-sm hover-scale" 
+                                                    style="width: 38px; height: 38px;" 
+                                                    data-bs-toggle="modal" data-bs-target="#rejectModal-@item.RequestId" title="Reject">
+                                                <i class="fas fa-times"></i>
                                             </button>
-                                        </form>
 
-                                        <!-- REJECT (Modal) -->
-                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle shadow-sm hover-scale" 
-                                                style="width: 38px; height: 38px;" 
-                                                data-bs-toggle="modal" data-bs-target="#rejectModal-@item.RequestId" title="Reject">
-                                            <i class="fas fa-times"></i>
-                                        </button>
+                                            <!-- FLAG (Modal Trigger) -->
+                                            <button type="button" class="btn btn-outline-warning btn-sm rounded-circle shadow-sm hover-scale text-dark border-warning" 
+                                                    style="width: 38px; height: 38px;" 
+                                                    data-bs-toggle="modal" data-bs-target="#flagModal-@item.RequestId" title="Flag Irregularity">
+                                                <i class="fas fa-flag"></i>
+                                            </button>
+                                        }
 
-                                        <!-- FLAG (Modal) -->
-                                        <button type="button" class="btn btn-outline-warning btn-sm rounded-circle shadow-sm hover-scale text-dark border-warning" 
-                                                style="width: 38px; height: 38px;" 
-                                                data-bs-toggle="modal" data-bs-target="#flagModal-@item.RequestId" title="Flag Irregularity">
-                                            <i class="fas fa-flag"></i>
-                                        </button>
+                                        @if (User.IsInRole("HRAdmin"))
+                                        {
+                                            <!-- OVERRIDE BUTTON -->
+                                            <a href="@Url.Action("OverrideDecision", "Leave", new { area = "Leave", id = item.RequestId })" 
+                                               class="btn btn-outline-danger btn-sm shadow-sm px-3 fw-bold rounded-pill" 
+                                               title="Override Decision">
+                                                <i class="fas fa-gavel me-1"></i> Override
+                                            </a>
+                                        }
+
                                     </div>
 
-                                    <!-- MODALS (Hidden) -->
+                                    <!-- MODALS -->
                                     <!-- Reject Modal -->
                                     <div class="modal fade text-start" id="rejectModal-@item.RequestId" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">

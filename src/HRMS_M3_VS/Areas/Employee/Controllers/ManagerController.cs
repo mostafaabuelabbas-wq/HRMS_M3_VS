@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace HRMS_M3_VS.Areas.Employee.Controllers
 {
     [Area("Employee")]
+    [Authorize(Roles = "Manager")]
     public class ManagerController : Controller
     {
         // Keep using EmployeeService as you had before

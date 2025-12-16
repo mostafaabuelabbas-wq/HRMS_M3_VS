@@ -38,15 +38,21 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT 
-        lr.request_id AS RequestId,
-        l.leave_type AS LeaveType,
-        lr.justification AS Justification,
-        lr.duration AS Duration,
-        lr.status AS Status,
-        lr.approval_timing AS ApprovalDate
+        lr.request_id,
+        l.leave_type,
+        lr.duration,
+        lr.status,
+        lr.justification,
+        lr.approval_timing,
+        -- ✅ Added Attachment Count
+        COUNT(ld.document_id) AS attachment_count
     FROM LeaveRequest lr
-    JOIN [Leave] l ON lr.leave_id = l.leave_id
+    INNER JOIN [Leave] l ON lr.leave_id = l.leave_id
+    -- ✅ Join Documents to count them
+    LEFT JOIN LeaveDocument ld ON lr.request_id = ld.leave_request_id
     WHERE lr.employee_id = @EmployeeID
+    -- ✅ Group By required for COUNT aggregate
+    GROUP BY lr.request_id, l.leave_type, lr.duration, lr.status, lr.justification, lr.approval_timing
     ORDER BY lr.request_id DESC;
 END;
 GO

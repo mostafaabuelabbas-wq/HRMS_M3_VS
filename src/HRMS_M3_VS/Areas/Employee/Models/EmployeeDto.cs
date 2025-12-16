@@ -10,7 +10,7 @@
         public string? Email { get; set; }
         public string? Phone { get; set; }
         public string? Address { get; set; }
-        public string? Profile_Image { get; set; }
+        public byte[]? Profile_Image { get; set; }
 
         // Emergency Contact Info
         public string? Emergency_Contact_Name { get; set; }

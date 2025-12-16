@@ -151,6 +151,7 @@ GO
 
 
 -- 3  ApproveLeaveRequest
+/*
 CREATE OR ALTER PROCEDURE ApproveLeaveRequest
     @LeaveRequestID INT,
     @ApproverID INT,
@@ -205,7 +206,8 @@ BEGIN
     END CATCH
 END;
 GO
-
+*/
+--combined it in one and put it in line manager
 
 --AssignMission
 CREATE OR ALTER PROCEDURE AssignMission
@@ -1688,63 +1690,69 @@ GO
 
 
 --29 ConfigureLeaveEligibility
-CREATE OR ALTER PROCEDURE ConfigureLeaveEligibility
+CREATE PROCEDURE ConfigureLeaveEligibility
     @LeaveType VARCHAR(50),
     @MinTenure INT,
     @EmployeeType VARCHAR(50)
 AS
 BEGIN
-    SET NOCOUNT ON;
-
-    -- Update the SAME policy row created by Rules
-    IF EXISTS (SELECT 1 FROM LeavePolicy WHERE special_leave_type = @LeaveType)
-    BEGIN
-        UPDATE LeavePolicy
-        SET eligibility_rules = 'MinTenure=' + CAST(@MinTenure AS VARCHAR(10)) + ';Type=' + @EmployeeType
-        WHERE special_leave_type = @LeaveType;
-    END
-    ELSE
-    BEGIN
-        -- Fallback if policy doesn't exist yet
-        INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year)
-        VALUES (
-            @LeaveType + ' Policy',
-            'Eligibility Policy',
-            'MinTenure=' + CAST(@MinTenure AS VARCHAR(10)) + ';Type=' + @EmployeeType,
-            0,
-            @LeaveType,
-            1
-        );
-    END
+    INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year)
+    VALUES (
+        @LeaveType + ' Eligibility Policy',
+        'Eligibility configuration for ' + @LeaveType,
+        'MinTenure=' + CAST(@MinTenure AS VARCHAR(10)) + ';EmployeeType=' + @EmployeeType,
+        7,
+        @LeaveType,
+        1
+    );
 
     SELECT 'Leave eligibility configured successfully' AS ConfirmationMessage;
 END;
 GO
 -- 30 ManageLeaveTypes
 -- PROCEDURE: ManageLeaveTypes
-CREATE OR ALTER PROCEDURE ManageLeaveTypes
+CREATE PROCEDURE ManageLeaveTypes
     @LeaveType VARCHAR(50),
     @Description VARCHAR(200)
 AS
 BEGIN
     SET NOCOUNT ON;
+
     BEGIN TRY
         BEGIN TRANSACTION;
+
+        ------------------------------------------------------
+        -- 1. Check if leave type already exists
+        ------------------------------------------------------
         IF EXISTS (SELECT 1 FROM [Leave] WHERE leave_type = @LeaveType)
         BEGIN
-            UPDATE [Leave] SET leave_description = @Description WHERE leave_type = @LeaveType;
+            -- Update existing leave description
+            UPDATE [Leave]
+            SET leave_description = @Description
+            WHERE leave_type = @LeaveType;
+
             COMMIT TRANSACTION;
+
             SELECT 'Leave type updated successfully' AS ConfirmationMessage;
             RETURN;
         END
-        INSERT INTO [Leave] (leave_type, leave_description) VALUES (@LeaveType, @Description);
+
+        ------------------------------------------------------
+        -- 2. Insert new leave type
+        ------------------------------------------------------
+        INSERT INTO [Leave] (leave_type, leave_description)
+        VALUES (@LeaveType, @Description);
+
         COMMIT TRANSACTION;
+
         SELECT 'New leave type created successfully' AS ConfirmationMessage;
+
     END TRY
     BEGIN CATCH
         ROLLBACK TRANSACTION;
-        SELECT 'Error: Leave type could not be created/updated.' AS ConfirmationMessage;
+        SELECT 'Error: Leave type could not be created or updated.' AS ConfirmationMessage;
     END CATCH
+
 END;
 GO
 
@@ -1752,33 +1760,73 @@ GO
 
 -- 31 AssignLeaveEntitlement
 -- PROCEDURE: AssignLeaveEntitlement
-CREATE OR ALTER PROCEDURE AssignLeaveEntitlement
+CREATE PROCEDURE AssignLeaveEntitlement
     @EmployeeID INT,
-    @LeaveTypeID INT,
+    @LeaveType VARCHAR(50),
     @Entitlement DECIMAL(5,2)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Check if record exists
-    IF EXISTS (
-        SELECT 1 FROM LeaveEntitlement 
-        WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID
-    )
-    BEGIN
-        -- Update existing
-        UPDATE LeaveEntitlement
-        SET entitlement = @Entitlement
-        WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID;
-    END
-    ELSE
-    BEGIN
-        -- Insert new
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        ----------------------------------------------------
+        -- 1. Validate employee exists
+        ----------------------------------------------------
+        IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
+        BEGIN
+            RAISERROR('Employee does not exist.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END;
+
+        ----------------------------------------------------
+        -- 2. Validate leave type exists
+        ----------------------------------------------------
+        DECLARE @LeaveTypeID INT;
+        SELECT @LeaveTypeID = leave_id FROM [Leave] WHERE leave_type = @LeaveType;
+
+        IF @LeaveTypeID IS NULL
+        BEGIN
+            RAISERROR('Invalid leave type.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END;
+
+        ----------------------------------------------------
+        -- 3. Update if entitlement exists
+        ----------------------------------------------------
+        IF EXISTS (
+            SELECT 1 FROM LeaveEntitlement
+            WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID
+        )
+        BEGIN
+            UPDATE LeaveEntitlement
+            SET entitlement = @Entitlement
+            WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID;
+
+            COMMIT TRANSACTION;
+
+            SELECT 'Entitlement updated successfully.' AS ConfirmationMessage;
+            RETURN;
+        END;
+
+        ----------------------------------------------------
+        -- 4. Insert new entitlement
+        ----------------------------------------------------
         INSERT INTO LeaveEntitlement (employee_id, leave_type_id, entitlement)
         VALUES (@EmployeeID, @LeaveTypeID, @Entitlement);
-    END
 
-    SELECT 'Leave entitlement assigned successfully.' AS ConfirmationMessage;
+        COMMIT TRANSACTION;
+
+        SELECT 'Entitlement assigned successfully.' AS ConfirmationMessage;
+
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
 GO
 
@@ -1789,38 +1837,58 @@ CREATE OR ALTER PROCEDURE ConfigureLeaveRules
     @LeaveType VARCHAR(50),
     @MaxDuration INT,
     @NoticePeriod INT,
-    @WorkflowType VARCHAR(50)
+    @WorkflowType VARCHAR(50),
+    @EligibilityRules VARCHAR(255) = 'All' -- Default to All if not provided
 AS
 BEGIN
     SET NOCOUNT ON;
-    
-    -- Check if a policy row exists for this leave type
-    IF EXISTS (SELECT 1 FROM LeavePolicy WHERE special_leave_type = @LeaveType)
-    BEGIN
-        -- UPDATE existing row
-        UPDATE LeavePolicy
-        SET notice_period = @NoticePeriod,
-            max_duration = @MaxDuration,
-            -- Update purpose to be a description or workflow related
-            purpose = 'Policy for ' + @LeaveType + '. Workflow: ' + @WorkflowType
-        WHERE special_leave_type = @LeaveType;
-    END
-    ELSE
-    BEGIN
-        -- INSERT new row
-        INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year, max_duration)
-        VALUES (
-            @LeaveType + ' Policy',
-            'Policy for ' + @LeaveType + '. Workflow: ' + @WorkflowType,
-            'All', -- Default eligibility
-            @NoticePeriod,
-            @LeaveType,
-            1,
-            @MaxDuration
-        );
-    END
 
-    SELECT 'Leave rules configured successfully' AS ConfirmationMessage;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- 1. Validate that LeaveType exists (Master Logic)
+        IF NOT EXISTS (SELECT 1 FROM [Leave] WHERE leave_type = @LeaveType)
+        BEGIN
+            RAISERROR('Leave type does not exist.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END;
+
+        -- 2. Upsert Logic (HASAN Logic - Allows Edits)
+        IF EXISTS (SELECT 1 FROM LeavePolicy WHERE special_leave_type = @LeaveType)
+        BEGIN
+            -- UPDATE existing row
+            UPDATE LeavePolicy
+            SET notice_period = @NoticePeriod,
+                max_duration = @MaxDuration,
+                eligibility_rules = @EligibilityRules,
+                purpose = 'Policy for ' + @LeaveType + '. Workflow: ' + @WorkflowType
+            WHERE special_leave_type = @LeaveType;
+        END
+        ELSE
+        BEGIN
+            -- INSERT new row
+            INSERT INTO LeavePolicy (name, purpose, eligibility_rules, notice_period, special_leave_type, reset_on_new_year, max_duration)
+            VALUES (
+                @LeaveType + ' Policy',
+                'Policy for ' + @LeaveType + '. Workflow: ' + @WorkflowType,
+                ISNULL(@EligibilityRules, 'All'),
+                @NoticePeriod,
+                @LeaveType,
+                1,
+                @MaxDuration
+            );
+        END
+
+        COMMIT TRANSACTION;
+
+        SELECT 'Leave rules configured successfully' AS ConfirmationMessage;
+
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
 GO
 
@@ -2573,7 +2641,6 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- 1. Read Request Details
         DECLARE @EmployeeID INT, @LeaveType VARCHAR(50), @Duration INT, 
                 @Status VARCHAR(50), @Justification VARCHAR(255), @StartDate DATE;
 
@@ -2587,7 +2654,6 @@ BEGIN
         JOIN [Leave] l ON lr.leave_id = l.leave_id
         WHERE lr.request_id = @LeaveRequestID;
 
-        -- 2. Validations
         IF @EmployeeID IS NULL
         BEGIN
             RAISERROR('Leave request does not exist.', 16, 1);
@@ -2602,20 +2668,21 @@ BEGIN
             RETURN;
         END
 
-        -- 3. PARSE START DATE from Justification
+        -- 3. PARSE START DATE from Justification (HASAN LOGIC)
         -- Format expected: "... (From: YYYY-MM-DD To: ...)"
         DECLARE @FromIndex INT = CHARINDEX('(From: ', @Justification);
         
         IF @FromIndex > 0
         BEGIN
             DECLARE @DateStr VARCHAR(10) = SUBSTRING(@Justification, @FromIndex + 7, 10);
-            TRY_CAST(@DateStr AS DATE); -- Check if valid
-            SET @StartDate = CAST(@DateStr AS DATE);
+            -- Safe Cast
+            SET @StartDate = TRY_CAST(@DateStr AS DATE);
         END
-        ELSE
+        
+        IF @StartDate IS NULL
         BEGIN
-             -- Fallback: Use Approval Timing if parsing fails (Legacy support)
-             SELECT @StartDate = approval_timing FROM LeaveRequest WHERE request_id = @LeaveRequestID;
+             -- Fallback: Use Approval Timing if parsing fails
+             SELECT @StartDate = CAST(approval_timing AS DATE) FROM LeaveRequest WHERE request_id = @LeaveRequestID;
         END
 
         IF @StartDate IS NULL
@@ -2625,7 +2692,7 @@ BEGIN
             RETURN;
         END
 
-        -- 4. LOOP: Process Each Day
+        -- 4. LOOP: Process Each Day (MASTER LOGIC with Defaults)
         DECLARE @i INT = 0;
         DECLARE @CurrentDate DATE;
         DECLARE @ShiftID INT;
@@ -2637,23 +2704,11 @@ BEGIN
         BEGIN
             SET @CurrentDate = DATEADD(DAY, @i, @StartDate);
 
-            --------------------------------------------------------
-            -- STEP 1: Create the Exception (The Reason)
-            --------------------------------------------------------
             INSERT INTO [Exception] ([name], category, [date], status)
-            VALUES (
-                @LeaveType + ' Leave', 
-                'Leave', 
-                @CurrentDate, 
-                'Approved'
-            );
+            VALUES (@LeaveType + ' Leave', 'Leave', @CurrentDate, 'Approved');
 
-            -- Capture the ID of the new Exception
             SET @ExceptionID = SCOPE_IDENTITY();
 
-            --------------------------------------------------------
-            -- STEP 2: Find Shift Details (To fill Attendance times)
-            --------------------------------------------------------
             SELECT TOP 1 
                 @ShiftID = s.shift_id,
                 @ShiftStart = s.start_time,
@@ -2664,61 +2719,47 @@ BEGIN
               AND sa.status = 'Active'
               AND @CurrentDate BETWEEN sa.start_date AND sa.end_date;
 
-            --------------------------------------------------------
-            -- STEP 3: Create Attendance Record (The Daily Truth)
-            -- AND Link it to the Exception (Step 4)
-            --------------------------------------------------------
             IF @ShiftID IS NOT NULL
             BEGIN
                 INSERT INTO Attendance (
-                    employee_id, 
-                    shift_id, 
-                    entry_time, 
-                    exit_time, 
-                    login_method, 
-                    logout_method,
-                    exception_id -- <--- LINKING HERE
+                    employee_id, shift_id, entry_time, exit_time, 
+                    login_method, logout_method, exception_id
                 )
                 VALUES (
-                    @EmployeeID,
-                    @ShiftID,
+                    @EmployeeID, @ShiftID,
                     CAST(@CurrentDate AS DATETIME) + CAST(@ShiftStart AS DATETIME), 
                     CAST(@CurrentDate AS DATETIME) + CAST(@ShiftEnd AS DATETIME),
-                    'LeaveSync', 
-                    'LeaveSync',
-                    @ExceptionID -- The ID from Step 1
+                    'LeaveSync', 'LeaveSync', @ExceptionID
                 );
             END
             ELSE
             BEGIN
-                -- Fallback if no shift assigned (still record the leave)
+                -- Fallback: Default 9-5 if no shift
                 INSERT INTO Attendance (
-                    employee_id, 
-                    entry_time, 
-                    login_method,
-                    exception_id
+                    employee_id, entry_time, exit_time,
+                    login_method, logout_method, exception_id
                 )
                 VALUES (
                     @EmployeeID, 
-                    CAST(@CurrentDate AS DATETIME), 
-                    'LeaveSync',
-                    @ExceptionID
+                    CAST(@CurrentDate AS DATETIME) + CAST('09:00:00' AS DATETIME),
+                    CAST(@CurrentDate AS DATETIME) + CAST('17:00:00' AS DATETIME),
+                    'LeaveSync', 'LeaveSync', @ExceptionID
                 );
             END
 
-            -- Also link via Employee_Exception table for redundancy/history
             INSERT INTO Employee_Exception (employee_id, exception_id)
             VALUES (@EmployeeID, @ExceptionID);
 
             SET @i = @i + 1;
         END;
 
-        --------------------------------------------------------
-        -- STEP 5: Finalize Status
-        --------------------------------------------------------
-        UPDATE LeaveRequest
-        SET status = 'Synced'
-        WHERE request_id = @LeaveRequestID;
+        -- 5. UPDATE STATUS (Protect Override Status)
+        IF @Status NOT IN ('Approved - Override') 
+        BEGIN
+            UPDATE LeaveRequest
+            SET status = 'Synced'
+            WHERE request_id = @LeaveRequestID;
+        END
 
         COMMIT TRANSACTION;
 
@@ -2726,7 +2767,7 @@ BEGIN
 
     END TRY
     BEGIN CATCH
-        ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         SELECT 'Error: ' + ERROR_MESSAGE() AS Message;
     END CATCH
 END;

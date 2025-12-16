@@ -11,7 +11,7 @@
         public string? Emergency_Contact_Phone { get; set; }
         public string? Department_Name { get; set; }
         public string? Position_Title { get; set; }
-        public string? Profile_Image { get; set; }
+        public byte[]? Profile_Image { get; set; }
 
         public int MissingCount { get; set; }
     }

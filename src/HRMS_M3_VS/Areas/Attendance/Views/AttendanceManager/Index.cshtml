@@ -3,25 +3,29 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container p-0">
-    <h2 class="mb-4 text-primary fw-bold">
-        <i class="fa fa-tasks me-2"></i>Attendance Operations
-    </h2>
+<div class="container-fluid">
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="fw-bold text-white m-0">
+            <i class="fa fa-tasks me-2 text-primary"></i>Attendance Operations
+        </h2>
+    </div>
 
     <div class="row g-4">
 
         <!-- 1. SYNC LEAVES (Requirement 2c) -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 bg-white border-top border-4 border-info">
+            <div class="card h-100 border-top border-4 border-info">
                 <div class="card-body text-center py-5">
-                    <div class="mb-3 text-info">
-                        <i class="fa fa-sync-alt fa-3x"></i>
+                    <div class="mb-4">
+                        <span class="d-inline-block p-3 rounded-circle bg-info bg-opacity-10 text-info">
+                            <i class="fa fa-sync-alt fa-3x"></i>
+                        </span>
                     </div>
-                    <h5 class="card-title fw-bold">Sync Leaves</h5>
-                    <p class="card-text text-muted small">
+                    <h5 class="card-title fw-bold text-white mb-3">Sync Leaves</h5>
+                    <p class="card-text text-muted small mb-4">
                         Convert approved leave requests into official attendance exceptions.
                     </p>
-                    <a asp-action="SyncLeaves" class="btn btn-outline-info w-75 rounded-pill">
+                    <a asp-action="SyncLeaves" class="btn btn-outline-info w-75 rounded-pill fw-medium">
                         Start Sync
                     </a>
                 </div>
@@ -30,41 +34,43 @@
 
         <!-- 2. OFFLINE SYNC (Requirement 2d) -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 bg-white border-top border-4 border-primary">
+            <div class="card h-100 border-top border-4 border-primary">
                 <div class="card-body text-center py-5">
-                    <div class="mb-3 text-primary">
-                        <i class="fa fa-wifi fa-3x"></i>
+                    <div class="mb-4">
+                        <span class="d-inline-block p-3 rounded-circle bg-primary bg-opacity-10 text-primary">
+                            <i class="fa fa-wifi fa-3x"></i>
+                        </span>
                     </div>
-                    <h5 class="card-title fw-bold">Offline Sync</h5>
-                    <p class="card-text text-muted small">
+                    <h5 class="card-title fw-bold text-white mb-3">Offline Sync</h5>
+                    <p class="card-text text-muted small mb-4">
                         Simulate data upload from disconnected biometric devices.
                     </p>
-                    <a asp-action="OfflineSync" class="btn btn-outline-primary w-75 rounded-pill">
+                    <a asp-action="OfflineSync" class="btn btn-outline-primary w-75 rounded-pill fw-medium">
                         Simulate Device
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- 3. TIME RULES & PENALTIES (Requirement 2e) - NEW! -->
+        <!-- 3. TIME RULES & PENALTIES (Requirement 2e) -->
         <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 bg-white border-top border-4 border-danger">
+            <div class="card h-100 border-top border-4 border-danger">
                 <div class="card-body text-center py-5">
-                    <div class="mb-3 text-danger">
-                        <i class="fa fa-gavel fa-3x"></i>
+                    <div class="mb-4">
+                        <span class="d-inline-block p-3 rounded-circle bg-danger bg-opacity-10 text-danger">
+                            <i class="fa fa-gavel fa-3x"></i>
+                        </span>
                     </div>
-                    <h5 class="card-title fw-bold">Time Rules</h5>
-                    <p class="card-text text-muted small">
+                    <h5 class="card-title fw-bold text-white mb-3">Time Rules</h5>
+                    <p class="card-text text-muted small mb-4">
                         View daily short-time penalties and grace period application.
                     </p>
-                    <a asp-action="TimeRules" class="btn btn-outline-danger w-75 rounded-pill">
+                    <a asp-action="TimeRules" class="btn btn-outline-danger w-75 rounded-pill fw-medium">
                         View Penalties
                     </a>
                 </div>
             </div>
         </div>
-
-        
 
     </div>
 </div>

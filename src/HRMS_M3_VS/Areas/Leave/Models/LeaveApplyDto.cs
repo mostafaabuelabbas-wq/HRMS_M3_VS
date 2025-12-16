@@ -2,6 +2,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HRMS_M3_VS.Areas.Leave.Models
 {
+   
+    
+    
+
+    // Existing DTOs below (keep all your existing ones)
+
     public class LeaveApplyDto
     {
         [Required]
@@ -16,7 +22,7 @@ namespace HRMS_M3_VS.Areas.Leave.Models
         [Required(ErrorMessage = "Reason is required")]
         public string justification { get; set; } = string.Empty;
 
-        // ✅ ADD THIS LINE:
+        // ✅ File upload property
         public IFormFile? attachment { get; set; }
     }
 

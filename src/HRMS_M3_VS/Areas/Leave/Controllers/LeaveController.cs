@@ -19,14 +19,26 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
         // ==========================================================
         // 1. MANAGER ACTIONS (Dashboard) - SECURED 🔒
         // ==========================================================
-
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Manager,HRAdmin")]
         public async Task<IActionResult> Index()
         {
             int managerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "1");
+
             try
             {
-                var requests = await _leaveService.GetPendingLeaveRequests(managerId);
+                IEnumerable<PendingLeaveRequestDto> requests;
+
+                // ✅ HR Admin sees ALL requests
+                if (User.IsInRole("HRAdmin"))
+                {
+                    requests = await _leaveService.GetAllLeaveRequests();
+                }
+                // ✅ Manager sees only PENDING requests
+                else
+                {
+                    requests = await _leaveService.GetPendingLeaveRequests(managerId);
+                }
+
                 return View(requests);
             }
             catch (Exception ex)
@@ -92,7 +104,8 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             try
             {
                 model.Balances = await _leaveService.GetEmployeeBalance(employeeId);
-                model.History = await _leaveService.GetEmployeeHistory(employeeId);
+                // ✅ UPDATED: Now gets history with attachment count
+                model.History = await _leaveService.GetEmployeeHistoryWithAttachments(employeeId);
             }
             catch (Exception ex) { TempData["Error"] = "Error: " + ex.Message; }
             return View(model);
@@ -139,11 +152,71 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             }
         }
 
+        // ✅ NEW: View Attachments for a Leave Request
+        [HttpGet]
+        public async Task<IActionResult> ViewAttachments(int id)
+        {
+            try
+            {
+                var attachments = await _leaveService.GetLeaveAttachments(id);
+                ViewBag.RequestId = id;
+                return View(attachments);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error: " + ex.Message;
+                return RedirectToAction(nameof(MyLeave));
+            }
+        }
+
+        // ✅ NEW: Download Attachment
+        [HttpGet]
+        public IActionResult DownloadAttachment(string filePath)
+        {
+            try
+            {
+                // Security: Ensure the path is within our uploads folder
+                if (string.IsNullOrEmpty(filePath) || !filePath.StartsWith("/uploads/leaves/"))
+                {
+                    return BadRequest("Invalid file path");
+                }
+
+                var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", filePath.TrimStart('/'));
+
+                if (!System.IO.File.Exists(fullPath))
+                {
+                    return NotFound("File not found");
+                }
+
+                var fileName = Path.GetFileName(fullPath);
+                var fileBytes = System.IO.File.ReadAllBytes(fullPath);
+                var contentType = "application/octet-stream";
+
+                // Set proper content type based on extension
+                var extension = Path.GetExtension(fileName).ToLower();
+                contentType = extension switch
+                {
+                    ".pdf" => "application/pdf",
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".doc" => "application/msword",
+                    ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    _ => "application/octet-stream"
+                };
+
+                return File(fileBytes, contentType, fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error downloading file: " + ex.Message;
+                return RedirectToAction(nameof(MyLeave));
+            }
+        }
+
         // ==========================================================
         // 3. HR ADMIN ACTIONS (Configuration) - SECURED 🔒
         // ==========================================================
 
-        // 1. Grid View (List all types)
         [Authorize(Roles = "HRAdmin,SystemAdmin")]
         public async Task<IActionResult> ManageTypes()
         {
@@ -159,17 +232,14 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             }
         }
 
-        // 2. Form View (Create or Edit)
         [Authorize(Roles = "HRAdmin,SystemAdmin")]
         public async Task<IActionResult> EditType(string id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                // Create Mode
                 return View(new LeaveConfigDto());
             }
 
-            // Edit Mode: Find the existing item
             var list = await _leaveService.GetLeaveConfigurations();
             var item = list.FirstOrDefault(x => x.leave_type == id);
 
@@ -178,7 +248,6 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             return View(item);
         }
 
-        // 3. Submit Action
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "HRAdmin,SystemAdmin")]
@@ -198,17 +267,16 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
                 return View("EditType", model);
             }
         }
+
         // ==========================================================
         // HR ADMIN: ASSIGN ENTITLEMENTS
         // ==========================================================
 
-        // GET: Leave/Leave/AssignEntitlement
         [Authorize(Roles = "HRAdmin")]
         public async Task<IActionResult> AssignEntitlement()
         {
             try
             {
-                // 1. Load Employees for Dropdown
                 ViewBag.Employees = await _leaveService.GetAllEmployees();
                 
                 // 2. Load Leave Types for Dropdown
@@ -226,7 +294,6 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             }
         }
 
-        // POST: Leave/Leave/AssignEntitlement
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "HRAdmin")]
@@ -234,7 +301,6 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Reload dropdowns if validation fails
                 ViewBag.Employees = await _leaveService.GetAllEmployees();
                 var allTypes = await _leaveService.GetLeaveTypesForDropdown(0);
                 ViewBag.LeaveTypes = allTypes.Where(x => x.leave_type != "Probation" && x.leave_type != "Holiday");
@@ -245,15 +311,13 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
             {
                 var message = await _leaveService.AssignEntitlement(model);
                 TempData["Success"] = message;
-                
-                // Redirect back to same page so you can add another one easily
+
                 return RedirectToAction(nameof(AssignEntitlement));
             }
             catch (Exception ex)
             {
                 TempData["Error"] = "Error: " + ex.Message;
-                
-                // Reload dropdowns on error
+
                 ViewBag.Employees = await _leaveService.GetAllEmployees();
                 ViewBag.LeaveTypes = await _leaveService.GetLeaveTypesForDropdown(0);
                 return View(model);
@@ -302,16 +366,7 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
         {
             try
             {
-                // Reuse existing method to get history/details. 
-                // Since we don't have a specific "GetOneRequest", we can filter from All History or similar.
-                // Or better, let's just make a simple DTO query here or in service.
-                // For simplicity/speed matching requirements: Reuse "GetEmployeeHistory" logic or similar.
-                // Wait, we need "Read-Only Details". 
-                // Let's assume we can fetch it. If not, I'll add a helper in Service.
-                
-                // Hack: We can use GetEmployeeHistory but we need to know the EmployeeID.
-                // Let's create a quick helper in Service for "GetLeaveRequestDetail".
-                
+                // Helper to get request details for the specific ID
                 var details = await _leaveService.GetLeaveRequestDetail(id);
                 return View(details);
             }
