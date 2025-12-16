@@ -25,12 +25,36 @@
                             <i class="fas fa-arrow-left me-2"></i> Back to Report
                         </a>
                     }
+                    // Show button ONLY if Manager AND NOT viewing their own profile
+                    if (User.IsInRole("Manager") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
+                    {
+                        <a asp-controller="Manager" asp-action="Index" class="btn btn-outline-light shadow fw-bold rounded-pill px-4 transition-btn">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Team
+                        </a>
+                    }
                 }
 
-                <!-- Edit Button -->
-                <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-light shadow fw-bold rounded-pill px-4 transition-btn">
-                    <i class="fas fa-pen me-2"></i> Edit Profile
-                </a>
+                <!-- Edit Button Logic -->
+                @{
+                    bool canEdit = false;
+                    // 1. Admins can always edit
+                    if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+                    {
+                        canEdit = true;
+                    }
+                    // 2. Employees can edit THEMSELVES
+                    else if (currentUserId != null && Model.Employee_Id.ToString() == currentUserId)
+                    {
+                        canEdit = true;
+                    }
+
+                    if (canEdit)
+                    {
+                         <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-light shadow fw-bold rounded-pill px-4 transition-btn">
+                            <i class="fas fa-pen me-2"></i> Edit Profile
+                        </a>
+                    }
+                }
             </div>
         </div>
 

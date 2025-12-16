@@ -23,7 +23,7 @@
         <!-- Date Filter Form -->
         <form method="get" class="d-flex shadow-sm rounded-pill p-1 border border-secondary" style="background-color: #1e293b;">
             <input type="date" name="date" class="form-control border-0 rounded-pill ps-3 text-white bg-transparent"
-                   value="@ViewBag.SelectedDate.ToString("yyyy-MM-dd")"
+                   value="@ViewBag.StartDate.ToString("yyyy-MM-dd")"
                    style="max-width: 160px; color-scheme: dark;" />
             <button type="submit" class="btn btn-primary rounded-pill px-4 ms-1">
                 <i class="fa fa-filter me-1"></i> Filter
@@ -83,7 +83,7 @@
     <div class="card shadow-sm border border-secondary" style="background-color: #1e293b;">
         <div class="card-header border-bottom border-secondary py-3 bg-transparent">
             <h5 class="mb-0 text-white">
-                <i class="fa fa-list-ul me-2"></i> Detailed Breakdown for @ViewBag.SelectedDate.ToString("MMM dd, yyyy")
+                <i class="fa fa-list-ul me-2"></i> Detailed Breakdown for @ViewBag.StartDate.ToString("MMM dd, yyyy")
             </h5>
         </div>
         <div class="table-responsive">

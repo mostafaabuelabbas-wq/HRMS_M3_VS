@@ -4,7 +4,7 @@
     ViewData["Title"] = "Direct Reports";
 }
 
-<div class="container-fluid">
+<div class="container-fluid py-4">
     <!-- Header Section -->
     <div class="row justify-content-center mb-5">
         <div class="col-12 col-xl-10">
@@ -14,9 +14,9 @@
                     <h1 class="display-6 fw-bold text-white mb-0">Direct Reports</h1>
                 </div>
                 <div class="text-md-end mt-3 mt-md-0">
-                    <div class="d-inline-flex align-items-center bg-dark px-4 py-2 rounded-pill border border-secondary">
+                    <div class="d-inline-flex align-items-center px-4 py-2 rounded-pill border border-secondary" style="background-color: #1E293B;">
                         <span class="fs-5 fw-bold text-white me-2">@Model.Count()</span>
-                        <span class="text-muted small text-uppercase">Total Members</span>
+                        <span class="text-secondary small text-uppercase">Total Members</span>
                     </div>
                 </div>
             </div>
@@ -29,10 +29,10 @@
             @if (!Model.Any())
             {
                 <div class="text-center py-5">
-                    <div class="mb-4 text-muted opacity-50">
+                    <div class="mb-4 text-secondary opacity-50">
                         <i class="fas fa-users fs-1"></i>
                     </div>
-                    <h4 class="text-muted fw-normal">No team members found</h4>
+                    <h4 class="text-secondary fw-normal">No team members found</h4>
                 </div>
             }
             else
@@ -51,7 +51,7 @@
                             else if (parts.Length == 1 && parts[0].Length >= 2) initials = parts[0].Substring(0, 2).ToUpper();
                             else if (parts.Length == 1) initials = parts[0].Substring(0, 1).ToUpper();
 
-                            // 2. Color Logic (Switched custom 'bg-indigo' to 'bg-warning' for standard Bootstrap support)
+                            // 2. Color Logic
                             int nameLen = item.Full_Name.Length;
                             colorClass = (nameLen % 4) switch
                             {
@@ -62,24 +62,24 @@
                             };
                         }
 
-                        // 3. Status Logic (Switched 'subtle' to solid for Dark Mode visibility)
+                        // 3. Status Logic
                         var status = item.Employment_Status ?? "Unknown";
                         var statusBadge = status.ToLower() switch
                         {
-                            "active" => "bg-success",
-                            "inactive" or "terminated" => "bg-danger",
-                            "on leave" => "bg-warning text-dark",
-                            _ => "bg-secondary"
+                            "active" => "bg-success bg-opacity-10 text-success border border-success border-opacity-25",
+                            "inactive" or "terminated" => "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
+                            "on leave" => "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
+                            _ => "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25"
                         };
 
                         <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="card h-100 overflow-hidden">
+                            <div class="card h-100 overflow-hidden shadow-lg border border-secondary rounded-4" style="background-color: #1E293B;">
                                 <!-- Top Accent Line -->
                                 <div class="@colorClass" style="height: 4px; width: 100%;"></div>
 
                                 <div class="card-body text-center pt-4 pb-3">
                                     <!-- Avatar -->
-                                    <div class="mx-auto mb-3 @colorClass text-white rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 64px; height: 64px;">
+                                    <div class="mx-auto mb-3 @colorClass bg-opacity-10 text-white rounded-circle d-flex align-items-center justify-content-center shadow-lg border border-white border-opacity-10" style="width: 64px; height: 64px;">
                                         <span class="fs-4 fw-bold">@initials</span>
                                     </div>
 
@@ -87,7 +87,7 @@
                                     <h5 class="fw-bold text-white mb-1 text-truncate px-2" title="@item.Full_Name">
                                         @item.Full_Name
                                     </h5>
-                                    <p class="text-muted small mb-3 text-truncate">
+                                    <p class="text-secondary small mb-3 text-truncate">
                                         @(item.Position ?? "Position Not Set")
                                     </p>
 
@@ -97,13 +97,13 @@
                                     </span>
 
                                     <!-- Info Grid -->
-                                    <div class="row g-0 border-top border-bottom border-secondary py-2 mb-3 text-start">
+                                    <div class="row g-0 border-top border-bottom border-secondary py-2 mb-3 text-start bg-dark bg-opacity-25">
                                         <div class="col-6 border-end border-secondary px-3 py-1">
-                                            <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.65rem;">ID</div>
+                                            <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.65rem;">ID</div>
                                             <div class="small fw-semibold text-white text-truncate">@item.Employee_Id</div>
                                         </div>
                                         <div class="col-6 px-3 py-1">
-                                            <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.65rem;">Dept</div>
+                                            <div class="text-secondary small text-uppercase fw-bold" style="font-size: 0.65rem;">Dept</div>
                                             <div class="small fw-semibold text-white text-truncate">@(item.Department ?? "-")</div>
                                         </div>
                                     </div>
@@ -113,7 +113,7 @@
                                        asp-controller="Home"
                                        asp-action="Profile"
                                        asp-route-id="@item.Employee_Id"
-                                       class="btn btn-primary btn-sm w-100">
+                                       class="btn btn-primary btn-sm w-100 rounded-pill fw-bold shadow-sm">
                                         View Profile
                                     </a>
                                 </div>

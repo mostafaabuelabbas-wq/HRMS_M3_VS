@@ -5,17 +5,17 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-success bg-success bg-opacity-25 text-white border-0 shadow-sm rounded-3 alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     </div>
 }
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div class="alert alert-danger bg-danger bg-opacity-25 text-white border-0 shadow-sm rounded-3 alert-dismissible fade show" role="alert">
         <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     </div>
 }
 
@@ -23,99 +23,99 @@
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold text-dark mb-1">
+            <h2 class="fw-bold text-white mb-1">
                 <i class="fas fa-user-shield text-primary me-2"></i>Roles Management
             </h2>
-            <p class="text-muted mb-0">Manage employee roles and system permissions</p>
+            <p class="text-secondary mb-0">Manage employee roles and system permissions</p>
         </div>
     </div>
 
     <!-- Stats Cards -->
     <!-- Horizontal Scroll Wrapper -->
-    <div class="mb-4">
+    <div class="mb-5">
         <div style="overflow-x: auto; white-space: nowrap; padding-bottom: 8px;">
-            <div class="d-inline-flex gap-3">
+            <div class="d-inline-flex gap-4">
 
                 <!-- System Admins -->
-                <div class="card border-0 shadow-sm" style="min-width: 250px; display: inline-block;">
-                    <div class="card-body">
+                <div class="card border border-secondary shadow-lg rounded-4" style="min-width: 260px; display: inline-block; background-color: #1E293B;">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-danger bg-opacity-10 text-danger rounded p-3">
+                                <div class="bg-danger bg-opacity-10 text-danger rounded-3 p-3 border border-danger border-opacity-25">
                                     <i class="fas fa-user-shield fa-2x"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h6 class="text-muted mb-1">System Admins</h6>
-                                <h3 class="mb-0">@Model.Count(x => x.CurrentRoleName == "SystemAdmin")</h3>
+                                <h6 class="text-secondary mb-1">System Admins</h6>
+                                <h3 class="mb-0 text-white fw-bold">@Model.Count(x => x.CurrentRoleName == "SystemAdmin")</h3>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- HR Admins -->
-                <div class="card border-0 shadow-sm" style="min-width: 250px; display: inline-block;">
-                    <div class="card-body">
+                <div class="card border border-secondary shadow-lg rounded-4" style="min-width: 260px; display: inline-block; background-color: #1E293B;">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-warning bg-opacity-10 text-warning rounded p-3">
+                                <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3 border border-warning border-opacity-25">
                                     <i class="fas fa-user-tie fa-2x"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h6 class="text-muted mb-1">HR Admins</h6>
-                                <h3 class="mb-0">@Model.Count(x => x.CurrentRoleName == "HRAdmin")</h3>
+                                <h6 class="text-secondary mb-1">HR Admins</h6>
+                                <h3 class="mb-0 text-white fw-bold">@Model.Count(x => x.CurrentRoleName == "HRAdmin")</h3>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Managers -->
-                <div class="card border-0 shadow-sm" style="min-width: 250px; display: inline-block;">
-                    <div class="card-body">
+                <div class="card border border-secondary shadow-lg rounded-4" style="min-width: 260px; display: inline-block; background-color: #1E293B;">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-info bg-opacity-10 text-info rounded p-3">
+                                <div class="bg-info bg-opacity-10 text-info rounded-3 p-3 border border-info border-opacity-25">
                                     <i class="fas fa-users-cog fa-2x"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h6 class="text-muted mb-1">Managers</h6>
-                                <h3 class="mb-0">@Model.Count(x => x.CurrentRoleName == "Manager")</h3>
+                                <h6 class="text-secondary mb-1">Managers</h6>
+                                <h3 class="mb-0 text-white fw-bold">@Model.Count(x => x.CurrentRoleName == "Manager")</h3>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Payroll Officers -->
-                <div class="card border-0 shadow-sm" style="min-width: 250px; display: inline-block;">
-                    <div class="card-body">
+                <div class="card border border-secondary shadow-lg rounded-4" style="min-width: 260px; display: inline-block; background-color: #1E293B;">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-primary bg-opacity-10 text-primary rounded p-3">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3 border border-primary border-opacity-25">
                                     <i class="fas fa-calculator fa-2x"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h6 class="text-muted mb-1">Payroll Officers</h6>
-                                <h3 class="mb-0">@Model.Count(x => x.CurrentRoleName == "PayrollOfficer")</h3>
+                                <h6 class="text-secondary mb-1">Payroll Officers</h6>
+                                <h3 class="mb-0 text-white fw-bold">@Model.Count(x => x.CurrentRoleName == "PayrollOfficer")</h3>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Employees -->
-                <div class="card border-0 shadow-sm" style="min-width: 250px; display: inline-block;">
-                    <div class="card-body">
+                <div class="card border border-secondary shadow-lg rounded-4" style="min-width: 260px; display: inline-block; background-color: #1E293B;">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center">
                             <div class="flex-shrink-0">
-                                <div class="bg-success bg-opacity-10 text-success rounded p-3">
+                                <div class="bg-success bg-opacity-10 text-success rounded-3 p-3 border border-success border-opacity-25">
                                     <i class="fas fa-user fa-2x"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
-                                <h6 class="text-muted mb-1">Employees</h6>
-                                <h3 class="mb-0">@Model.Count(x => x.CurrentRoleName == "Employee")</h3>
+                                <h6 class="text-secondary mb-1">Employees</h6>
+                                <h3 class="mb-0 text-white fw-bold">@Model.Count(x => x.CurrentRoleName == "Employee")</h3>
                             </div>
                         </div>
                     </div>
@@ -127,89 +127,89 @@
 
 
     <!-- Table Card -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3 border-bottom">
+    <div class="card shadow-lg border border-secondary rounded-4 overflow-hidden" style="background-color: #1E293B;">
+        <div class="card-header bg-transparent py-3 border-bottom border-secondary">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-semibold">
+                <h5 class="mb-0 fw-bold text-white">
                     <i class="fas fa-list me-2 text-primary"></i>Employee Roles
                 </h5>
-                <span class="badge bg-light text-dark border">
+                <span class="badge rounded-pill bg-dark border border-secondary text-secondary px-3 py-2">
                     Total: @Model.Count() employees
                 </span>
             </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                <table class="table table-hover align-middle mb-0 text-white">
+                    <thead class="text-secondary text-uppercase small" style="background-color: rgba(255,255,255,0.05); border-bottom: 1px solid #334155;">
                         <tr>
-                            <th class="py-3 ps-4 text-muted fw-semibold" style="width: 80px;">ID</th>
-                            <th class="py-3 text-muted fw-semibold">Employee</th>
-                            <th class="py-3 text-muted fw-semibold">Department</th>
-                            <th class="py-3 text-muted fw-semibold" style="width: 180px;">Current Role</th>
-                            <th class="py-3 pe-4 text-end text-muted fw-semibold" style="width: 150px;">Actions</th>
+                            <th class="py-3 ps-4 border-0" style="width: 80px;">ID</th>
+                            <th class="py-3 border-0">Employee</th>
+                            <th class="py-3 border-0">Department</th>
+                            <th class="py-3 border-0" style="width: 180px;">Current Role</th>
+                            <th class="py-3 pe-4 text-end border-0" style="width: 150px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var emp in Model)
                         {
-                            <tr>
-                                <td class="ps-4">
-                                    <span class="text-muted fw-medium">#@emp.EmployeeId</span>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td class="ps-4 border-0">
+                                    <span class="text-secondary fw-medium">#@emp.EmployeeId</span>
                                 </td>
-                                <td>
+                                <td class="border-0">
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar-circle bg-primary bg-opacity-10 text-primary me-2">
+                                        <div class="avatar-circle bg-primary bg-opacity-10 text-primary me-3 border border-primary border-opacity-25">
                                             @emp.FullName?.Substring(0, 1).ToUpper()
                                         </div>
-                                        <span class="fw-semibold text-dark">@emp.FullName</span>
+                                        <span class="fw-bold text-white">@emp.FullName</span>
                                     </div>
                                 </td>
-                                <td>
+                                <td class="border-0">
                                     <span class="text-secondary">@emp.Department</span>
                                 </td>
-                                <td>
+                                <td class="border-0">
                                     @if (emp.CurrentRoleName == "SystemAdmin")
                                     {
-                                        <span class="badge rounded-pill bg-danger px-3 py-2">
+                                        <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2">
                                             <i class="fas fa-shield-alt me-1"></i>System Admin
                                         </span>
                                     }
                                     else if (emp.CurrentRoleName == "HRAdmin")
                                     {
-                                        <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                                        <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2">
                                             <i class="fas fa-user-tie me-1"></i>HR Admin
                                         </span>
                                     }
                                     else if (emp.CurrentRoleName == "Manager")
                                     {
-                                        <span class="badge rounded-pill bg-info px-3 py-2">
+                                        <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
                                             <i class="fas fa-users-cog me-1"></i>Manager
                                         </span>
                                     }
                                     else if (emp.CurrentRoleName == "PayrollOfficer")
                                     {
-                                        <span class="badge rounded-pill bg-primary px-3 py-2">
+                                        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">
                                             <i class="fas fa-calculator me-1"></i>Payroll Officer
                                         </span>
                                     }
 
                                     else if (emp.CurrentRoleName == "Employee")
                                     {
-                                        <span class="badge rounded-pill bg-success px-3 py-2">
+                                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
                                             <i class="fas fa-user me-1"></i>Employee
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge rounded-pill bg-secondary px-3 py-2">
+                                        <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-2">
                                             <i class="fas fa-user-slash me-1"></i>Unassigned
                                         </span>
                                     }
                                 </td>
-                                <td class="pe-4 text-end">
+                                <td class="pe-4 text-end border-0">
                                     <a asp-action="Edit" asp-route-id="@emp.EmployeeId"
-                                       class="btn btn-sm btn-outline-primary">
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm visited-transition">
                                         <i class="fas fa-edit me-1"></i>Change Role
                                     </a>
                                 </td>
@@ -224,18 +224,13 @@
 
 <style>
     .avatar-circle {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 600;
-        font-size: 14px;
-    }
-
-    .table > tbody > tr:hover {
-        background-color: #f8f9fa;
-        transition: all 0.2s ease;
+        font-weight: 700;
+        font-size: 1.1em;
     }
 </style>

@@ -5,70 +5,111 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="alert alert-success bg-success bg-opacity-25 text-white border-0 shadow-sm rounded-3 alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     </div>
 }
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="alert alert-danger bg-danger bg-opacity-25 text-white border-0 shadow-sm rounded-3 alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
     </div>
 }
 
 <div class="container mt-4">
-    <div class="card shadow border-0 rounded-3">
-        <div class="card-header bg-dark text-white">
-            <h4 class="mb-0">Contract #@Model.ContractId Details</h4>
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <h5 class="text-primary">Employee Information</h5>
-                    <p><strong>Name:</strong> @Model.EmployeeName</p>
-                    <p><strong>Email:</strong> @Model.EmployeeEmail</p>
-                    <p><strong>Phone:</strong> @Model.EmployeePhone</p>
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border border-secondary rounded-4" style="background-color: #1E293B;">
+                <div class="card-header bg-transparent border-bottom border-secondary py-4">
+                    <h4 class="mb-0 fw-bold text-white"><i class="fas fa-file-contract me-2 text-warning"></i>Contract #@Model.ContractId Details</h4>
                 </div>
-                <div class="col-md-6">
-                    <h5 class="text-primary">Contract Information</h5>
-                    <p><strong>Type:</strong> @Model.Type</p>
-                    <p><strong>Start Date:</strong> @Model.StartDate?.ToString("dd MMM yyyy")</p>
-                    <p><strong>End Date:</strong> @Model.EndDate?.ToString("dd MMM yyyy")</p>
-                    <p>
-                        <strong>Status:</strong>
-                        <span class="badge @(Model.CurrentState == "Active" ? "bg-success" : "bg-secondary")">
-                            @Model.CurrentState
-                        </span>
-                    </p>
+                <div class="card-body p-4 p-md-5">
+                    
+                    <div class="row g-4 mb-5">
+                        <!-- Employee Info -->
+                        <div class="col-md-6">
+                            <h5 class="text-white fw-bold mb-3 border-bottom border-secondary pb-2">
+                                <i class="fas fa-user me-2 text-primary"></i>Employee Information
+                            </h5>
+                            <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                <div class="mb-2">
+                                    <label class="d-block text-secondary text-uppercase small fw-bold">Name</label>
+                                    <span class="text-white fw-bold">@Model.EmployeeName</span>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="d-block text-secondary text-uppercase small fw-bold">Email</label>
+                                    <span class="text-white">@Model.EmployeeEmail</span>
+                                </div>
+                                <div>
+                                    <label class="d-block text-secondary text-uppercase small fw-bold">Phone</label>
+                                    <span class="text-white">@Model.EmployeePhone</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contract Info -->
+                        <div class="col-md-6">
+                            <h5 class="text-white fw-bold mb-3 border-bottom border-secondary pb-2">
+                                <i class="fas fa-briefcase me-2 text-success"></i>Contract Information
+                            </h5>
+                            <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                <div class="mb-2">
+                                    <label class="d-block text-secondary text-uppercase small fw-bold">Type</label>
+                                    <span class="text-white">@Model.Type</span>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="d-block text-secondary text-uppercase small fw-bold">Duration</label>
+                                    <span class="text-white">
+                                        @Model.StartDate?.ToString("dd MMM yyyy") <i class="fas fa-arrow-right mx-1 text-secondary small"></i> @Model.EndDate?.ToString("dd MMM yyyy")
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="d-block text-secondary text-uppercase small fw-bold">Status</label>
+                                    <span class="badge rounded-pill @(Model.CurrentState == "Active" ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25" : "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25") px-3 py-1">
+                                        @Model.CurrentState
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.PositionTitle))
+                    {
+                        <div class="row mb-5">
+                            <div class="col-12">
+                                <h5 class="text-white fw-bold mb-3 border-bottom border-secondary pb-2">
+                                    <i class="fas fa-id-badge me-2 text-info"></i>Position
+                                </h5>
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <span class="text-white fw-bold fs-5">@Model.PositionTitle</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Actions -->
+                    <div class="d-flex flex-wrap gap-2 pt-3 border-top border-secondary">
+                        <a asp-action="Edit" asp-route-id="@Model.ContractId" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+                            <i class="fas fa-pen me-2"></i> Edit
+                        </a>
+
+                        @if (Model.CurrentState == "Active" && Model.EndDate.HasValue && Model.EndDate.Value <= DateTime.Today.AddDays(30))
+                        {
+                            <a asp-action="Renew" asp-route-id="@Model.ContractId" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold">
+                                <i class="fas fa-sync-alt me-2"></i> Renew
+                            </a>
+                        }
+
+                        <a asp-action="Index" class="btn btn-outline-light rounded-pill px-4 ms-auto">
+                            <i class="fas fa-arrow-left me-2"></i> Back to List
+                        </a>
+                    </div>
+
                 </div>
             </div>
-
-            @if (!string.IsNullOrEmpty(Model.PositionTitle))
-            {
-                <div class="row">
-                    <div class="col-12">
-                        <h5 class="text-primary">Position</h5>
-                        <p>@Model.PositionTitle</p>
-                    </div>
-                </div>
-            }
-        </div>
-        <div class="card-footer bg-light">
-            <a asp-action="Edit" asp-route-id="@Model.ContractId" class="btn btn-warning">
-                <i class="fas fa-pen"></i> Edit
-            </a>
-            @if (Model.CurrentState == "Active" && Model.EndDate.HasValue && Model.EndDate.Value <= DateTime.Today.AddDays(30))
-            {
-                <a asp-action="Renew" asp-route-id="@Model.ContractId" class="btn btn-success">
-                    <i class="fas fa-sync-alt"></i> Renew
-                </a>
-            }
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
         </div>
     </div>
 </div>

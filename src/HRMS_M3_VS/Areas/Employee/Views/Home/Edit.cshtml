@@ -1,88 +1,125 @@
 ﻿@model HRMS_M3_VS.Areas.Employee.Models.EmployeeEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="card shadow border-0 rounded-4">
-                <div class="card-header bg-dark text-white py-3">
-                    <h4 class="mb-0 fw-bold"><i class="fas fa-user-edit me-2"></i>Edit Profile</h4>
+            <div class="card shadow-lg border border-secondary rounded-4" style="background-color: #1E293B;">
+                <div class="card-header bg-transparent border-bottom border-secondary py-4">
+                    <h4 class="mb-0 fw-bold text-white"><i class="fas fa-user-edit me-2 text-primary"></i>Edit Profile</h4>
                 </div>
                 <div class="card-body p-5">
-                    code
-                    Code
-                    <!-- IMPORTANT: enctype is required for file uploads -->
-<form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    
+                    <!-- Form Start -->
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
 
-    <!-- Hidden Fields to keep IDs -->
-    <input type="hidden" asp-for="EmployeeId" />
-    <!-- ExistingImageBytes not needed in hidden field, we reload from DB -->
+                        <!-- Hidden Fields -->
+                        <input type="hidden" asp-for="EmployeeId" />
 
+                        <!-- 1. Profile Image Upload -->
+                        <div class="mb-5 text-center">
+                            <label class="form-label fw-bold text-white mb-3">Profile Picture</label>
 
-    <!-- 1. Profile Image Upload -->
-    <div class="mb-4 text-center">
-        <label class="form-label fw-bold">Profile Picture</label>
+                            <!-- Image Preview -->
+                            <div class="position-relative d-inline-block mb-3">
+                                @if (Model.ExistingImageBytes != null && Model.ExistingImageBytes.Length > 0)
+                                {
+                                    var base64 = Convert.ToBase64String(Model.ExistingImageBytes);
+                                    <img src="data:image/*;base64,@base64" class="rounded-circle shadow-lg" 
+                                         style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #334155;" />
+                                }
+                                else
+                                {
+                                     <div class="rounded-circle d-flex align-items-center justify-content-center bg-dark border border-secondary" 
+                                          style="width: 120px; height: 120px;">
+                                         <i class="fas fa-camera fa-2x text-secondary"></i>
+                                     </div>
+                                }
+                            </div>
 
-        <!-- Show current image preview -->
-        @if (Model.ExistingImageBytes != null && Model.ExistingImageBytes.Length > 0)
-        {
-            var base64 = Convert.ToBase64String(Model.ExistingImageBytes);
-            <div class="mb-2">
-                <img src="data:image/*;base64,@base64" class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover;" />
+                            <!-- Remove Checkbox -->
+                            @if (Model.ExistingImageBytes != null && Model.ExistingImageBytes.Length > 0)
+                            {
+                                <div class="form-check d-flex justify-content-center mb-3">
+                                    <input asp-for="RemoveImage" class="form-check-input me-2" type="checkbox" id="removeCheck" style="cursor: pointer;" />
+                                    <label class="form-check-label text-danger small fw-bold" for="removeCheck" style="cursor: pointer;">
+                                        Remove current photo
+                                    </label>
+                                </div>
+                            }
+
+                            <!-- File Input -->
+                            <div class="d-flex justify-content-center">
+                                <div class="input-group" style="max-width: 400px;">
+                                    <input asp-for="ProfileImage" type="file" class="form-control bg-dark border-secondary text-white" accept="image/*" />
+                                </div>
+                            </div>
+                            <small class="text-secondary d-block mt-2">Upload a JPG or PNG file.</small>
+                        </div>
+
+                        <!-- 2. Personal Details -->
+                        <h5 class="text-white fw-bold mb-3 border-bottom border-secondary pb-2">
+                            <i class="fas fa-id-card me-2 text-info"></i>Personal Details
+                        </h5>
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="Email" class="form-label fw-bold text-secondary text-uppercase small">Email</label>
+                                    <input asp-for="Email" class="form-control bg-transparent border-0 text-white fw-bold p-0" />
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="Phone" class="form-label fw-bold text-secondary text-uppercase small">Phone</label>
+                                    <input asp-for="Phone" class="form-control bg-transparent border-0 text-white fw-bold p-0" />
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 border border-secondary rounded-3" style="background-color: rgba(255,255,255,0.05);">
+                                    <label asp-for="Address" class="form-label fw-bold text-secondary text-uppercase small">Address</label>
+                                    <input asp-for="Address" class="form-control bg-transparent border-0 text-white fw-bold p-0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Emergency Contact -->
+                        <h5 class="text-white fw-bold mb-3 border-bottom border-secondary pb-2">
+                            <i class="fas fa-heartbeat me-2 text-danger"></i>Emergency Contact
+                        </h5>
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-6">
+                                <div class="p-3 border border-danger border-opacity-25 rounded-3" style="background-color: rgba(239, 68, 68, 0.05);">
+                                    <label asp-for="EmergencyContactName" class="form-label fw-bold text-danger text-opacity-75 text-uppercase small">Contact Name</label>
+                                    <input asp-for="EmergencyContactName" class="form-control bg-transparent border-0 text-white fw-bold p-0" placeholder="e.g. Father, Spouse" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border border-danger border-opacity-25 rounded-3" style="background-color: rgba(239, 68, 68, 0.05);">
+                                    <label asp-for="EmergencyRelationship" class="form-label fw-bold text-danger text-opacity-75 text-uppercase small">Relationship</label>
+                                    <input asp-for="EmergencyRelationship" class="form-control bg-transparent border-0 text-white fw-bold p-0" placeholder="e.g. Brother, Friend" />
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 border border-danger border-opacity-25 rounded-3" style="background-color: rgba(239, 68, 68, 0.05);">
+                                    <label asp-for="EmergencyContactPhone" class="form-label fw-bold text-danger text-opacity-75 text-uppercase small">Emergency Phone</label>
+                                    <input asp-for="EmergencyContactPhone" class="form-control bg-transparent border-0 text-white fw-bold p-0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-end gap-3 pt-3 border-top border-secondary">
+                            <a asp-action="Profile" asp-route-id="@Model.EmployeeId" class="btn btn-outline-light rounded-pill px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-lg">Save Changes</button>
+                        </div>
+
+                    </form>
+                </div>
             </div>
-
-            <!-- THE REMOVE CHECKBOX -->
-            <div class="form-check d-inline-block mb-2">
-                <input asp-for="RemoveImage" class="form-check-input" type="checkbox" id="removeCheck" />
-                <label class="form-check-label text-danger small fw-bold" for="removeCheck">
-                    Remove current photo
-                </label>
-            </div>
-        }
-
-        <input asp-for="ProfileImage" type="file" class="form-control" accept="image/*" />
-        <small class="text-muted">Upload a JPG or PNG file.</small>
-    </div>
-
-    <h5 class="text-primary fw-bold mb-3 border-bottom pb-2">Personal Details</h5>
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <label asp-for="Email" class="form-label fw-bold">Email</label>
-            <input asp-for="Email" class="form-control" />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
-        <div class="col-md-6">
-            <label asp-for="Phone" class="form-label fw-bold">Phone</label>
-            <input asp-for="Phone" class="form-control" />
-        </div>
-        <div class="col-12">
-            <label asp-for="Address" class="form-label fw-bold">Address</label>
-            <input asp-for="Address" class="form-control" />
         </div>
     </div>
-
-    <!-- 2. EMERGENCY CONTACT SECTION (This was likely missing or broken) -->
-    <h5 class="text-danger fw-bold mb-3 border-bottom pb-2">Emergency Contact</h5>
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <label asp-for="EmergencyContactName" class="form-label fw-bold">Contact Name</label>
-            <input asp-for="EmergencyContactName" class="form-control" placeholder="e.g. Father, Spouse" />
-        </div>
-        <div class="col-md-6">
-            <label asp-for="EmergencyRelationship" class="form-label fw-bold">Relationship</label>
-            <input asp-for="EmergencyRelationship" class="form-control" placeholder="e.g. Brother, Friend" />
-        </div>
-        <div class="col-12">
-            <label asp-for="EmergencyContactPhone" class="form-label fw-bold">Emergency Phone</label>
-            <input asp-for="EmergencyContactPhone" class="form-control" />
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-end gap-2">
-        <a asp-action="Profile" asp-route-id="@Model.EmployeeId" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-success px-4">Save Changes</button>
-    </div>
-
-</form>
-</div>
-</div>
-</div>
 </div>

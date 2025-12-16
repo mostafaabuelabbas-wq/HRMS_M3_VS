@@ -1,93 +1,109 @@
 ﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.ProfileCompletenessDto>
 
+@{
+    ViewData["Title"] = "Profile Completeness";
+}
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-dark">Profile Completeness</h2>
+        <h2 class="fw-bold text-white mb-0">
+            <i class="fas fa-chart-pie me-2 text-info"></i>Profile Completeness
+        </h2>
     </div>
 
     <!-- Card Container -->
-    <div class="card shadow border-0 rounded-3 overflow-hidden">
+    <div class="card shadow-lg border border-secondary rounded-4 overflow-hidden" style="background-color: #1E293B;">
         <div class="card-body p-0">
-            <table class="table table-hover table-striped align-middle mb-0">
-                <thead class="bg-dark text-white">
-                    <tr>
-                        <th class="py-3 ps-4">Employee</th>
-                        <th class="py-3">Department</th>
-                        <th class="py-3">Position</th>
-                        <th class="py-3 text-center">Missing Fields</th>
-                        <th class="py-3 text-center">Status</th>
-                        <th class="py-3 text-end pe-4">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Any())
-                    {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-white">
+                    <thead class="text-secondary text-uppercase small" style="background-color: rgba(255,255,255,0.05); border-bottom: 1px solid #334155;">
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i><br />
-                                Great job! All profiles are complete.
-                            </td>
+                            <th class="py-3 ps-4 border-0">Employee</th>
+                            <th class="py-3 border-0">Department</th>
+                            <th class="py-3 border-0">Position</th>
+                            <th class="py-3 text-center border-0">Missing Fields</th>
+                            <th class="py-3 text-center border-0">Status</th>
+                            <th class="py-3 text-end pe-4 border-0">Action</th>
                         </tr>
-                    }
-                    else
-                    {
-                        @foreach (var emp in Model)
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
                         {
                             <tr>
-                                <!-- Name -->
-                                <td class="ps-4 fw-semibold text-primary">
-                                    @emp.Full_Name
-                                </td>
-
-                                <!-- Department -->
-                                <td>
-                                    @(emp.Department_Name ?? "Not Assigned")
-                                </td>
-
-                                <!-- Position -->
-                                <td>
-                                    @(emp.Position_Title ?? "Not Assigned")
-                                </td>
-
-                                <!-- Missing Count (Red Badge if high) -->
-                                <td class="text-center">
-                                    @if (emp.MissingCount > 0)
-                                    {
-                                        <span class="badge bg-danger rounded-pill px-3">@emp.MissingCount</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-
-                                <!-- Status Badge -->
-                                <td class="text-center">
-                                    @if (emp.MissingCount == 0)
-                                    {
-                                        <span class="badge bg-success shadow-sm">Complete</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark shadow-sm">Incomplete</span>
-                                    }
-                                </td>
-
-                                <!-- Action Button -->
-                                <td class="text-end pe-4">
-                                    <a asp-area="Employee"
-                                       asp-controller="Home"
-                                       asp-action="Edit"
-                                       asp-route-id="@emp.Employee_Id"
-                                       class="btn btn-sm btn-primary shadow-sm">
-                                        <i class="fas fa-edit me-1"></i> Fix Profile
-                                    </a>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <div class="opacity-50">
+                                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i><br />
+                                        <h5 class="text-white">Great job! All profiles are complete.</h5>
+                                    </div>
                                 </td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
+                        else
+                        {
+                            @foreach (var emp in Model)
+                            {
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <!-- Name -->
+                                    <td class="ps-4 fw-bold text-white border-0">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex justify-content-center align-items-center me-3 fw-bold" 
+                                                 style="width: 40px; height: 40px; font-size: 1.1em;">
+                                                @emp.Full_Name.Substring(0, 1)
+                                            </div>
+                                            @emp.Full_Name
+                                        </div>
+                                    </td>
+
+                                    <!-- Department -->
+                                    <td class="text-secondary border-0">
+                                        @(emp.Department_Name ?? "Not Assigned")
+                                    </td>
+
+                                    <!-- Position -->
+                                    <td class="text-secondary border-0">
+                                        @(emp.Position_Title ?? "Not Assigned")
+                                    </td>
+
+                                    <!-- Missing Count (Red Badge if high) -->
+                                    <td class="text-center border-0">
+                                        @if (emp.MissingCount > 0)
+                                        {
+                                            <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3">@emp.MissingCount</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">-</span>
+                                        }
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td class="text-center border-0">
+                                        @if (emp.MissingCount == 0)
+                                        {
+                                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 shadow-sm">Complete</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 shadow-sm">Incomplete</span>
+                                        }
+                                    </td>
+
+                                    <!-- Action Button -->
+                                    <td class="text-end pe-4 border-0">
+                                        <a asp-area="Employee"
+                                           asp-controller="Home"
+                                           asp-action="Edit"
+                                           asp-route-id="@emp.Employee_Id"
+                                           class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm visited-transition">
+                                            <i class="fas fa-edit me-1"></i> Fix Profile
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

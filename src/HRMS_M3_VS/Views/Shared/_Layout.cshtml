@@ -13,18 +13,40 @@
 
     <!-- 2. YOUR APP STYLES -->
     <link href="~/css/ui/app-ui.css" rel="stylesheet" asp-append-version="true" />
+    <style>
+        body {
+            background-color: #0F172A; /* Slate 900 - Dark Background */
+            color: #E2E8F0; /* Slate 200 - Light Text */
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1E293B; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748B; 
+        }
+    </style>
 </head>
 
 <body>
-
     <!-- 1. SIDEBAR (Fixed Position) -->
-    <nav id="app-sidebar">
+    <nav id="app-sidebar" class="shadow-lg border-end border-secondary border-opacity-25">
         <!-- Brand -->
-        <div class="sidebar-header">
-            <div class="brand-icon">
+        <div class="sidebar-header border-bottom border-secondary border-opacity-25">
+            <div class="brand-icon bg-primary bg-gradient text-white shadow">
                 <i class="fas fa-layer-group"></i>
             </div>
-            <div class="brand-text">HR<span>MS</span></div>
+            <div class="brand-text text-white">HR<span>MS</span></div>
         </div>
 
         <!-- Navigation Links (Scrollable) -->
@@ -57,25 +79,45 @@
                 <div class="nav-group">
                     <div class="nav-label">Management</div>
 
-                    @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin"))
+                    @* TEAM PROFILES: Manager Only (Strict: ManagerController has [Authorize(Roles="Manager")]) *@
+                    @if (User.IsInRole("Manager")) 
                     {
                         <a class="nav-link" asp-area="Employee" asp-controller="Manager" asp-action="Index">
                             <i class="fas fa-users"></i> <span>Team Profiles</span>
                         </a>
+                    }
+                    
+                    @* TEAM ATTENDANCE: Manager, HRAdmin, SystemAdmin (TeamAttendanceController logic) *@
+                    @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin") || User.IsInRole("HRAdmin"))
+                    {
                         <a class="nav-link" asp-area="Attendance" asp-controller="TeamAttendance" asp-action="Index">
                             <i class="fas fa-user-check"></i> <span>Team Attendance</span>
                         </a>
+                    }
+
+                    @* LEAVE REQUESTS: Manager or HRAdmin Only (LeaveController has [Authorize(Roles="Manager,HRAdmin")]) *@
+                    @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin"))
+                    {
                         <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
                             <i class="fas fa-clipboard-check"></i> <span>Leave Requests</span>
                         </a>
                     }
 
-                    <a class="nav-link" asp-area="Attendance" asp-controller="Shift" asp-action="Index">
-                        <i class="fas fa-calendar-alt"></i> <span>Shifts</span>
-                    </a>
-                    <a class="nav-link" asp-area="Attendance" asp-controller="AttendanceManager" asp-action="Index">
-                        <i class="fas fa-tasks"></i> <span>Operations</span>
-                    </a>
+                    @* SHIFTS: All Management Roles *@
+                    @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+                    {
+                        <a class="nav-link" asp-area="Attendance" asp-controller="Shift" asp-action="Index">
+                            <i class="fas fa-calendar-alt"></i> <span>Shifts</span>
+                        </a>
+                    }
+
+                    @* OPERATIONS: Broad access for TimeRules *@
+                    @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+                    {
+                        <a class="nav-link" asp-area="Attendance" asp-controller="AttendanceManager" asp-action="Index">
+                            <i class="fas fa-tasks"></i> <span>Operations</span>
+                        </a>
+                    }
                 </div>
             }
 
@@ -83,18 +125,37 @@
             {
                 <div class="nav-group">
                     <div class="nav-label">HR Admin</div>
-                    <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
-                        <i class="fas fa-address-book"></i> <span>Directory</span>
-                    </a>
-                    <a class="nav-link" asp-area="Employee" asp-controller="HRAdmin" asp-action="ProfileCompleteness">
-                        <i class="fas fa-percentage"></i> <span>Completeness</span>
-                    </a>
-                    <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
-                        <i class="fas fa-file-contract"></i> <span>Contracts</span>
-                    </a>
-                    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
-                        <i class="fas fa-sliders-h"></i> <span>Leave Config</span>
-                    </a>
+                    
+                    @if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+                    {
+                        <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-address-book"></i> <span>Directory</span>
+                        </a>
+                    }
+
+                    @* COMPLETENESS: HRAdmin Only (HRAdminController) *@
+                    @if (User.IsInRole("HRAdmin"))
+                    {
+                        <a class="nav-link" asp-area="Employee" asp-controller="HRAdmin" asp-action="ProfileCompleteness">
+                            <i class="fas fa-percentage"></i> <span>Completeness</span>
+                        </a>
+                    }
+
+                    @* CONTRACTS: HRAdmin Only (ContractController) *@
+                    @if (User.IsInRole("HRAdmin"))
+                    {
+                        <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
+                            <i class="fas fa-file-contract"></i> <span>Contracts</span>
+                        </a>
+                    }
+
+                    @* LEAVE CONFIG: HRAdmin or SystemAdmin (LeaveController ManageTypes) *@
+                    @if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+                    {
+                        <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
+                            <i class="fas fa-sliders-h"></i> <span>Leave Config</span>
+                        </a>
+                    }
                 </div>
             }
 
