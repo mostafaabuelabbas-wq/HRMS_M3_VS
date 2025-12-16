@@ -16,6 +16,16 @@ namespace HRMS_M3_VS.Areas.Leave.Services
         {
             return await _db.QueryAsync<PendingLeaveRequestDto>("GetPendingLeaveRequests", new { ManagerID = managerId });
         }
+
+        /// <summary>
+        /// Get ALL leave requests for HR Admin (not just pending)
+        /// </summary>
+        public async Task<IEnumerable<PendingLeaveRequestDto>> GetAllLeaveRequests()
+        {
+            return await _db.QueryAsync<PendingLeaveRequestDto>("GetAllLeaveRequests", null);
+        }
+
+
         public async Task<string> ApproveLeaveRequest(int id, int managerId)
         {
             await _db.QueryAsync<dynamic>("ApproveLeaveRequest", new { LeaveRequestID = id, ApproverID = managerId, Status = "Approved" });
@@ -38,7 +48,7 @@ namespace HRMS_M3_VS.Areas.Leave.Services
             return await _db.QueryAsync<LeaveTypeDropdownDto>("GetLeaveTypes", null);
         }
 
-        // ✅ FIXED: Safe ID Conversion to prevent "Cannot convert null to int"
+        // ✅ UPDATED: Submit Leave Request with File Attachment
         public async Task SubmitLeaveRequest(int employeeId, LeaveApplyDto dto)
         {
             var result = await _db.QueryAsync<dynamic>(
@@ -70,10 +80,10 @@ namespace HRMS_M3_VS.Areas.Leave.Services
             {
                 string msg = "Submission failed.";
                 try { msg = (string)row.ConfirmationMessage; } catch { } // Try to get SQL error message
-                throw new Exception(msg); 
+                throw new Exception(msg);
             }
 
-            // 2. Handle Attachment (Only if we have a valid ID)
+            // ✅ NEW: Handle Attachment (Only if we have a valid ID)
             if (dto.attachment != null && dto.attachment.Length > 0 && newRequestId > 0)
             {
                 var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "leaves");
@@ -87,17 +97,51 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                     await dto.attachment.CopyToAsync(stream);
                 }
 
-                await _db.ExecuteAsync("InsertLeaveDocument", new 
-                { 
-                    LeaveRequestID = newRequestId, 
-                    FilePath = "/uploads/leaves/" + uniqueFileName 
+                // Save to database using the stored procedure
+                await _db.ExecuteAsync("InsertLeaveDocument", new
+                {
+                    LeaveRequestID = newRequestId,
+                    FilePath = "/uploads/leaves/" + uniqueFileName
                 });
             }
         }
 
+        // ✅ NEW: Get Attachments for a Leave Request
+        public async Task<IEnumerable<LeaveDocumentDto>> GetLeaveAttachments(int requestId)
+        {
+            var sql = @"
+                SELECT 
+                    document_id AS DocumentId,
+                    leave_request_id AS LeaveRequestId,
+                    file_path AS FilePath,
+                    uploaded_at AS UploadedAt
+                FROM LeaveDocument
+                WHERE leave_request_id = @RequestId
+                ORDER BY uploaded_at DESC";
+
+            return await _db.QueryAsync<LeaveDocumentDto>(sql, new { RequestId = requestId });
+        }
+
         // --- Other Getters ---
-        public async Task<IEnumerable<LeaveBalanceDto>> GetEmployeeBalance(int id) => await _db.QueryAsync<LeaveBalanceDto>("GetLeaveBalance", new { EmployeeID = id });
-        public async Task<IEnumerable<LeaveHistoryDto>> GetEmployeeHistory(int id) => await _db.QueryAsync<LeaveHistoryDto>("ViewLeaveHistory", new { EmployeeID = id });
+        public async Task<IEnumerable<LeaveBalanceDto>> GetEmployeeBalance(int id)
+        {
+            return await _db.QueryAsync<LeaveBalanceDto>("GetLeaveBalance", new { EmployeeID = id });
+        }
+
+        public async Task<IEnumerable<LeaveHistoryDto>> GetEmployeeHistory(int id)
+        {
+            return await _db.QueryAsync<LeaveHistoryDto>("ViewLeaveHistory", new { EmployeeID = id });
+        }
+
+        // ✅ NEW: Get History with Attachment Count
+        public async Task<IEnumerable<LeaveHistoryWithAttachmentsDto>> GetEmployeeHistoryWithAttachments(int id)
+        {
+            // ✅ Now uses YOUR existing ViewLeaveHistory procedure!
+            return await _db.QueryAsync<LeaveHistoryWithAttachmentsDto>(
+                "ViewLeaveHistory",  // Your existing procedure name
+                new { EmployeeID = id }
+            );
+        }
 
         // --- HR Admin (Configuration) ---
 
@@ -112,7 +156,7 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                 leave_type = r.leave_type,
                 leave_description = r.leave_description,
                 notice_period = r.notice_period ?? 0,
-                max_duration = r.max_duration ?? 0, // Added this mapping
+                max_duration = r.max_duration ?? 0,
                 eligibility_rules = r.eligibility_rules ?? "All"
             });
         }
@@ -126,7 +170,7 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                 Description = dto.leave_description
             });
 
-            // 2. Configure Rules (Added WorkflowType to match SQL Proc)
+            // 2. Configure Rules
             await _db.ExecuteAsync("ConfigureLeaveRules", new
             {
                 LeaveType = dto.leave_type,
@@ -135,23 +179,23 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                 WorkflowType = dto.workflow_type
             });
 
-            // 3. Configure Eligibility (Map string rule to EmployeeType param)
+            // 3. Configure Eligibility
             await _db.ExecuteAsync("ConfigureLeaveEligibility", new
             {
                 LeaveType = dto.leave_type,
                 MinTenure = 0,
-                EmployeeType = dto.eligibility_rules // Passing the string here
+                EmployeeType = dto.eligibility_rules
             });
 
             return "Configuration saved successfully.";
         }
+
         // ==========================================================
         // HR ADMIN: ASSIGN ENTITLEMENTS
         // ==========================================================
 
         public async Task<IEnumerable<EmployeeSimpleDto>> GetAllEmployees()
         {
-            // Uses your existing procedure that filters by is_active
             return await _db.QueryAsync<EmployeeSimpleDto>("GetAllEmployeesSimple", null);
         }
 
@@ -167,6 +211,26 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                 }
             );
             return result.FirstOrDefault()?.ConfirmationMessage ?? "Entitlement updated.";
+        }
+        /// <summary>
+        /// HR Admin can override a leave decision (flip approved/rejected)
+        /// </summary>
+        public async Task<string> OverrideLeaveDecision(int requestId, string reason)
+        {
+            try
+            {
+                await _db.ExecuteAsync("OverrideLeaveDecision", new
+                {
+                    LeaveRequestID = requestId,
+                    Reason = reason
+                });
+
+                return "Leave decision overridden successfully.";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Override failed: {ex.Message}");
+            }
         }
     }
 }

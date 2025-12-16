@@ -4,127 +4,98 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "My Leave";
 
-    // --- LOGIC EXTRACTION (FIXED) ---
+    // ONLY Vacation is banked
+    var vacation = Model.Balances.FirstOrDefault(b => b.leave_type == "Vacation");
 
-    // 1. Identify "Banked" Leaves (Leaves where entitlement > 0)
-    // We assume any leave with a positive entitlement is part of the "Annual Pool"
-    // unless you have specific logic otherwise.
-    var bankedLeaves = Model.Balances.Where(b => b.entitlement > 0).ToList();
+    var policyLeaves = Model.Balances.Where(b => b.leave_type != "Vacation").ToList();
 
-    // 2. Calculate Totals dynamically
-    decimal totalEntitlement = bankedLeaves.Sum(b => b.entitlement);
-    decimal totalUsed = bankedLeaves.Sum(b => b.days_used);
-    decimal totalRemaining = bankedLeaves.Sum(b => b.remaining_balance);
+    decimal entitlement = vacation?.entitlement ?? 0;
+    decimal used = vacation?.days_used ?? 0;
+    decimal remaining = vacation?.remaining_balance ?? 0;
 
-    // 3. Percentage for Progress Bar
-    decimal progressPercent = totalEntitlement > 0 ? (totalRemaining / totalEntitlement) * 100 : 0;
-    
-    // 4. Color Logic (Red = Low Balance)
-    string progressColor = progressPercent < 20 ? "bg-danger" : (progressPercent < 50 ? "bg-warning" : "bg-success");
+    decimal percent = entitlement > 0 ? (remaining / entitlement) * 100 : 0;
+
+    // Logic for color: Low balance = Red, Mid = Orange, High = Green
+    string barColor = percent < 20 ? "bg-danger" : percent < 50 ? "bg-warning" : "bg-success";
 }
 
 <div class="container-fluid py-4">
-    
-    <!-- Header -->
+
+    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-1">My Leave Dashboard</h2>
-            <p class="text-muted mb-0">Overview of your annual entitlement and usage.</p>
+            <p class="text-muted mb-0 small">Overview of your leave usage and history.</p>
         </div>
-        <a href="/Leave/Leave/Create" class="btn btn-primary shadow-sm rounded-pill px-4 fw-bold">
-            <i class="fas fa-plus-circle me-2"></i> Apply for Leave
+        <a href="/Leave/Leave/Create" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+            <i class="fas fa-plus-circle me-2"></i>Apply for Leave
         </a>
     </div>
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger border-0 shadow-sm border-start border-danger border-4 rounded-3 mb-4">
-            <i class="fas fa-exclamation-circle me-2"></i> @TempData["Error"]
+    <!-- ANNUAL LEAVE (VACATION) -->
+    <div class="card shadow border-0 rounded-4 mb-5 overflow-hidden">
+        <div class="card-header bg-white p-4 border-bottom">
+            <h5 class="fw-bold text-dark mb-0"><i class="fas fa-umbrella-beach me-2 text-warning"></i>Annual Leave (Vacation)</h5>
         </div>
-    }
+        <div class="card-body p-4">
+            @if (vacation != null)
+            {
+                <div class="row align-items-center">
+                    <!-- Left: Big Number -->
+                    <div class="col-md-3 text-center border-end">
+                        <h1 class="display-4 fw-bold text-primary mb-0">@remaining</h1>
+                        <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px;">Days Remaining</small>
+                    </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success border-0 shadow-sm border-start border-success border-4 rounded-3 mb-4">
-            <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
-        </div>
-    }
-
-    <!-- SECTION 1: ANNUAL ENTITLEMENT (DYNAMIC POOL) -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-                <div class="card-body p-4">
-                    <div class="row align-items-center">
-                        <!-- Main Balance Circle -->
-                        <div class="col-md-3 text-center border-end">
-                            <h6 class="text-uppercase text-secondary fw-bold small">Total Balance</h6>
-                            <h1 class="display-4 fw-bold text-dark mb-0">@totalRemaining.ToString("0.##")</h1>
-                            <span class="badge bg-light text-dark border rounded-pill mt-2">Days Remaining</span>
+                    <!-- Right: Progress Bar -->
+                    <div class="col-md-9 ps-md-5">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold text-secondary">
+                                <i class="fas fa-chart-pie me-1"></i> Usage Overview
+                            </span>
+                            <span class="fw-bold text-dark">@used used / @entitlement total</span>
                         </div>
-                        
-                        <!-- Progress & Breakdown -->
-                        <div class="col-md-9 ps-md-5">
-                            <div class="d-flex justify-content-between align-items-end mb-2">
-                                <div>
-                                    <h5 class="fw-bold text-dark mb-1">Annual Leave Pool</h5>
-                                    <p class="text-muted small mb-0">Combined Balance (@totalEntitlement Days Total)</p>
-                                </div>
-                                <span class="fw-bold text-dark">@totalUsed.ToString("0.##") / @totalEntitlement Used</span>
-                            </div>
-                            
-                            <!-- Main Progress Bar -->
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar @progressColor" role="progressbar" style="width: @progressPercent%"></div>
-                            </div>
 
-                            <!-- Usage Breakdown (Dynamic Loop) -->
-                            <div class="row mt-4 g-3">
-                                @foreach (var leaf in bankedLeaves)
-                                {
-                                    <div class="col-sm-6 col-lg-4">
-                                        <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="fas fa-calendar-check text-primary me-2"></i>
-                                                <span class="fw-bold text-secondary">@leaf.leave_type</span>
-                                            </div>
-                                            <div class="text-end">
-                                                <div class="fw-bold text-dark">@leaf.remaining_balance Left</div>
-                                                <small class="text-muted">of @leaf.entitlement</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                @if (!bankedLeaves.Any())
-                                {
-                                    <div class="col-12">
-                                        <div class="alert alert-warning mb-0">
-                                            <i class="fas fa-info-circle me-2"></i> No leave entitlements have been assigned to you yet. Please contact HR.
-                                        </div>
-                                    </div>
-                                }
-                            </div>
+                        <div class="progress rounded-pill bg-light" style="height: 15px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                            <div class="progress-bar @barColor rounded-pill" role="progressbar" style="width: @percent%"></div>
+                        </div>
+
+                        <div class="mt-2 text-end">
+                            <small class="text-muted fw-bold">@percent.ToString("0")% Available</small>
                         </div>
                     </div>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="alert alert-warning mb-0 border-0 d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                    <div>
+                        <strong>Not Configured:</strong> Annual leave setup is missing. Please contact HR.
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
-    <!-- SECTION 2: OTHER LEAVE TYPES (Policy Based / Unlimited) -->
-    <h5 class="fw-bold text-dark mb-3">Policy Based Leaves</h5>
-    <div class="row g-4 mb-5">
-        @foreach (var item in Model.Balances.Where(b => b.entitlement == 0))
+    <!-- POLICY LEAVES -->
+    <h5 class="fw-bold text-secondary mb-3 small text-uppercase" style="letter-spacing: 1px;">
+        <i class="fas fa-file-contract me-2"></i>Policy Based Leaves
+    </h5>
+
+    <div class="row g-3 mb-5">
+        @foreach (var item in policyLeaves)
         {
-            <div class="col-md-6 col-xl-3">
-                <div class="card border-0 shadow-sm h-100 rounded-4">
-                    <div class="card-body p-4 d-flex align-items-center">
-                        <div class="rounded-circle bg-info bg-opacity-10 text-info p-3 me-3">
-                            <i class="fas fa-info-circle fs-4"></i>
+            <div class="col-md-4">
+                <!-- Added border-start for a "widget" look -->
+                <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-info">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="bg-info bg-opacity-10 text-info rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px;">
+                            <i class="fas fa-info-circle fs-5"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold text-dark mb-1">@item.leave_type</h6>
-                            <small class="text-muted">Policy Based / HR Controlled</small>
+                            <h6 class="fw-bold text-dark mb-0">@item.leave_type</h6>
+                            <small class="text-muted" style="font-size: 0.8rem;">HR Controlled / Unlimited</small>
                         </div>
                     </div>
                 </div>
@@ -132,54 +103,72 @@
         }
     </div>
 
-    <!-- SECTION 3: REQUEST HISTORY -->
-    <h5 class="fw-bold text-dark mb-3">Request History</h5>
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr class="text-uppercase text-secondary small fw-bold" style="letter-spacing: 0.5px;">
-                            <th class="ps-4 py-3">Leave Type</th>
-                            <th class="py-3">Reason / Details</th>
-                            <th class="py-3">Duration</th>
-                            <th class="py-3">Status</th>
-                            <th class="py-3">Decision Date</th>
+    <!-- REQUEST HISTORY -->
+    <h5 class="fw-bold text-secondary mb-3 small text-uppercase" style="letter-spacing: 1px;">
+        <i class="fas fa-history me-2"></i>Request History
+    </h5>
+
+    <div class="card shadow border-0 rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 text-secondary small fw-bold text-uppercase">Leave Type</th>
+                        <th class="text-secondary small fw-bold text-uppercase">Reason</th>
+                        <th class="text-secondary small fw-bold text-uppercase">Duration</th>
+                        <th class="text-secondary small fw-bold text-uppercase text-center">Status</th>
+                        <th class="pe-4 text-secondary small fw-bold text-uppercase text-end">Decision Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.History.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="far fa-folder-open fa-2x mb-2"></i><br />
+                                No leave history found.
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.History != null && Model.History.Any())
-                        {
-                            @foreach (var row in Model.History)
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-bold text-dark">@row.leave_type</td>
-                                    <td class="text-muted text-truncate" style="max-width: 250px;">
-                                        @row.justification
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-light text-dark border">@row.duration Day(s)</span>
-                                    </td>
-                                    <td>
-                                        @if (row.status == "Pending") { <span class="badge bg-warning text-dark bg-opacity-25 rounded-pill px-3">Pending</span> }
-                                        else if (row.status == "Approved") { <span class="badge bg-success text-success-emphasis bg-opacity-25 rounded-pill px-3">Approved</span> }
-                                        else { <span class="badge bg-danger text-danger-emphasis bg-opacity-25 rounded-pill px-3">Rejected</span> }
-                                    </td>
-                                    <td class="text-muted small fw-bold">
-                                        @(row.approval_timing?.ToString("yyyy-MM-dd") ?? "-")
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
+                    }
+                    else
+                    {
+                        @foreach (var row in Model.History)
                         {
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">No history found.</td>
+                                <td class="ps-4 fw-bold text-primary">@row.leave_type</td>
+                                <td class="text-muted small">@row.justification</td>
+                                <td>
+                                    <span class="fw-bold text-dark">@row.duration</span> <span class="text-muted small">days</span>
+                                </td>
+                                <td class="text-center">
+                                    @if (row.status.Contains("Approved"))
+                                    {
+                                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-3">Approved</span>
+                                    }
+                                    else if (row.status.Contains("Rejected"))
+                                    {
+                                        <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger px-3">Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning px-3">Pending</span>
+                                    }
+                                </td>
+                                <td class="pe-4 text-end">
+                                    @if (row.approval_timing.HasValue)
+                                    {
+                                        <span class="fw-bold text-dark">@row.approval_timing.Value.ToString("MMM dd, yyyy")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small fst-italic">- Waiting -</span>
+                                    }
+                                </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

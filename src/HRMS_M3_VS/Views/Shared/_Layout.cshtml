@@ -140,7 +140,8 @@
             </a>
 
             <!-- Leave Management (Manager only) -->
-            @if (User.IsInRole("Manager"))
+            <!-- Leave Management (Manager + HR Admin) -->
+            @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin"))
             {
                 <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
                     <i class="fas fa-clipboard-list"></i> Leave Management
