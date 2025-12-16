@@ -35,7 +35,7 @@
 
                     <!-- FORM START -->
                     <!-- Action points to Leave Area -> Leave Controller -> Create Action -->
-                    <form action="/Leave/Leave/Create" method="post" enctype="multipart/form-data">
+                    <form asp-area="Leave" asp-controller="Leave" asp-action="Create" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
 
                         <!-- 1. Leave Type Dropdown -->

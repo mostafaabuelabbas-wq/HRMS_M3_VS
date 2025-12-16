@@ -1,6 +1,6 @@
 
  --Employee
-CREATE OR ALTER PROCEDURE SubmitLeaveRequest
+ CREATE OR ALTER PROCEDURE SubmitLeaveRequest
     @EmployeeID INT,
     @LeaveTypeID INT,
     @StartDate DATE,
@@ -40,21 +40,19 @@ BEGIN
         RETURN;
     END;
 
-    -- 4. SMART CHECK: Entitlement - Used vs Requested
-    
-    -- Check Entitlement
+    -- 4. Check Entitlement
     SELECT @Entitlement = entitlement
     FROM LeaveEntitlement
     WHERE employee_id = @EmployeeID AND leave_type_id = @LeaveTypeID;
 
-    -- Check Used Days (Approved + Pending)
+    -- ✅ FIXED: Check Used Days (ONLY Approved/Synced, NOT Pending)
     IF @Entitlement IS NOT NULL
     BEGIN
         SELECT @UsedDays = ISNULL(SUM(duration), 0)
         FROM LeaveRequest
         WHERE employee_id = @EmployeeID 
           AND leave_id = @LeaveTypeID 
-          AND status IN ('Approved', 'Pending');
+          AND status IN ('Approved', 'Synced');  -- ✅ FIXED LINE
     END
 
     -- Check Policy
@@ -63,11 +61,9 @@ BEGIN
         SET @HasPolicy = 1;
     END
 
-    -- VALIDATION LOGIC:
+    -- Validation
     IF @Entitlement IS NOT NULL
     BEGIN
-        -- Scenario A: Employee has a balance row
-        -- Formula: (Entitlement - Used) must be >= New Request Duration
         IF (@Entitlement - @UsedDays) < @Duration
         BEGIN
             SELECT 0 AS NewRequestId, 
@@ -77,12 +73,10 @@ BEGIN
     END
     ELSE IF @HasPolicy = 1
     BEGIN
-        -- Scenario B: Policy exists (Unlimited/Special), allow request
         SET @Entitlement = 999; 
     END
     ELSE
     BEGIN
-        -- Scenario C: No balance AND No policy
         SELECT 0 AS NewRequestId, 'Error: You are not eligible for this leave type.' AS ConfirmationMessage;
         RETURN;
     END;
@@ -117,7 +111,6 @@ BEGIN
     SELECT @NewID AS NewRequestId, 'Leave request submitted successfully' AS ConfirmationMessage;
 END;
 GO
-
 -- 2 GetLeaveBalance
 
 

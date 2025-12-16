@@ -141,7 +141,7 @@
                                     <span class="fw-bold text-dark">@row.duration</span> <span class="text-muted small">days</span>
                                 </td>
                                 <td class="text-center">
-                                    @if (row.status.Contains("Approved"))
+                                    @if (row.status.Contains("Approved") || row.status.Contains("Synced"))
                                     {
                                         <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success px-3">Approved</span>
                                     }

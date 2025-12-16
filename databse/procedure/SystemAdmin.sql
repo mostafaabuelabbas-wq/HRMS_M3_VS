@@ -1664,6 +1664,7 @@ END;
 GO
 
 -- 2. Requirement #5.1: Submit Leave Request (Employee)
+/*
 CREATE OR ALTER PROCEDURE SubmitLeaveRequest
     @EmployeeID INT,
     @LeaveTypeID INT,
@@ -1686,6 +1687,9 @@ BEGIN
     SELECT 'Leave request submitted successfully.' AS Message;
 END;
 GO
+*/
+-- it is already in employee procedures file
+
 
 -- 3. Requirement #5.2: Get Leave Balance
 CREATE OR ALTER PROCEDURE GetLeaveBalance

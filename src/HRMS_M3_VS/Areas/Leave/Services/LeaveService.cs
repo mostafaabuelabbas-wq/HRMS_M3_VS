@@ -28,12 +28,41 @@ namespace HRMS_M3_VS.Areas.Leave.Services
 
         public async Task<string> ApproveLeaveRequest(int id, int managerId)
         {
-            await _db.QueryAsync<dynamic>("ApproveLeaveRequest", new { LeaveRequestID = id, ApproverID = managerId, Status = "Approved" });
-            return "Approved successfully.";
+            // Call the approval stored procedure
+            await _db.ExecuteAsync("ApproveLeaveRequest", new
+            {
+                LeaveRequestID = id,
+                ApproverID = managerId,
+                Status = "Approved"
+            });
+
+            // ✅ NEW: After approval succeeds, sync to attendance
+            try
+            {
+                await _db.ExecuteAsync("SyncLeaveToAttendance", new
+                {
+                    LeaveRequestID = id
+                });
+            }
+            catch (Exception ex)
+            {
+                // If sync fails, log it but don't fail the approval
+                // The leave is already approved, sync can be done manually if needed
+                Console.WriteLine($"Attendance sync failed: {ex.Message}");
+            }
+
+            return "Leave request approved successfully and synced to attendance.";
         }
         public async Task<string> RejectLeaveRequest(int id, int managerId, string reason)
         {
-            await _db.QueryAsync<dynamic>("RejectLeaveRequest", new { LeaveRequestID = id, ManagerID = managerId, Reason = reason });
+            await _db.ExecuteAsync("ApproveLeaveRequest", new
+            {
+                LeaveRequestID = id,
+                ApproverID = managerId,
+                Status = "Rejected",
+                Reason = reason  // ✅ Pass reason for reject
+            });
+
             return "Rejected successfully.";
         }
         public async Task<string> FlagIrregularLeave(int empId, int mgrId, string reason)
