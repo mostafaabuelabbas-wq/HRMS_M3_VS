@@ -90,37 +90,19 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ContractEditViewModel vm)
         {
-            // DEBUG
-            Console.WriteLine("=== EDIT POST CALLED ===");
-            Console.WriteLine($"ContractId: {vm.ContractId}");
-            Console.WriteLine($"Type: {vm.Type}");
-            Console.WriteLine($"StartDate: {vm.StartDate}");
-            Console.WriteLine($"EndDate: {vm.EndDate}");
-            Console.WriteLine($"CurrentState: {vm.CurrentState}");
-            Console.WriteLine($"ModelState.IsValid: {ModelState.IsValid}");
-
             if (!ModelState.IsValid)
             {
-                Console.WriteLine("=== VALIDATION FAILED ===");
-                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-                {
-                    Console.WriteLine($"Error: {error.ErrorMessage}");
-                }
                 return View("Edit", vm);
             }
 
             try
             {
-                Console.WriteLine("=== CALLING UPDATE SERVICE ===");
                 await _service.UpdateContractAsync(vm);
-                Console.WriteLine("=== UPDATE SUCCESSFUL ===");
-
                 TempData["SuccessMessage"] = "Contract updated successfully!";
                 return RedirectToAction(nameof(Details), new { id = vm.ContractId });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== EXCEPTION: {ex.Message} ===");
                 TempData["ErrorMessage"] = ex.Message;
                 return View("Edit", vm);
             }

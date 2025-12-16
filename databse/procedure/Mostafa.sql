@@ -169,9 +169,6 @@ GO
 
 
 
-
-
-
 ---contracts
 SET NOCOUNT ON;
 

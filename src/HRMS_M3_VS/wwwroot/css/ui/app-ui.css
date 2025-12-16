@@ -1,660 +1,462 @@
 ﻿/* 
     ============================================================
-    HRMS ENTERPRISE - STRICT LAYOUT & DARK THEME
+    HRMS ENTERPRISE - PITCH BLACK & ORANGE THEME
     ============================================================
+    User Choice: Pure Black background with Vibrant Orange accents.
 */
-/* ===============================
-   GLOBAL TEXT COLOR FIX
-   =============================== */
-
-body,
-p,
-span,
-div,
-label,
-small,
-strong {
-    color: #e5e7eb;
-}
-/* ===============================
-   BOOTSTRAP OVERRIDES (DARK MODE)
-   =============================== */
-
-.bg-light,
-.bg-white {
-    background-color: #111827 !important;
-}
-
-.text-dark {
-    color: #e5e7eb !important;
-}
-
-.text-muted {
-    color: #9ca3af !important;
-}
-
-.btn-light {
-    background-color: #1f2937 !important;
-    color: #e5e7eb !important;
-    border: 1px solid #2e3443;
-}
-/* ===============================
-   GLOBAL CARD NORMALIZATION
-   =============================== */
-
-.card {
-    background-color: #111827 !important;
-    color: #e5e7eb !important;
-    border: 1px solid #2e3443 !important;
-    border-radius: 16px;
-}
-
-.card-header,
-.card-footer {
-    background-color: #1f2937 !important;
-    border-color: #2e3443;
-}
-/* Emergency / special cards */
-.card-danger,
-.bg-danger {
-    background-color: #3f1d2c !important;
-    color: #fca5a5 !important;
-}
-/* ===============================
-   GLOBAL PAGE CONTENT WRAPPER
-   =============================== */
-
-.main-content > .container,
-.main-content > .container-fluid,
-.main-content > section,
-.main-content > div {
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-}
-/* Global vertical rhythm */
-.main-content > * {
-    margin-bottom: 24px;
-}
-/* Tables always live in a dark surface */
-.table-responsive,
-.table {
-    background-color: #111827;
-    border-radius: 14px;
-    overflow: hidden;
-}
-
-    .table td,
-    .table th {
-        color: #e5e7eb;
-    }
-/* Page headers */
-.main-content h1,
-.main-content h2 {
-    margin-bottom: 20px;
-    font-weight: 600;
-}
-
-.main-content h2 {
-    padding-bottom: 12px;
-    border-bottom: 1px solid #2e3443;
-}
-/* ===============================
-   ATTENDANCE TABLE CONTAINER
-   =============================== */
-
-.table-responsive {
-    background: #111827;
-    border-radius: 16px;
-    border: 1px solid #2e3443;
-    padding: 16px;
-    margin-top:
-}
-/* Base table styling */
-.table {
-    background-color: transparent;
-    color: #e5e7eb;
-    margin-bottom: 0;
-}
-
-    .table th,
-    .table td {
-        padding: 14px 16px;
-        vertical-align: middle;
-        border-color: #2e3443;
-    }
-    /* Table header */
-    .table thead th {
-        background: #1f2937;
-        color: #e5e7eb;
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border-bottom: 1px solid #2e3443;
-    }
-    /* Row hover effect */
-    .table tbody tr {
-        transition: background-color 0.2s ease;
-    }
-
-        .table tbody tr:hover {
-            background-color: #243244;
-        }
-        /* Empty table state */
-        .table tbody tr td {
-            color: #9ca3af;
-        }
-
-            .table tbody tr td.text-center {
-                padding: 48px 16px;
-                font-size: 0.95rem;
-                opacity: 0.85;
-            }
-/* Attendance status styling */
-.status-present {
-    color: #22c55e;
-    font-weight: 600;
-}
-
-.status-absent {
-    color: #ef4444;
-    font-weight: 600;
-}
-
-.status-late {
-    color: #f59e0b;
-    font-weight: 600;
-}
-/* ===============================
-   FORCE ALL TABLES DARK (GLOBAL)
-   =============================== */
-
-.table,
-.table-responsive,
-.table-striped,
-.table-hover {
-    background-color: #111827 !important;
-}
-
-    .table tbody,
-    .table thead,
-    .table tfoot {
-        background-color: #111827 !important;
-    }
-
-    .table-striped > tbody > tr:nth-of-type(odd) {
-        background-color: #0f172a !important;
-    }
-
-    .table td,
-    .table th {
-        color: #e5e7eb !important;
-    }
-/* ===============================
-   BUTTONS & LINKS VISIBILITY FIX
-   =============================== */
-
-.btn-outline-secondary,
-.btn-secondary {
-    color: #e5e7eb !important;
-    border-color: #4b5563 !important;
-}
-
-    .btn-outline-secondary:hover {
-        background-color: #4b5563 !important;
-        color: #ffffff !important;
-    }
-
-.text-secondary {
-    color: #9ca3af !important;
-}
-
-a {
-    color: #60a5fa;
-}
-
-    a:hover {
-        color: #93c5fd;
-    }
-
 
 :root {
     /* 1. LAYOUT VARIABLES */
-    --sidebar-width: 280px; /* Slightly wider for better readability */
-    /* 2. COLOR PALETTE (Dark Blue/Slate Theme) */
-    --bg-body: #0F172A; /* Darkest Slate (Body Background) */
-    --bg-sidebar: #1E293B; /* Dark Slate (Sidebar) */
-    --bg-card: #1E293B; /* Card Background (Same as sidebar) */
-    --bg-input: #020617; /* Almost Black (Inputs) */
+    --sidebar-width: 280px;
 
-    --text-main: #F1F5F9; /* White-ish */
-    --text-muted: #94A3B8; /* Grey-ish Blue */
+    /* 2. COLOR PALETTE (Black & Orange) */
+    /* Backgrounds */
+    --bg-body: #000000;
+    /* Pure Black */
+    --bg-surface: #111111;
+    /* Very Dark Gray (almost black) */
+    --bg-card: #0a0a0a;
+    /* Near Black for cards */
+    --bg-input: #000000;
+    /* Pure Black */
 
-    --primary: #3B82F6; /* Bright Blue */
-    --primary-hover: #2563EB;
-    --primary-bg: rgba(59, 130, 246, 0.1);
-    --border: rgba(255, 255, 255, 0.08); /* Subtle Borders */
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    /* Text */
+    --text-main: #ffffff;
+    /* Pure White */
+    --text-muted: #888888;
+    /* Neutral Gray */
+    --text-dark: #cccccc;
+    /* Light Gray */
+
+    /* Brand / Primary (BLUE) */
+    --primary: #3b82f6;
+    /* Vibrant Blue */
+    --primary-hover: #2563eb;
+    /* Deep Blue */
+    --primary-light: rgba(59, 130, 246, 0.15);
+
+    /* Accents */
+    --success: #00C851;
+    /* Bright Green */
+    --warning: #ffbb33;
+    /* Yellow/Orange */
+    --danger: #ff4444;
+    /* Bright Red */
+    --info: #33b5e5;
+    /* Bright Blue */
+
+    /* Borders & Shadows */
+    --border: #222222;
+    /* Dark subtle border */
+    --border-subtle: rgba(255, 255, 255, 0.1);
+
+    --shadow-sm: 0 1px 2px 0 rgba(59, 130, 246, 0.1);
+    /* Subtle blue glow */
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.8);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.9);
 }
 
 /* ============================================================
-   1. STRUCTURAL GEOMETRY (THE FIX)
+   1. GLOBAL RESET & TYPOGRAPHY
    ============================================================ */
 
 body {
     background-color: var(--bg-body);
     color: var(--text-main);
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* SIDEBAR: FIXED to the LEFT */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-main);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: -0.025em;
+}
+
+p,
+span,
+label,
+div {
+    color: var(--text-main);
+}
+
+/* Color Utilities overrides */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.text-dark {
+    color: var(--text-main) !important;
+}
+
+.text-secondary {
+    color: var(--text-muted) !important;
+}
+
+.text-white {
+    color: #ffffff !important;
+}
+
+.bg-light {
+    background-color: var(--bg-surface) !important;
+}
+
+.bg-white {
+    background-color: var(--bg-surface) !important;
+}
+
+/* Links */
+a {
+    color: var(--text-main);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--primary);
+}
+
+/* ============================================================
+   2. LAYOUT STRUCTURE
+   ============================================================ */
+
+/* Sidebar */
 #app-sidebar {
     position: fixed;
     top: 0;
     left: 0;
     width: var(--sidebar-width);
     height: 100vh;
-    background-color: var(--bg-sidebar);
+    background-color: var(--bg-surface);
     border-right: 1px solid var(--border);
+    z-index: 1000;
     display: flex;
     flex-direction: column;
-    z-index: 1000;
-    box-shadow: 4px 0 10px rgba(0,0,0,0.3);
 }
 
-/* MAIN CONTENT: PUSHED to the RIGHT */
-#app-main {
-    margin-left: var(--sidebar-width); /* EXACT MATCH TO SIDEBAR WIDTH */
-    width: calc(100% - var(--sidebar-width));
-    min-height: 100vh;
-    padding: 30px;
-    background-color: var(--bg-body);
-    transition: margin-left 0.3s ease;
-}
-
-/* ============================================================
-   2. SIDEBAR STYLING
-   ============================================================ */
-
-/* Header */
 .sidebar-header {
     height: 70px;
     display: flex;
     align-items: center;
     padding: 0 24px;
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(90deg, #1E293B, #0F172A);
+    background: #000000;
+    /* Sidebar Header Black */
 }
 
+/* BLUE BRAND ICON */
 .brand-icon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     background: var(--primary);
+    /* Blue */
     border-radius: 8px;
+    /* Slightly sharper */
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     margin-right: 12px;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    /* Blue Glow */
+    font-size: 1.2rem;
 }
 
 .brand-text {
     font-size: 1.25rem;
     font-weight: 800;
-    letter-spacing: -0.5px;
     color: white;
+    letter-spacing: -0.5px;
 }
 
-    .brand-text span {
-        color: var(--primary);
-    }
+.brand-text span {
+    color: var(--primary);
+    /* Blue text accent */
+}
 
-/* Navigation Area */
 .sidebar-content {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 16px;
+    padding: 24px 16px;
 }
-
-    /* Scrollbar polish */
-    .sidebar-content::-webkit-scrollbar {
-        width: 5px;
-    }
-
-    .sidebar-content::-webkit-scrollbar-thumb {
-        background: #334155;
-        border-radius: 4px;
-    }
 
 .nav-label {
     text-transform: uppercase;
     font-size: 0.75rem;
-    font-weight: 700;
-    color: #64748B;
-    margin: 20px 0 8px 12px;
+    font-weight: 800;
+    color: #555555;
+    margin: 24px 0 12px 12px;
     letter-spacing: 0.05em;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
-    padding: 10px 12px;
+    padding: 12px 16px;
     color: var(--text-muted) !important;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 500;
-    transition: all 0.2s;
+    border-radius: 8px;
+    font-weight: 600;
     margin-bottom: 4px;
+    transition: all 0.2s;
 }
 
-    .nav-link i {
-        width: 24px;
-        text-align: center;
-        margin-right: 12px;
-        font-size: 1.1em;
-        transition: transform 0.2s;
-    }
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white !important;
+    transform: translateX(4px);
+    border-left: 3px solid var(--primary);
+    /* Blue Bar on Hover */
+}
 
-    .nav-link:hover {
-        background-color: rgba(255,255,255,0.05);
-        color: white !important;
-        transform: translateX(5px);
-    }
+.nav-link.active {
+    background-color: var(--primary-light);
+    color: var(--primary) !important;
+    border-left: 3px solid var(--primary);
+}
 
-        .nav-link:hover i {
-            color: var(--primary);
-            transform: scale(1.1);
-        }
+.nav-link i {
+    width: 24px;
+    margin-right: 12px;
+    text-align: center;
+    font-size: 1.1em;
+    transition: transform 0.2s;
+}
 
-/* Footer */
+.nav-link:hover i {
+    color: var(--primary);
+}
+
 .sidebar-footer {
     padding: 20px;
     border-top: 1px solid var(--border);
-    background-color: rgba(0,0,0,0.2);
+    background-color: #050505;
 }
 
 .user-info {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
-    background: #334155;
+    width: 42px;
+    height: 42px;
+    background: #222;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-weight: bold;
-    border: 2px solid var(--border);
+    color: var(--primary);
+    /* Blue Text */
+    font-weight: 700;
+    border: 1px solid var(--border);
 }
 
-.btn-logout {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 8px;
-    background: rgba(239, 68, 68, 0.1);
-    color: #EF4444;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transition: all 0.2s;
+/* Main Content */
+#app-main {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    min-height: 100vh;
+    padding: 30px;
+    background-color: var(--bg-body);
+    /* Pure Black */
 }
-
-    .btn-logout:hover {
-        background: #EF4444;
-        color: white;
-        text-decoration: none;
-    }
 
 /* ============================================================
-   3. GLOBAL COMPONENT NORMALIZATION (Bootstrap Overrides)
+   3. COMPONENTS (CARDS)
    ============================================================ */
-
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--text-main);
-    margin-bottom: 1rem;
-}
-
-h1 {
-    font-weight: 800;
-    letter-spacing: -1px;
-}
-
-/* Cards */
 .card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px;
+    box-shadow: none;
+    /* Flat look for black theme */
     margin-bottom: 24px;
+    overflow: hidden;
 }
 
 .card-header {
-    background-color: rgba(255,255,255,0.02);
-    border-bottom: 1px solid var(--border);
-    color: var(--text-main);
-    padding: 16px 20px;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 18px 24px;
     font-weight: 600;
 }
 
 .card-body {
-    padding: 20px;
-    color: var(--text-muted);
+    padding: 24px;
+    color: var(--text-main);
 }
 
-/* Tables */
-.table {
-    margin: 0;
-    color: var(--text-muted);
-    border-color: var(--border);
-}
-
-    .table th {
-        background-color: rgba(15, 23, 42, 0.6);
-        color: var(--text-main);
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.8rem;
-        letter-spacing: 0.05em;
-        border-bottom: 2px solid var(--border);
-        padding: 12px;
-    }
-
-    .table td {
-        border-bottom: 1px solid var(--border);
-        padding: 12px;
-        vertical-align: middle;
-    }
-
-.table-hover tbody tr:hover td {
-    color: white;
-    background-color: rgba(255,255,255,0.04);
-}
-
-/* Forms */
-.form-label {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.form-control, .form-select {
-    background-color: var(--bg-input);
-    border: 1px solid var(--border);
-    color: white;
-    padding: 10px 12px;
-    border-radius: 6px;
-}
-
-    .form-control:focus, .form-select:focus {
-        background-color: var(--bg-input);
-        border-color: var(--primary);
-        color: white;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
-    }
-
-/* Buttons */
+/* ============================================================
+   4. BUTTONS
+   ============================================================ */
 .btn {
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 500;
-    transition: transform 0.1s;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
 }
-
-    .btn:active {
-        transform: scale(0.98);
-    }
 
 .btn-primary {
-    background-color: var(--primary);
-    border: none;
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+    background-color: var(--primary) !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3) !important;
+    /* Blue glow */
+    color: white !important;
 }
 
-    .btn-primary:hover {
-        background-color: var(--primary-hover);
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.5);
-    }
-
-.btn-secondary {
-    background-color: #334155;
-    border: none;
-    color: white;
+.btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4) !important;
+    transform: translateY(-2px);
 }
 
-    .btn-secondary:hover {
-        background-color: #475569;
-    }
-
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.btn-secondary,
+.btn-light,
+.btn-outline-secondary {
+    background-color: #222 !important;
+    border: 1px solid #333 !important;
+    color: white !important;
 }
 
-#app-main {
-    animation: fadeIn 0.4s ease-out;
-}
-/* ===============================
-   MISSIONS / APPROVALS ROW FIX
-   =============================== */
-
-/* Force any row-like container to stay dark */
-.main-content .row,
-.main-content .list-group-item,
-.main-content .table tr,
-.main-content .table td,
-.main-content .table th {
-    background-color: transparent;
+.btn-secondary:hover {
+    background-color: #333 !important;
+    border-color: #444 !important;
 }
 
-/* Mission / approval cards or rows */
-.main-content .card,
-.main-content .mission-row,
-.main-content .approval-row {
-    background-color: #111827 !important;
-    color: #e5e7eb !important;
+.btn-danger {
+    background-color: var(--danger) !important;
+    border: none !important;
 }
 
-    /* If mission uses div-based cells */
-    .main-content .mission-row > *,
-    .main-content .approval-row > * {
-        background-color: transparent !important;
-        color: #e5e7eb !important;
-    }
-/* Status / approval column background fix */
-.main-content .status,
-.main-content .approval,
-.main-content .badge,
-.main-content .status-column {
-    background-color: transparent !important;
-}
-/* Status badges */
-.badge {
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-weight: 600;
+/* ============================================================
+   5. TABLES (High Contrast)
+   ============================================================ */
+.table-responsive {
+    background-color: var(--bg-surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
 }
 
-    .badge.bg-danger,
-    .badge-danger {
-        background-color: #7f1d1d !important;
-        color: #fecaca !important;
-    }
+.table {
+    margin-bottom: 0;
+    color: var(--text-main) !important;
+}
 
-    .badge.bg-success,
-    .badge-success {
-        background-color: #064e3b !important;
-        color: #a7f3d0 !important;
-    }
-/* ================================
-   GLOBAL DARK TABLE FIX
-   ================================ */
+.table th {
+    background-color: #000000 !important;
+    color: var(--text-muted) !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    font-weight: 800;
+    padding: 18px 24px;
+    border-bottom: 2px solid var(--border) !important;
+    /* Stronger border */
+}
 
-.table,
-.table thead,
-.table tbody,
-.table tr,
-.table th,
 .table td {
-    background-color: #0f172a !important; /* dark navy */
-    color: #e5e7eb !important; /* light text */
-    border-color: #1f2937 !important;
+    padding: 16px 24px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border) !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
 }
 
-    /* Header */
-    .table thead th {
-        background-color: #020617 !important;
-        color: #ffffff !important;
-        font-weight: 600;
-    }
-
-/* Row hover */
-.table-hover tbody tr:hover {
-    background-color: #1e293b !important;
+.table-hover tbody tr:hover td {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+    /* Slight Blue Tint */
 }
 
-/* Status badges inside tables */
-.table .badge,
-.table .status,
-.table .pill {
-    background-color: #1f2937 !important;
-    color: #ffffff !important;
+/* ============================================================
+   6. FORM CONTROLS
+   ============================================================ */
+.form-control,
+.form-select,
+input,
+textarea,
+select {
+    background-color: var(--bg-input) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-main) !important;
+    border-radius: 8px;
+    /* Slightly squarer than slate theme */
+    padding: 12px 16px;
 }
 
-.card,
-.card-body,
-.table-container {
-    background-color: #020617 !important;
-    color: #e5e7eb !important;
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    background-color: var(--bg-input) !important;
+    border-color: var(--primary) !important;
+    color: white !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+    /* Blue Focus Ring */
+    outline: none !important;
 }
 
-.mission-row,
-.mission-item,
-.list-row,
-.data-row {
-    background-color: #0f172a !important;
-    color: #e5e7eb !important;
+/* Chrome Autofill fix - Forced Black */
+input:-webkit-autofill,
+select:-webkit-autofill,
+textarea:-webkit-autofill {
+    -webkit-text-fill-color: white !important;
+    -webkit-box-shadow: 0 0 0 1000px black inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 4px;
+    /* Squarer badges */
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.bg-primary {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    color: var(--primary) !important;
+    border: 1px solid var(--primary);
+}
+
+.bg-success {
+    background-color: rgba(0, 200, 81, 0.2) !important;
+    color: #00C851 !important;
+    border: 1px solid #00C851;
+}
+
+.bg-danger {
+    background-color: rgba(255, 68, 68, 0.2) !important;
+    color: #ff4444 !important;
+    border: 1px solid #ff4444;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-input);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
 }

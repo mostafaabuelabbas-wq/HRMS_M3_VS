@@ -26,44 +26,47 @@
     <!-- TOOLBAR SECTION -->
     <div class="row mb-4">
 
-        <!-- SECTION 1: CONFIGURATION -->
-        <div class="col-xl-6 mb-3">
-            <div class="card h-100 shadow-sm border-0 bg-light">
-                <div class="card-body">
-                    <h6 class="text-muted text-uppercase small fw-bold mb-3">
-                        <i class="fa fa-cogs me-1"></i> Shift Configuration
-                    </h6>
-                    <div class="d-flex flex-wrap gap-2">
+        <!-- SECTION 1: CONFIGURATION (Admin Only) -->
+        @if (User.IsInRole("SystemAdmin") || User.IsInRole("HRAdmin"))
+        {
+            <div class="col-xl-6 mb-3">
+                <div class="card h-100 shadow-sm border-0 bg-light">
+                    <div class="card-body">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                            <i class="fa fa-cogs me-1"></i> Shift Configuration
+                        </h6>
+                        <div class="d-flex flex-wrap gap-2">
 
-                        <!-- Requirement (a): System Admin creates standard shifts -->
-                        @if (User.IsInRole("SystemAdmin"))
-                        {
-                            <a class="btn btn-primary" asp-area="Attendance" asp-controller="Shift" asp-action="Create">
-                                <i class="fa fa-plus"></i> Standard
-                            </a>
-                        }
+                            <!-- Requirement (a): System Admin creates standard shifts -->
+                            @if (User.IsInRole("SystemAdmin"))
+                            {
+                                <a class="btn btn-primary" asp-area="Attendance" asp-controller="Shift" asp-action="Create">
+                                    <i class="fa fa-plus"></i> Standard
+                                </a>
+                            }
 
-                        <!-- Requirement (b): HR Admin configures split & rotational -->
-                        @if (User.IsInRole("HRAdmin"))
-                        {
-                            <a class="btn btn-info text-white" asp-area="Attendance" asp-controller="Shift" asp-action="ConfigureSplit">
-                                <i class="fa fa-columns"></i> Split
-                            </a>
+                            <!-- Requirement (b): HR Admin configures split & rotational -->
+                            @if (User.IsInRole("HRAdmin"))
+                            {
+                                <a class="btn btn-info text-white" asp-area="Attendance" asp-controller="Shift" asp-action="ConfigureSplit">
+                                    <i class="fa fa-columns"></i> Split
+                                </a>
 
-                            <div class="vr mx-2"></div>
+                                <div class="vr mx-2"></div>
 
-                            <a class="btn btn-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="CreateCycle">
-                                <i class="fa fa-sync"></i> New Cycle
-                            </a>
-                            <a class="btn btn-outline-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="AddToCycle">
-                                <i class="fa fa-link"></i> Link to Cycle
-                            </a>
-                        }
+                                <a class="btn btn-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="CreateCycle">
+                                    <i class="fa fa-sync"></i> New Cycle
+                                </a>
+                                <a class="btn btn-outline-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="AddToCycle">
+                                    <i class="fa fa-link"></i> Link to Cycle
+                                </a>
+                            }
 
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
 
         <!-- SECTION 2: ASSIGNMENT -->
         <div class="col-xl-6 mb-3">
@@ -101,7 +104,6 @@
                 </div>
             </div>
         </div>
-        }
 
     </div>
 

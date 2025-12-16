@@ -4,48 +4,79 @@
     ViewData["Title"] = "Link Shift to Cycle";
 }
 
-<h2 class="mb-4">Link Shift to Cycle</h2>
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            
+            <div class="card shadow-lg border border-subtle" style="background-color: var(--bg-surface);">
+                <div class="card-header bg-transparent border-bottom border-subtle py-3">
+                    <h5 class="mb-0 text-white fw-bold">
+                        <i class="fa fa-link me-2 text-primary"></i>Link Shift to Cycle
+                    </h5>
+                    <div class="small text-muted mt-1">Add a shift to a rotational cycle sequence</div>
+                </div>
+                
+                <div class="card-body p-4">
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger border-0 d-flex align-items-center mb-4">
+                            <i class="fa fa-exclamation-circle me-2 fs-5"></i>
+                            <div>@ViewBag.Error</div>
+                        </div>
+                    }
 
-@if (ViewBag.Error != null)
-{
-    <div class="alert alert-danger">
-        <i class="fa fa-exclamation-circle"></i> @ViewBag.Error
+                    <form method="post">
+                        <!-- 1. Cycle Dropdown -->
+                        <div class="mb-4">
+                            <label class="form-label text-muted text-uppercase small fw-bold">Select Cycle</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body border-subtle text-muted"><i class="fa fa-sync"></i></span>
+                                <select asp-for="cycle_id" class="form-select border-subtle text-white" 
+                                        style="background-color: var(--bg-body);"
+                                        asp-items="@(new SelectList(ViewBag.Cycles, "cycle_id", "cycle_name"))" required>
+                                    <option value="" class="text-muted">-- Select Cycle --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 2. Shift Dropdown -->
+                        <div class="mb-4">
+                            <label class="form-label text-muted text-uppercase small fw-bold">Select Shift to Add</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body border-subtle text-muted"><i class="fa fa-clock"></i></span>
+                                <select asp-for="shift_id" class="form-select border-subtle text-white" 
+                                        style="background-color: var(--bg-body);"
+                                        asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
+                                    <option value="" class="text-muted">-- Select Shift --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 3. Order Number -->
+                        <div class="mb-4">
+                            <label class="form-label text-muted text-uppercase small fw-bold">Order Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-body border-subtle text-muted">#</span>
+                                <input asp-for="order_number" type="number" class="form-control border-subtle text-white" 
+                                       style="background-color: var(--bg-body);" placeholder="e.g. 1" required />
+                            </div>
+                            <div class="form-text text-muted mt-2">
+                                <i class="fa fa-info-circle me-1"></i> Defines the sequence (1 = First shift in rotation).
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                                <i class="fa fa-check me-2"></i> Link Shift to Cycle
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
     </div>
-}
-
-<form method="post" class="card p-4 shadow-sm">
-
-    <!-- 1. Cycle Dropdown -->
-    <div class="mb-3">
-        <label class="form-label">Select Cycle</label>
-
-        <!-- Crucial: We use "cycle_id" and "cycle_name" strings here to match the DTO -->
-        <select asp-for="cycle_id" class="form-control"
-                asp-items="@(new SelectList(ViewBag.Cycles, "cycle_id", "cycle_name"))" required>
-            <option value="">-- Select Cycle --</option>
-        </select>
-    </div>
-
-    <!-- 2. Shift Dropdown -->
-    <div class="mb-3">
-        <label class="form-label">Select Shift to Add</label>
-
-        <!-- Crucial: We use "shift_id" and "name" here to match ShiftDto -->
-        <select asp-for="shift_id" class="form-control"
-                asp-items="@(new SelectList(ViewBag.Shifts, "shift_id", "name"))" required>
-            <option value="">-- Select Shift --</option>
-        </select>
-    </div>
-
-    <!-- 3. Order Number -->
-    <div class="mb-3">
-        <label class="form-label">Order Number</label>
-        <input asp-for="order_number" type="number" class="form-control" placeholder="e.g. 1" required />
-        <small class="text-muted">1 = First shift in the rotation sequence.</small>
-    </div>
-
-    <button type="submit" class="btn btn-success">
-        <i class="fa fa-link"></i> Link Shift
-    </button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+</div>

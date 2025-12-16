@@ -411,7 +411,7 @@ namespace HRMS_M3_VS.Areas.Leave.Controllers
         {
             try
             {
-                var requests = await _leaveService.GetAllLeaveRequests();
+                var requests = await _leaveService.GetAllLeaveRequestsDetails();
                 return View(requests);
             }
             catch (Exception ex)

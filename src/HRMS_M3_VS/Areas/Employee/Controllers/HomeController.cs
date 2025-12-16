@@ -122,9 +122,16 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
                 finalBytes = null;
             }
 
-            // Case B: User uploaded a NEW photo -> Force Update (Overrides everything)
+            // Case B: User uploaded a NEW photo
             if (model.ProfileImage != null)
             {
+                // VALIDATION: Max 2MB to prevent DB truncation/performance issues
+                if (model.ProfileImage.Length > 2 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("ProfileImage", "Image file is too large. Maximum size is 2MB.");
+                    return View(model);
+                }
+
                 using (var memoryStream = new MemoryStream())
                 {
                     await model.ProfileImage.CopyToAsync(memoryStream);
