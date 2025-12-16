@@ -3,7 +3,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Time Rules & Penalties";
 
-    // Calculate Summary Stats for the top cards
+    // Summary Stats
     var totalLateEmp = Model.Count(x => x.raw_late_minutes > 0);
     var totalPenalties = Model.Sum(x => x.TotalShortTime);
     var graceUsed = Model.Count(x => x.raw_late_minutes > 0 && x.penalized_late_minutes == 0);
@@ -14,17 +14,17 @@
     <!-- HEADER & FILTER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="text-primary fw-bold mb-1">
-                <i class="fa fa-gavel me-2"></i>Time Rules & Penalties
+            <h2 class="text-white fw-bold mb-1">
+                <i class="fa fa-gavel me-2 text-danger"></i>Time Rules & Penalties
             </h2>
             <p class="text-muted mb-0">Daily breakdown of grace periods, lateness, and short-time.</p>
         </div>
 
         <!-- Date Filter Form -->
-        <form method="get" class="d-flex shadow-sm rounded-pill bg-white p-1 border">
-            <input type="date" name="date" class="form-control border-0 rounded-pill ps-3"
+        <form method="get" class="d-flex shadow-sm rounded-pill p-1 border border-secondary" style="background-color: #1e293b;">
+            <input type="date" name="date" class="form-control border-0 rounded-pill ps-3 text-white bg-transparent"
                    value="@ViewBag.SelectedDate.ToString("yyyy-MM-dd")"
-                   style="max-width: 160px;" />
+                   style="max-width: 160px; color-scheme: dark;" />
             <button type="submit" class="btn btn-primary rounded-pill px-4 ms-1">
                 <i class="fa fa-filter me-1"></i> Filter
             </button>
@@ -35,14 +35,14 @@
     <div class="row g-3 mb-4">
         <!-- Card 1: Late Arrivals -->
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm border-start border-4 border-warning h-100">
+            <div class="card border border-secondary shadow-sm border-start border-4 border-warning h-100" style="background-color: #1e293b;">
                 <div class="card-body d-flex align-items-center">
-                    <div class="bg-warning-subtle p-3 rounded-circle text-warning me-3">
+                    <div class="p-3 rounded-circle text-warning me-3" style="background-color: rgba(245, 158, 11, 0.1);">
                         <i class="fa fa-user-clock fa-2x"></i>
                     </div>
                     <div>
                         <h6 class="text-muted text-uppercase small fw-bold mb-1">Late Arrivals</h6>
-                        <h3 class="mb-0 fw-bold text-dark">@totalLateEmp <small class="text-muted fs-6">employees</small></h3>
+                        <h3 class="mb-0 fw-bold text-white">@totalLateEmp <small class="text-muted fs-6">employees</small></h3>
                     </div>
                 </div>
             </div>
@@ -50,14 +50,14 @@
 
         <!-- Card 2: Grace Periods -->
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm border-start border-4 border-success h-100">
+            <div class="card border border-secondary shadow-sm border-start border-4 border-success h-100" style="background-color: #1e293b;">
                 <div class="card-body d-flex align-items-center">
-                    <div class="bg-success-subtle p-3 rounded-circle text-success me-3">
+                    <div class="p-3 rounded-circle text-success me-3" style="background-color: rgba(16, 185, 129, 0.1);">
                         <i class="fa fa-shield-alt fa-2x"></i>
                     </div>
                     <div>
                         <h6 class="text-muted text-uppercase small fw-bold mb-1">Grace Applied</h6>
-                        <h3 class="mb-0 fw-bold text-dark">@graceUsed <small class="text-muted fs-6">waived</small></h3>
+                        <h3 class="mb-0 fw-bold text-white">@graceUsed <small class="text-muted fs-6">waived</small></h3>
                     </div>
                 </div>
             </div>
@@ -65,14 +65,14 @@
 
         <!-- Card 3: Total Deductions -->
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm border-start border-4 border-danger h-100">
+            <div class="card border border-secondary shadow-sm border-start border-4 border-danger h-100" style="background-color: #1e293b;">
                 <div class="card-body d-flex align-items-center">
-                    <div class="bg-danger-subtle p-3 rounded-circle text-danger me-3">
+                    <div class="p-3 rounded-circle text-danger me-3" style="background-color: rgba(239, 68, 68, 0.1);">
                         <i class="fa fa-minus-circle fa-2x"></i>
                     </div>
                     <div>
                         <h6 class="text-muted text-uppercase small fw-bold mb-1">Total Penalty Time</h6>
-                        <h3 class="mb-0 fw-bold text-dark">@totalPenalties <small class="text-muted fs-6">minutes</small></h3>
+                        <h3 class="mb-0 fw-bold text-white">@totalPenalties <small class="text-muted fs-6">minutes</small></h3>
                     </div>
                 </div>
             </div>
@@ -80,23 +80,23 @@
     </div>
 
     <!-- DETAILED TABLE -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3 border-bottom">
-            <h5 class="mb-0 text-muted">
+    <div class="card shadow-sm border border-secondary" style="background-color: #1e293b;">
+        <div class="card-header border-bottom border-secondary py-3 bg-transparent">
+            <h5 class="mb-0 text-white">
                 <i class="fa fa-list-ul me-2"></i> Detailed Breakdown for @ViewBag.SelectedDate.ToString("MMM dd, yyyy")
             </h5>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table class="table table-hover align-middle mb-0 text-white">
+                <thead style="background-color: rgba(255,255,255,0.05);">
                     <tr>
-                        <th class="ps-4">Employee</th>
-                        <th>Shift Plan</th>
-                        <th>Actual Time</th>
-                        <th>Status</th>
-                        <th>Late (Raw)</th>
-                        <th>Early Out</th>
-                        <th class="text-end pe-4">Final Deduction</th>
+                        <th class="ps-4 text-muted text-uppercase small">Employee</th>
+                        <th class="text-muted text-uppercase small">Shift Plan</th>
+                        <th class="text-muted text-uppercase small">Actual Time</th>
+                        <th class="text-muted text-uppercase small">Status</th>
+                        <th class="text-muted text-uppercase small">Late (Raw)</th>
+                        <th class="text-muted text-uppercase small">Early Out</th>
+                        <th class="text-end pe-4 text-muted text-uppercase small">Final Deduction</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -106,7 +106,7 @@
                             <td colspan="7" class="text-center py-5">
                                 <div class="text-muted opacity-50">
                                     <i class="fa fa-check-circle fa-4x mb-3 text-success"></i>
-                                    <h5>No violations found for this date.</h5>
+                                    <h5 class="text-white">No violations found for this date.</h5>
                                     <p>Everyone was on time!</p>
                                 </div>
                             </td>
@@ -120,7 +120,7 @@
                             bool isGrace = isLate && item.penalized_late_minutes == 0;
                             bool isPenalty = item.TotalShortTime > 0;
 
-                            <tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <!-- Employee Info -->
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
@@ -128,7 +128,7 @@
                                             @item.employee_name.Substring(0, 1)
                                         </div>
                                         <div>
-                                            <div class="fw-bold text-dark">@item.employee_name</div>
+                                            <div class="fw-bold text-white">@item.employee_name</div>
                                             <div class="small text-muted">@item.department_name</div>
                                         </div>
                                     </div>
@@ -136,7 +136,7 @@
 
                                 <!-- Shift Plan -->
                                 <td class="text-muted font-monospace small">
-                                    @item.shift_start.ToString(@"hh\:mm") <i class="fa fa-arrow-right mx-1"></i> @item.shift_end.ToString(@"hh\:mm")
+                                    @item.shift_start.ToString(@"hh\:mm") <i class="fa fa-arrow-right mx-1 text-primary"></i> @item.shift_end.ToString(@"hh\:mm")
                                 </td>
 
                                 <!-- Actual Time -->
@@ -155,19 +155,19 @@
                                 <td>
                                     @if (isGrace)
                                     {
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill">
                                             <i class="fa fa-shield-alt me-1"></i> Grace Period
                                         </span>
                                     }
                                     else if (isPenalty)
                                     {
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill">
                                             <i class="fa fa-exclamation-circle me-1"></i> Violation
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-light text-dark border rounded-pill">On Time</span>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill">On Time</span>
                                     }
                                 </td>
 
@@ -179,7 +179,6 @@
                                     }
                                     else
                                     {
-
                                         <span>-</span>
                                     }
                                 </td>
@@ -192,7 +191,6 @@
                                     }
                                     else
                                     {
-
                                         <span>-</span>
                                     }
                                 </td>
