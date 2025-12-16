@@ -8,90 +8,134 @@
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-
+        <div class="col-lg-8">
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
                 <!-- Header -->
-                <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);">
-                    <div class="mb-2">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-white bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-cogs fs-2"></i>
-                        </div>
+                <div class="card-header bg-dark text-white p-5 position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                        <i class="fas fa-cogs fa-5x"></i>
                     </div>
-                    <h3 class="fw-bold mb-1">@(isEdit ? "Edit Policy" : "New Policy")</h3>
-                    <p class="mb-0 text-white-50 small">Define rules and eligibility for this leave type.</p>
+                    <div class="position-relative z-1">
+                        <a href="/Leave/Leave/ManageTypes" class="text-white-50 text-decoration-none small mb-2 d-inline-block">
+                            <i class="fas fa-arrow-left me-1"></i> Back to List
+                        </a>
+                        <h2 class="fw-bold mb-1">@(isEdit ? "Edit Leave Policy" : "Create New Policy")</h2>
+                        <p class="text-white-50 mb-0">Configure rules, accruals, and eligibility for this leave type.</p>
+                    </div>
                 </div>
 
-                <div class="card-body p-4 p-md-5 bg-white">
-
+                <div class="card-body p-5 bg-white">
                     @if (TempData["Error"] != null)
                     {
                         <div class="alert alert-danger shadow-sm border-0 border-start border-danger border-4 mb-4">
-                            @TempData["Error"]
+                            <i class="fas fa-exclamation-triangle me-2"></i> @TempData["Error"]
                         </div>
                     }
 
-                    <!-- FIX: Standard HTML Form Action -->
-                    <form action="/Leave/Leave/SaveType" method="post">
+                    <form action="/Leave/Leave/SaveType" method="post" class="needs-validation" novalidate>
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="leave_id" value="@Model.leave_id" />
 
-                        <!-- 1. Basic Info -->
-                        <h6 class="text-uppercase text-secondary fw-bold small mb-3 ls-1">Basic Information</h6>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">Leave Type Name</label>
-                            @if (isEdit)
-                            {
-                                <!-- Readonly in Edit Mode -->
-                                <input name="leave_type" value="@Model.leave_type" class="form-control bg-light" readonly />
-                            }
-                            else
-                            {
-                                <input name="leave_type" value="@Model.leave_type" class="form-control" placeholder="e.g. Remote Work" required />
-                            }
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted">Description</label>
-                            <textarea name="leave_description" class="form-control" rows="2" placeholder="Brief description...">@Model.leave_description</textarea>
-                        </div>
-
-                        <hr class="my-4 text-muted opacity-25" />
-
-                        <!-- 2. Rules -->
-                        <h6 class="text-uppercase text-secondary fw-bold small mb-3 ls-1">Policy Rules</h6>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-6">
-                                <label class="form-label fw-bold small text-muted">Notice Period (Days)</label>
-                                <input name="notice_period" value="@Model.notice_period" type="number" class="form-control" min="0" />
-                                <div class="form-text small">Days in advance required.</div>
+                        <!-- Section 1: Basic Information -->
+                        <div class="mb-5">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                                    <i class="fas fa-info-circle fa-lg"></i>
+                                </div>
+                                <h5 class="fw-bold m-0 text-dark">Basic Information</h5>
                             </div>
-                            <div class="col-6">
-                                <label class="form-label fw-bold small text-muted">Max Duration (Days)</label>
-                                <input name="max_duration" value="@Model.max_duration" type="number" class="form-control" min="1" />
-                                <div class="form-text small">Max consecutive days.</div>
+
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-secondary small text-uppercase ls-1">Leave Type Name</label>
+                                    @if (isEdit)
+                                    {
+                                        <input name="leave_type" value="@Model.leave_type" class="form-control bg-light fw-bold text-dark" readonly />
+                                        <div class="form-text">Cannot be changed after creation.</div>
+                                    }
+                                    else
+                                    {
+                                        <input name="leave_type" value="@Model.leave_type" class="form-control form-control-lg" placeholder="e.g. Remote Work" required />
+                                        <div class="invalid-feedback">Please provide a name.</div>
+                                    }
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold text-secondary small text-uppercase ls-1">Description</label>
+                                    <textarea name="leave_description" class="form-control" rows="3" placeholder="Describe the purpose of this leave type...">@Model.leave_description</textarea>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted">Eligibility Rules</label>
-                            <!-- UPDATED: Text Input to match your Schema -->
-                            <input name="eligibility_rules" value="@Model.eligibility_rules" class="form-control" placeholder="e.g. Full-Time Employees Only" />
-                            <div class="form-text small">Enter rule as plain text (Max 200 chars).</div>
+                        <hr class="my-5 border-light-subtle" />
+
+                        <!-- Section 2: Policy & Restrictions -->
+                        <div class="mb-5">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3">
+                                    <i class="fas fa-shield-alt fa-lg"></i>
+                                </div>
+                                <h5 class="fw-bold m-0 text-dark">Policy Rules & Restrictions</h5>
+                            </div>
+
+                            <div class="row g-4 bg-light p-4 rounded-4 border border-light-subtle">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Notice Period (Days)</label>
+                                    <div class="input-group">
+                                        <input name="notice_period" value="@Model.notice_period" type="number" class="form-control" min="0" />
+                                        <span class="input-group-text bg-white text-muted">days</span>
+                                    </div>
+                                    <div class="form-text small">Minimum days required before start date.</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Max Duration</label>
+                                    <div class="input-group">
+                                        <input name="max_duration" value="@Model.max_duration" type="number" class="form-control" min="1" />
+                                        <span class="input-group-text bg-white text-muted">days</span>
+                                    </div>
+                                    <div class="form-text small">Maximum allowed days per request.</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Workflow</label>
+                                    <select name="workflow_type" class="form-select">
+                                        <!option value="Standard" @(Model.workflow_type == "Standard" ? "selected" : "")>Standard (Line Manager)</!option>
+                                        <!option value="Auto-Approve" @(Model.workflow_type == "Auto-Approve" ? "selected" : "")>Auto-Approve</!option>
+                                        <!option value="HR-Review" @(Model.workflow_type == "HR-Review" ? "selected" : "")>HR Review Required</!option>
+                                    </select>
+                                    <div class="form-text small">Approval process for this type.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Eligibility -->
+                        <div class="mb-5">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3">
+                                    <i class="fas fa-users fa-lg"></i>
+                                </div>
+                                <h5 class="fw-bold m-0 text-dark">Eligibility</h5>
+                            </div>
+                            
+                            <div class="p-3 border rounded-3">
+                                <label class="form-label fw-semibold text-secondary small text-uppercase ls-1">Eligibility Rule</label>
+                                <input name="eligibility_rules" value="@Model.eligibility_rules" class="form-control" placeholder="e.g. Full-Time Only; MinTenure=6Months" />
+                                <div class="d-flex gap-2 mt-2 flex-wrap">
+                                    <span class="badge bg-light text-dark border cursor-pointer" onclick="setRule('All')">All</span>
+                                    <span class="badge bg-light text-dark border cursor-pointer" onclick="setRule('Type=FullTime')">Type=FullTime</span>
+                                    <span class="badge bg-light text-dark border cursor-pointer" onclick="setRule('Type=PartTime')">Type=PartTime</span>
+                                    <span class="badge bg-light text-dark border cursor-pointer" onclick="setRule('MinTenure=180')">MinTenure=180</span>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Actions -->
-                        <div class="d-grid gap-3 pt-2">
-                            <button type="submit" class="btn btn-primary btn-lg shadow-sm" style="background-color: #2c5364; border-color: #2c5364;">
+                        <div class="d-grid gap-3 pt-3">
+                            <button type="submit" class="btn btn-dark btn-lg rounded-pill shadow-lg">
                                 <i class="fas fa-save me-2"></i> Save Configuration
                             </button>
-                            <!-- Direct Link for Cancel -->
-                            <a href="/Leave/Leave/ManageTypes" class="btn btn-outline-secondary btn-lg border-0">
-                                Cancel
+                            <a href="/Leave/Leave/ManageTypes" class="btn btn-link text-muted text-decoration-none">
+                                Cancel and return to list
                             </a>
                         </div>
-
                     </form>
                 </div>
             </div>
@@ -99,19 +143,21 @@
     </div>
 </div>
 
-<style>
-    .ls-1 {
-        letter-spacing: 1px;
+<script>
+    function setRule(val) {
+        document.getElementsByName('eligibility_rules')[0].value = val;
     }
+</script>
 
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .cursor-pointer { cursor: pointer; }
     .form-control:focus, .form-select:focus {
-        border-color: #2c5364;
-        box-shadow: 0 0 0 0.2rem rgba(44, 83, 100, 0.25);
+        border-color: #212529;
+        box-shadow: 0 0 0 0.25rem rgba(33, 37, 41, 0.1);
     }
 </style>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

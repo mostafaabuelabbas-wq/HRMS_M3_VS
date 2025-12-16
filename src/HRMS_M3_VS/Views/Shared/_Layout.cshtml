@@ -1,4 +1,4 @@
-﻿@using System.Security.Claims
+@using System.Security.Claims
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,11 +66,12 @@
                 <a class="nav-link" asp-area="Attendance" asp-controller="Track" asp-action="Index">
                     <i class="fas fa-clock"></i> <span>My Attendance</span>
                 </a>
+                <!-- Added My Leave from Master -->
                 <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="MyLeave">
                     <i class="fas fa-calendar-check"></i> <span>My Leave</span>
                 </a>
                 <a class="nav-link" asp-area="Employee" asp-controller="Mission" asp-action="Index">
-                    <i class="fas fa-plane"></i> <span>Missions</span>
+                    <i class="fas fa-briefcase"></i> <span>Missions</span>
                 </a>
             </div>
 
@@ -156,6 +157,30 @@
                             <i class="fas fa-sliders-h"></i> <span>Leave Config</span>
                         </a>
                     }
+                    <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-users"></i> <span>All Employees</span>
+                    </a>
+                    <a class="nav-link" asp-area="Employee" asp-controller="HRAdmin" asp-action="ProfileCompleteness">
+                        <i class="fas fa-check-circle"></i> <span>Profile Completeness</span>
+                    </a>
+                    <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
+                        <i class="fas fa-file-contract"></i> <span>Contracts</span>
+                    </a>
+                    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
+                        <i class="fas fa-cogs"></i> <span>Leave Config</span>
+                    </a>
+
+                    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="AssignEntitlement">
+                        <i class="fas fa-user-edit"></i> <span>Leave Entitlements</span>
+                    </a>
+                    
+                    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ViewFlags">
+                        <i class="fas fa-exclamation-triangle"></i> <span>View Flags</span>
+                    </a>
+                    
+                    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageRequests">
+                        <i class="fas fa-tasks"></i> <span>Manage Requests</span>
+                    </a>
                 </div>
             }
 

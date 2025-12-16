@@ -9,7 +9,9 @@ namespace HRMS_M3_VS.Areas.Leave.Models
         public decimal entitlement { get; set; } 
         
         // Calculated fields (SQL must alias these exactly as below)
-        public decimal days_used { get; set; } 
+        public decimal days_used { get; set; }
+        public decimal days_pending { get; set; }
         public decimal remaining_balance { get; set; }
+        public string category { get; set; } = string.Empty;
     }
 }
