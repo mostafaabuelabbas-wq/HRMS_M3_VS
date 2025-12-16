@@ -1,0 +1,117 @@
+@model IEnumerable<HRMS_M3_VS.Areas.Leave.Models.ManagerNoteDto>
+@{
+    ViewData["Title"] = "Irregular Leave Reports";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-5">
+    
+    <!-- Top Header -->
+    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-4">
+        <div>
+            <h1 class="h2 fw-bold text-dark mb-1">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i> Irregularity Reports
+            </h1>
+            <p class="text-secondary mb-0">Monitor flagged leave patterns reported by managers.</p>
+        </div>
+        <div>
+             <span class="badge bg-danger rounded-pill px-3 py-2 fs-6 shadow-sm">
+                @Model.Count() Reports
+            </span>
+        </div>
+    </div>
+
+    <!-- Content -->
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-check-circle fa-4x text-success opacity-50"></i>
+            </div>
+            <h4 class="text-success fw-bold">All Clear</h4>
+            <p class="text-muted">No irregular patterns have been flagged.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative hover-lift">
+                        <!-- Accent Stipe -->
+                        <div class="position-absolute top-0 start-0 w-100" style="height: 6px; background: linear-gradient(90deg, #ffc107, #dc3545);"></div>
+                        
+                        <div class="card-body p-4 pt-5">
+                            <!-- Header: Reported By -->
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="rounded-circle bg-light text-secondary d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px;">
+                                    <i class="fas fa-user-shield fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Flagged By</div>
+                                    <div class="fw-bold text-dark">@item.ManagerName</div>
+                                </div>
+                                <div class="ms-auto text-end">
+                                    <div class="small text-muted">@item.CreatedAt.ToString("MMM dd")</div>
+                                    <div class="small text-muted">@item.CreatedAt.ToString("HH:mm")</div>
+                                </div>
+                            </div>
+
+                            <!-- Subject: The Employee -->
+                            <div class="bg-light bg-opacity-50 rounded-3 p-3 mb-3 border border-light">
+                                <div class="d-flex align-items-center">
+                                     <div class="rounded-circle bg-danger text-white d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user fs-6"></i>
+                                    </div>
+                                    <div>
+                                        <div class="small text-uppercase text-danger fw-bold" style="font-size: 0.65rem;">Subject</div>
+                                        <div class="fw-bold text-dark">@item.EmployeeName</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Content: The Reason -->
+                            <div class="p-3">
+                                <h6 class="fw-bold text-secondary mb-2 text-uppercase text-xs"><i class="fas fa-quote-left me-2 opacity-25"></i>Pattern Description</h6>
+                                <p class="text-dark mb-0 fw-medium" style="line-height: 1.6;">
+                                    @item.NoteContent
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer Actions -->
+                        <div class="card-footer bg-white border-0 p-3 pt-0 text-end d-flex justify-content-end gap-2">
+                            <!-- ARCHIVE BUTTON -->
+                            <form action="/Leave/Leave/ArchiveFlag" method="post" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.NoteId" />
+                                <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3 opacity-75">
+                                    <i class="fas fa-archive me-1"></i> Archive
+                                </button>
+                            </form>
+
+                            <!-- INVESTIGATE BUTTON -->
+                            <a href="/Employee/Home/Profile/@item.EmployeeId" class="btn btn-dark btn-sm rounded-pill px-3">
+                                <i class="fas fa-search me-1"></i> Investigate
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+    }
+    .text-xs {
+        font-size: 0.75rem;
+    }
+</style>

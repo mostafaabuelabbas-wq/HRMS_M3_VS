@@ -72,9 +72,68 @@ namespace HRMS_M3_VS.Areas.Leave.Services
         }
 
         // --- Employee Features ---
-        public async Task<IEnumerable<LeaveTypeDropdownDto>> GetLeaveTypesForDropdown()
+        public async Task<IEnumerable<LeaveTypeDropdownDto>> GetLeaveTypesForDropdown(int employeeId)
         {
-            return await _db.QueryAsync<LeaveTypeDropdownDto>("GetLeaveTypes", null);
+            // 1. Get All Leave Types (with rules)
+            var allTypes = await _db.QueryAsync<LeaveTypeDropdownDto>("GetLeaveTypes", null);
+
+            // 2. Get Employee Info for filtering
+            // Note: We need a lightweight way to get Gender/Tenure/Type. 
+            // Reuse ViewEmployeeInfo simply as we don't have a smaller one ready, or query directly.
+            // For efficiency, let's assuming ViewEmployeeInfo is okay, or just map needed fields.
+            var empInfo = (await _db.QueryAsync<dynamic>("ViewEmployeeInfo", new { EmployeeID = employeeId })).FirstOrDefault();
+
+            if (empInfo == null) return allTypes; // Fallback
+
+            // 3. Filter in Memory
+            var filtered = allTypes.Where(type => CheckEligibility(type.eligibility_rules, empInfo)).ToList();
+            return filtered;
+        }
+
+        private bool CheckEligibility(string rules, dynamic employee)
+        {
+            if (string.IsNullOrEmpty(rules) || rules.Equals("All", StringComparison.OrdinalIgnoreCase)) 
+                return true;
+
+            // Rules format: "Type=FullTime;Gender=Female"
+            var criteria = rules.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var criterion in criteria)
+            {
+                var parts = criterion.Split('=');
+                if (parts.Length != 2) continue;
+
+                var key = parts[0].Trim();
+                var value = parts[1].Trim();
+
+                if (key.Equals("Gender", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Assuming we have Gender in employee info (not strictly in provided schema ViewEmployeeInfo output, 
+                    // but usually inferred or present. If missing, skip check or fail?)
+                    // Schema check: ViewEmployeeInfo returns FullName, etc. Does it return Gender?
+                    // Let's rely on what we saw: ContractType IS there.
+                    // For now, implement ContractType and Tenure.
+                }
+                
+                if (key.Equals("Type", StringComparison.OrdinalIgnoreCase)) // Contract Type
+                {
+                    if (value.Equals("All", StringComparison.OrdinalIgnoreCase)) continue; // Allow "All"
+
+                    string empType = employee.contract_type ?? ""; // e.g. Full-Time, Part-Time
+                    if (!empType.Equals(value, StringComparison.OrdinalIgnoreCase)) return false;
+                }
+
+                if (key.Equals("MinTenure", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (int.TryParse(value, out int requiredDays))
+                    {
+                         DateTime hireDate = employee.hire_date;
+                         var tenure = (DateTime.Now - hireDate).TotalDays;
+                         if (tenure < requiredDays) return false;
+                    }
+                }
+            }
+            return true;
         }
 
         // ✅ UPDATED: Submit Leave Request with File Attachment
@@ -115,10 +174,28 @@ namespace HRMS_M3_VS.Areas.Leave.Services
             // ✅ NEW: Handle Attachment (Only if we have a valid ID)
             if (dto.attachment != null && dto.attachment.Length > 0 && newRequestId > 0)
             {
+                // VALIDATION: Max 5MB
+                if (dto.attachment.Length > 5 * 1024 * 1024)
+                {
+                    throw new Exception("File size exceeds the 5MB limit.");
+                }
+
+                // VALIDATION: Allowed Extensions
+                var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+                var extension = Path.GetExtension(dto.attachment.FileName).ToLowerInvariant();
+                
+                if (!allowedExtensions.Contains(extension))
+                {
+                    throw new Exception("Invalid file type. Only PDF, JPG, and PNG are allowed.");
+                }
+
                 var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "leaves");
                 if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
 
-                var uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(dto.attachment.FileName);
+                // SANITIZE FILENAME: Remove spaces and special chars to prevent URL issues
+                var rawFileName = Path.GetFileName(dto.attachment.FileName);
+                var safeFileName = System.Text.RegularExpressions.Regex.Replace(rawFileName, @"[^a-zA-Z0-9\._-]", "_");
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + safeFileName;
                 var filePath = Path.Combine(uploadFolder, uniqueFileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -199,15 +276,18 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                 Description = dto.leave_description
             });
 
+            // 2. Configure Rules (Added WorkflowType, EligibilityRules to match SQL Proc)
             // 2. Configure Rules
             await _db.ExecuteAsync("ConfigureLeaveRules", new
             {
                 LeaveType = dto.leave_type,
                 MaxDuration = dto.max_duration,
                 NoticePeriod = dto.notice_period,
-                WorkflowType = dto.workflow_type
+                WorkflowType = dto.workflow_type,
+                EligibilityRules = dto.eligibility_rules // Passed here
             });
 
+            // 3. Removed ConfigureLeaveEligibility as it is now handled in ConfigureLeaveRules
             // 3. Configure Eligibility
             await _db.ExecuteAsync("ConfigureLeaveEligibility", new
             {
@@ -241,6 +321,48 @@ namespace HRMS_M3_VS.Areas.Leave.Services
             );
             return result.FirstOrDefault()?.ConfirmationMessage ?? "Entitlement updated.";
         }
+
+        public async Task<IEnumerable<ManagerNoteDto>> GetManagerNotes()
+        {
+            return await _db.QueryAsync<ManagerNoteDto>("GetManagerNotes", null);
+        }
+
+        public async Task<string> ArchiveManagerNote(int noteId)
+        {
+            var result = await _db.QueryAsync<dynamic>(
+                "ArchiveManagerNote",
+                new { NoteID = noteId }
+            );
+            return result.FirstOrDefault()?.ConfirmationMessage ?? "Flag archived.";
+        }
+
+        public async Task<string> OverrideLeaveDecision(int requestId, string status, string reason, int adminId)
+        {
+            var result = await _db.QueryAsync<dynamic>(
+                "OverrideLeaveDecision",
+                new 
+                { 
+                    LeaveRequestID = requestId, 
+                    NewStatus = status, 
+                    Reason = reason, 
+                    AdminID = adminId 
+                }
+            );
+            return result.FirstOrDefault()?.ConfirmationMessage ?? "Decision overridden.";
+        }
+
+        public async Task<LeaveRequestDetailDto> GetLeaveRequestDetail(int id)
+        {
+            var result = await _db.QueryAsync<LeaveRequestDetailDto>(
+                "GetLeaveRequestDetail", 
+                new { RequestID = id }
+            );
+            return result.FirstOrDefault() ?? throw new Exception("Request not found.");
+        }
+
+        public async Task<IEnumerable<LeaveRequestDetailDto>> GetAllLeaveRequests()
+        {
+            return await _db.QueryAsync<LeaveRequestDetailDto>("GetAllLeaveRequests", null);
         /// <summary>
         /// HR Admin can override a leave decision (flip approved/rejected)
         /// </summary>

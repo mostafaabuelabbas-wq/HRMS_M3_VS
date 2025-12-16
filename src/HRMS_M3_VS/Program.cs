@@ -5,7 +5,6 @@ using HRMS_M3_VS.Services;
 using Microsoft.AspNetCore.Authentication.Cookies; // <--- 1. ADD THIS NAMESPACE
 using Microsoft.Data.SqlClient;
 using System.Security.Claims;
-using HRMS_M3_VS.Areas.Leave.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

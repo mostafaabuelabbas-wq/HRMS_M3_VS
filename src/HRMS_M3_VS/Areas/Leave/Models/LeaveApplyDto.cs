@@ -26,14 +26,10 @@ namespace HRMS_M3_VS.Areas.Leave.Models
         public IFormFile? attachment { get; set; }
     }
 
-    
-
-    
-    
-
-   
-
-
-  
-   
+    public class LeaveTypeDropdownDto
+    {
+        public int leave_id { get; set; }
+        public string leave_type { get; set; } = string.Empty;
+        public string eligibility_rules { get; set; } = "All"; // Added for filtering
+    }
 }
