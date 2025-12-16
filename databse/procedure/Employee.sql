@@ -727,37 +727,22 @@ GO
 
 
 -- 14. UpdateEmergencyContact
-CREATE OR ALTER PROCEDURE UpdateEmployeeInfo
+CREATE OR ALTER PROCEDURE UpdateEmergencyContact
     @EmployeeID INT,
-    @Email VARCHAR(100),
-    @Phone VARCHAR(20),
-    @Address VARCHAR(150),
-    @ProfileImage VARBINARY(MAX) = NULL
+    @ContactName VARCHAR(100),
+    @Relation VARCHAR(50),
+    @Phone VARCHAR(20)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM Employee WHERE employee_id = @EmployeeID)
-    BEGIN
-        SELECT 'Error: Employee not found.' AS Message;
-        RETURN;
-    END;
-
-    IF EXISTS (SELECT 1 FROM Employee WHERE email = @Email AND employee_id <> @EmployeeID)
-    BEGIN
-        SELECT 'Error: This email is already used by another employee.' AS Message;
-        RETURN;
-    END;
-
     UPDATE Employee
-    SET email = @Email,
-        phone = @Phone,
-        address = @Address,
-        profile_image = @ProfileImage
+    SET 
+        emergency_contact_name = @ContactName,
+        relationship = @Relation,
+        emergency_contact_phone = @Phone
     WHERE employee_id = @EmployeeID;
-
-    SELECT 'Employee information updated successfully' AS ConfirmationMessage;
-END;
+END
 GO
 
 
@@ -1745,5 +1730,24 @@ BEGIN
     WHERE e.email = @Email; 
     
     -- If this returns a row, Login Success.
+END;
+GO
+
+
+--extra 
+CREATE OR ALTER PROCEDURE GetAllEmployeesSimple
+    @ManagerID INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        employee_id,
+        full_name,
+        national_id -- Helpful for distinguishing same names
+    FROM Employee
+    WHERE (@ManagerID IS NULL OR manager_id = @ManagerID)
+      AND is_active = 1 -- Good practice to only show active employees
+    ORDER BY full_name;
 END;
 GO

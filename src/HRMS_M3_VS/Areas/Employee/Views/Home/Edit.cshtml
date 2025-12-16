@@ -14,7 +14,7 @@
 
     <!-- Hidden Fields to keep IDs -->
     <input type="hidden" asp-for="EmployeeId" />
-    <input type="hidden" asp-for="ExistingImagePath" />
+    <!-- ExistingImageBytes not needed in hidden field, we reload from DB -->
 
 
     <!-- 1. Profile Image Upload -->
@@ -22,10 +22,11 @@
         <label class="form-label fw-bold">Profile Picture</label>
 
         <!-- Show current image preview -->
-        @if (!string.IsNullOrEmpty(Model.ExistingImagePath))
+        @if (Model.ExistingImageBytes != null && Model.ExistingImageBytes.Length > 0)
         {
+            var base64 = Convert.ToBase64String(Model.ExistingImageBytes);
             <div class="mb-2">
-                <img src="@Model.ExistingImagePath" class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover;" />
+                <img src="data:image/*;base64,@base64" class="rounded-circle shadow-sm" style="width: 80px; height: 80px; object-fit: cover;" />
             </div>
 
             <!-- THE REMOVE CHECKBOX -->

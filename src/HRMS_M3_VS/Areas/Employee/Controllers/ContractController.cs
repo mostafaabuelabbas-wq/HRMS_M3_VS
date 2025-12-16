@@ -2,10 +2,12 @@
 using HRMS_M3_VS.Areas.Employee.Services;
 using HRMS_M3_VS.Areas.Employee.Models;
 using System.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HRMS_M3_VS.Areas.Employee.Controllers
 {
     [Area("Employee")]
+    [Authorize(Roles = "HRAdmin")]
     public class ContractController : Controller
     {
         private readonly ContractService _service;
@@ -20,6 +22,13 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
         {
             var list = await _service.GetAllContractsAsync();
             return View(list);
+        }
+
+        // LIST EXPIRING CONTRACTS
+        public async Task<IActionResult> Expiring()
+        {
+            var list = await _service.GetExpiringContractsAsync();
+            return View("Index", list); // Reuse Index view
         }
 
         // DETAILS

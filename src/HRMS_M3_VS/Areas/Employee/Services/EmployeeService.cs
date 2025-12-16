@@ -40,7 +40,7 @@ namespace HRMS_M3_VS.Areas.Employee.Services
                 Email = vm.Email,
                 Phone = vm.Phone,
                 Address = vm.Address,
-                ProfileImage = vm.ExistingImagePath
+                ProfileImage = vm.ExistingImageBytes
             });
         }
 

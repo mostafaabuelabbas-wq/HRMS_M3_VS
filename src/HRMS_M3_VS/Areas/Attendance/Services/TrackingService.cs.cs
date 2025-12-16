@@ -61,5 +61,17 @@ namespace HRMS_M3_VS.Areas.Attendance.Services
 
             return result.FirstOrDefault();
         }
+
+        // 5. Real-Time Punch (ClockIn/ClockOut)
+        public async Task<string> RecordPunch(int employeeId, DateTime time, string type)
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("EmployeeID", employeeId);
+            parameters.Add("ClockInOutTime", time);
+            parameters.Add("Type", type);
+
+            var result = await _db.QueryAsync<string>("RecordMultiplePunches", parameters);
+            return result.FirstOrDefault();
+        }
     }
 }
