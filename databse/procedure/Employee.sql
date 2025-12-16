@@ -1732,3 +1732,22 @@ BEGIN
     -- If this returns a row, Login Success.
 END;
 GO
+
+
+--extra 
+CREATE OR ALTER PROCEDURE GetAllEmployeesSimple
+    @ManagerID INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        employee_id,
+        full_name,
+        national_id -- Helpful for distinguishing same names
+    FROM Employee
+    WHERE (@ManagerID IS NULL OR manager_id = @ManagerID)
+      AND is_active = 1 -- Good practice to only show active employees
+    ORDER BY full_name;
+END;
+GO
