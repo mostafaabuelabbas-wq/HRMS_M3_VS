@@ -3,22 +3,21 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="d-flex align-items-center justify-content-center min-vh-100" style="background-color: #f0f2f5;">
+<div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;">
 
-    <div class="card border-0 shadow-lg rounded-3 overflow-hidden" style="width: 100%; max-width: 400px;">
+    <div class="card border-secondary shadow-lg overflow-hidden" style="width: 100%; max-width: 450px;">
 
         <!-- Colorful Top Accent Line -->
         <div style="height: 4px; background: linear-gradient(90deg, #0d6efd 0%, #6610f2 50%, #fd7e14 100%);"></div>
 
-        <div class="card-header bg-white border-bottom py-3 px-4">
+        <div class="card-header border-bottom border-secondary py-3 px-4 bg-transparent">
             <div class="d-flex align-items-center">
-                <!-- Changed Icon back to Wifi -->
-                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                    <i class="fa fa-wifi"></i>
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="fa fa-wifi fa-lg"></i>
                 </div>
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark">Offline Sync</h6>
-                    <small class="text-muted" style="font-size: 0.75rem;">Push offline records</small>
+                    <h5 class="mb-0 fw-bold text-white">Offline Sync</h5>
+                    <small class="text-muted">Push offline biometric records</small>
                 </div>
             </div>
         </div>
@@ -27,10 +26,10 @@
 
             @if (TempData["Success"] != null)
             {
-                <div class="alert alert-success py-2 px-3 d-flex align-items-center small mb-3 rounded-2 border-0 bg-success bg-opacity-10 text-success">
+                <div class="alert alert-success d-flex align-items-center small mb-3 rounded-2">
                     <i class="fa fa-check-circle me-2"></i>
                     <div class="flex-grow-1 fw-medium">@TempData["Success"]</div>
-                    <button type="button" class="btn-close small ms-2" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close btn-close-white small ms-2" data-bs-dismiss="alert"></button>
                 </div>
             }
 
@@ -38,38 +37,36 @@
 
                 <!-- Employee Dropdown -->
                 <div class="mb-3">
-                    <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Employee</label>
-                    <div class="input-group shadow-sm rounded-2 overflow-hidden">
-                        <span class="input-group-text border-0 bg-white text-primary ps-3">
+                    <label class="form-label text-uppercase text-muted small fw-bold">Employee</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-primary ps-3">
                             <i class="fa fa-user"></i>
                         </span>
-                        <select asp-for="employee_id" class="form-select border-0 custom-select fw-medium text-dark"
+                        <select asp-for="employee_id" class="form-select border-secondary text-white"
                                 asp-items="@(new SelectList(ViewBag.Employees, "employee_id", "full_name"))" required>
                             <option value="">Select Employee...</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Device & Time (Adjusted Widths) -->
-                <div class="row g-2 mb-4">
+                <!-- Device & Time -->
+                <div class="row g-3 mb-4">
                     <div class="col-5">
-                        <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Device ID</label>
-                        <div class="input-group shadow-sm rounded-2 overflow-hidden">
-                            <span class="input-group-text border-0 bg-white text-warning ps-3">
+                        <label class="form-label text-uppercase text-muted small fw-bold">Device ID</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-warning ps-3">
                                 <i class="fa fa-desktop"></i>
                             </span>
-                            <input asp-for="device_id" type="number" class="form-control border-0 fw-medium" placeholder="101" required />
+                            <input asp-for="device_id" type="number" class="form-control border-secondary text-white" placeholder="101" required />
                         </div>
                     </div>
-                    <!-- Increased width to col-7 and removed milliseconds -->
                     <div class="col-7">
-                        <label class="form-label small text-muted fw-bold text-uppercase tracking-wide mb-1">Time</label>
-                        <div class="input-group shadow-sm rounded-2 overflow-hidden">
-                            <span class="input-group-text border-0 bg-white text-info ps-3">
+                        <label class="form-label text-uppercase text-muted small fw-bold">Time</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark border-secondary text-info ps-3">
                                 <i class="fa fa-clock"></i>
                             </span>
-                            <!-- Removed step="1" to hide seconds/milliseconds -->
-                            <input asp-for="clock_time" type="datetime-local" class="form-control border-0 fw-medium px-2"
+                            <input asp-for="clock_time" type="datetime-local" class="form-control border-secondary text-white px-2"
                                    asp-format="{0:yyyy-MM-ddTHH:mm}" required />
                         </div>
                     </div>
@@ -77,21 +74,21 @@
 
                 <!-- Punch Type Toggle -->
                 <div class="mb-4">
-                    <div class="d-flex bg-light p-1 rounded-pill border">
+                    <div class="btn-group w-100" role="group">
                         <input type="radio" class="btn-check" name="type" id="opt_in" value="IN" checked>
-                        <label class="btn btn-sm flex-fill rounded-pill fw-bold transition-all py-2" for="opt_in" id="lbl_in">
+                        <label class="btn btn-outline-success fw-bold py-2" for="opt_in">
                             <i class="fa fa-sign-in-alt me-1"></i> Check IN
                         </label>
 
                         <input type="radio" class="btn-check" name="type" id="opt_out" value="OUT">
-                        <label class="btn btn-sm flex-fill rounded-pill fw-bold transition-all py-2 text-muted" for="opt_out" id="lbl_out">
+                        <label class="btn btn-outline-danger fw-bold py-2" for="opt_out">
                             Check OUT <i class="fa fa-sign-out-alt ms-1"></i>
                         </label>
                     </div>
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="btn btn-dark w-100 fw-bold py-2 rounded-2 shadow-sm transition-btn">
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">
                     Sync Record
                 </button>
 
@@ -99,64 +96,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    /* --- Typography --- */
-    .tracking-wide {
-        letter-spacing: 0.8px;
-        font-size: 0.65rem;
-    }
-
-    /* --- Custom Dropdown Styling --- */
-    .custom-select {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 1rem center;
-        background-size: 12px 12px;
-        cursor: pointer;
-    }
-
-    /* --- Input Groups --- */
-    .input-group {
-        background-color: #fff;
-        border: 1px solid #e9ecef;
-        transition: all 0.2s;
-    }
-
-        .input-group:focus-within {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1) !important;
-        }
-
-    .form-control:focus, .form-select:focus {
-        box-shadow: none;
-        background-color: #fff;
-    }
-
-    /* --- Toggle Logic --- */
-    #opt_in:checked + #lbl_in {
-        background-color: #198754; /* Green */
-        color: #fff;
-        box-shadow: 0 2px 6px rgba(25, 135, 84, 0.3);
-    }
-
-    #opt_out:checked + #lbl_out {
-        background-color: #dc3545; /* Red */
-        color: #fff;
-        box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
-    }
-
-    /* --- Button Hover --- */
-    .transition-btn {
-        transition: transform 0.2s;
-    }
-
-        .transition-btn:hover {
-            transform: translateY(-2px);
-        }
-
-    .transition-all {
-        transition: all 0.2s ease;
-    }
-</style>
