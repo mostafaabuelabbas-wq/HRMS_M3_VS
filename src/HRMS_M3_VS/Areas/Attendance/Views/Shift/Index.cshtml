@@ -26,7 +26,7 @@
     <!-- TOOLBAR SECTION -->
     <div class="row mb-4">
 
-        <!-- SECTION 1: CONFIGURATION (Defining Types) -->
+        <!-- SECTION 1: CONFIGURATION -->
         <div class="col-xl-6 mb-3">
             <div class="card h-100 shadow-sm border-0 bg-light">
                 <div class="card-body">
@@ -34,62 +34,78 @@
                         <i class="fa fa-cogs me-1"></i> Shift Configuration
                     </h6>
                     <div class="d-flex flex-wrap gap-2">
-                        <!-- Standard -->
-                        <a class="btn btn-primary" asp-area="Attendance" asp-controller="Shift" asp-action="Create">
-                            <i class="fa fa-plus"></i> Standard
-                        </a>
-                        <!-- Split -->
-                        <a class="btn btn-info text-white" asp-area="Attendance" asp-controller="Shift" asp-action="ConfigureSplit">
-                            <i class="fa fa-columns"></i> Split
-                        </a>
-                        <div class="vr mx-2"></div>
-                        <!-- Rotational Cycles -->
-                        <a class="btn btn-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="CreateCycle">
-                            <i class="fa fa-sync"></i> New Cycle
-                        </a>
-                        <a class="btn btn-outline-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="AddToCycle">
-                            <i class="fa fa-link"></i> Link to Cycle
-                        </a>
+
+                        <!-- Requirement (a): System Admin creates standard shifts -->
+                        @if (User.IsInRole("SystemAdmin"))
+                        {
+                            <a class="btn btn-primary" asp-area="Attendance" asp-controller="Shift" asp-action="Create">
+                                <i class="fa fa-plus"></i> Standard
+                            </a>
+                        }
+
+                        <!-- Requirement (b): HR Admin configures split & rotational -->
+                        @if (User.IsInRole("HRAdmin"))
+                        {
+                            <a class="btn btn-info text-white" asp-area="Attendance" asp-controller="Shift" asp-action="ConfigureSplit">
+                                <i class="fa fa-columns"></i> Split
+                            </a>
+
+                            <div class="vr mx-2"></div>
+
+                            <a class="btn btn-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="CreateCycle">
+                                <i class="fa fa-sync"></i> New Cycle
+                            </a>
+                            <a class="btn btn-outline-secondary" asp-area="Attendance" asp-controller="Shift" asp-action="AddToCycle">
+                                <i class="fa fa-link"></i> Link to Cycle
+                            </a>
+                        }
+
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- SECTION 2: ASSIGNMENT & UPDATES (Applying to Employees) -->
+        <!-- SECTION 2: ASSIGNMENT -->
         <div class="col-xl-6 mb-3">
             <div class="card h-100 shadow-sm border-0 bg-white border-start border-primary border-4">
                 <div class="card-body">
                     <h6 class="text-muted text-uppercase small fw-bold mb-3">
-                        <i class="fa fa-users me-1"></i> Assign & Update Employees
+                        <i class="fa fa-users me-1"></i> Assign & Update
                     </h6>
                     <div class="d-flex flex-wrap gap-2">
 
-                        <!-- 2c: Assign Normal (Update if exists) -->
-                        <a class="btn btn-success" asp-area="Attendance" asp-controller="Shift" asp-action="AssignEmployee">
-                            <i class="fa fa-user-clock"></i> Standard
-                        </a>
+                        <!-- Req (c): Available to Manager & SysAdmin -->
+                        @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin"))
+                        {
+                            <a class="btn btn-success" asp-area="Attendance" asp-controller="Shift" asp-action="AssignEmployee">
+                                <i class="fa fa-user-clock"></i> Standard
+                            </a>
+                            <a class="btn btn-dark" asp-area="Attendance" asp-controller="Shift" asp-action="AssignDepartment">
+                                <i class="fa fa-building"></i> Dept
+                            </a>
+                        }
 
-                        <!-- 2d: Assign Rotational (Update if exists) -->
-                        <a class="btn btn-outline-success" asp-area="Attendance" asp-controller="Shift" asp-action="AssignRotational">
-                            <i class="fa fa-sync-alt"></i> Rotational
-                        </a>
+                        <!-- Req (d): Available ONLY to SystemAdmin -->
+                        @if (User.IsInRole("SystemAdmin"))
+                        {
+                            <div class="vr mx-2"></div>
+                            <a class="btn btn-outline-success" asp-area="Attendance" asp-controller="Shift" asp-action="AssignRotational">
+                                <i class="fa fa-sync-alt"></i> Rotational
+                            </a>
+                            <a class="btn btn-warning text-dark" asp-area="Attendance" asp-controller="Shift" asp-action="AssignCustom">
+                                <i class="fa fa-star"></i> Custom
+                            </a>
+                        }
 
-                        <!-- 2d: Assign Custom (Update if exists) -->
-                        <a class="btn btn-warning text-dark" asp-area="Attendance" asp-controller="Shift" asp-action="AssignCustom">
-                            <i class="fa fa-star"></i> Custom
-                        </a>
-
-                        <!-- 2c: Assign Department -->
-                        <a class="btn btn-dark" asp-area="Attendance" asp-controller="Shift" asp-action="AssignDepartment">
-                            <i class="fa fa-building"></i> Dept
-                        </a>
                     </div>
                 </div>
             </div>
         </div>
+        }
+
     </div>
 
-    <!-- SHIFT TYPES TABLE -->
+    <!-- SHIFT TYPES TABLE (Visible to everyone with access to the page) -->
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3">
             <h5 class="mb-0 text-muted">Configured Shift Types</h5>
@@ -113,8 +129,7 @@
                         <tr>
                             <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="fa fa-inbox fa-3x mb-3 opacity-25"></i>
-                                <p class="mb-0">No shifts found in the database.</p>
-                                <small>Use the configuration buttons above to start.</small>
+                                <p class="mb-0">No shifts found.</p>
                             </td>
                         </tr>
                     }
@@ -123,51 +138,21 @@
                         @foreach (var s in Model)
                         {
                             <tr>
-                                <!-- Name -->
                                 <td class="fw-bold text-dark">@s.name</td>
-
-                                <!-- Type -->
                                 <td>
-                                    @if (s.type == "Standard")
-                                    {
-                                        <span class="badge bg-primary">Standard</span>
-                                    }
-                                    else if (s.type == "Split Shift")
-                                    {
-
-                                        <span class="badge bg-info text-dark">Split</span>
-                                    }
-                                    else
-                                    {
-
-                                        <span class="badge bg-secondary">@s.type</span>
-                                    }
+                                    @if (s.type == "Standard") { <span class="badge bg-primary">Standard</span> }
+                                    else if (s.type == "Split Shift") { <span class="badge bg-info text-dark">Split</span> }
+                                    else { <span class="badge bg-secondary">@s.type</span> }
                                 </td>
-
-                                <!-- Times -->
                                 <td class="font-monospace">@s.start_time.ToString(@"hh\:mm")</td>
                                 <td class="font-monospace">@s.end_time.ToString(@"hh\:mm")</td>
-
-                                <!-- Break -->
                                 <td>
-                                    @if (s.break_duration > 0)
-                                    {
-                                        <span>@s.break_duration m</span>
-                                    }
-                                    else
-                                    {
-
-                                        <span class="text-muted">-</span>
-                                    }
-                            </td>
-
-                            <!-- Date -->
-                            <td>
-                                @(s.shift_date.HasValue ? s.shift_date.Value.ToString("yyyy-MM-dd") :
-                                                            Html.Raw("<span class='badge bg-light text-dark border'>Recurring</span>"))
+                                    @if (s.break_duration > 0) { <span>@s.break_duration m</span> }
+                                    else { <span class="text-muted">-</span> }
                                 </td>
-
-                                <!-- Status -->
+                                <td>
+                                    @(s.shift_date.HasValue ? s.shift_date.Value.ToString("yyyy-MM-dd") : Html.Raw("<span class='badge bg-light text-dark border'>Recurring</span>"))
+                                </td>
                                 <td>
                                     <span class="badge rounded-pill @(s.status == "Active" ? "bg-success" : "bg-secondary")">
                                         @s.status

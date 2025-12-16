@@ -1,266 +1,165 @@
 ﻿@using System.Security.Claims
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - HRMS</title>
+    <title>@ViewData["Title"] - HRMS Enterprise</title>
 
+    <!-- 1. EXTERNAL LIBRARIES -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 
-    <style>
-        body {
-            background-color: #F8FAFC;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        /* ------------------------------
-                            SIDEBAR (Merged Styles)
-                           ------------------------------ */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 260px;
-            height: 100vh;
-            background-color: #1E293B;
-            color: white;
-            border-right: 1px solid #0F172A;
-            box-shadow: 3px 0 8px rgba(0,0,0,0.15);
-            /* Flexbox to push Logout to bottom */
-            display: flex;
-            flex-direction: column;
-        }
-
-            /* This makes the nav scrollable and takes available space */
-            .sidebar .nav {
-                flex-grow: 1;
-                overflow-y: auto;
-                padding-top: 10px;
-            }
-
-        /* Sidebar header */
-        .sidebar-header {
-            padding: 20px;
-            text-align: left;
-            font-size: 22px;
-            font-weight: bold;
-            color: #FFFFFF;
-            letter-spacing: 1px;
-        }
-
-            .sidebar-header span {
-                color: #3B82F6; /* blue accent */
-            }
-
-        /* Nav styling */
-        .sidebar .nav-link {
-            color: #CBD5E1;
-            padding: 12px 20px;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-radius: 6px;
-            transition: 0.2s ease;
-        }
-
-            .sidebar .nav-link i {
-                width: 22px;
-                text-align: center;
-                font-size: 17px;
-            }
-
-            .sidebar .nav-link:hover {
-                background-color: #334155;
-                color: #fff;
-                transform: translateX(4px);
-            }
-
-            /* Active state */
-            .sidebar .nav-link.active {
-                background-color: #3B82F6;
-                color: white !important;
-            }
-
-        /* Content area */
-        .main-content {
-            margin-left: 260px;
-            padding: 35px;
-            transition: margin-left 0.3s ease;
-        }
-    </style>
+    <!-- 2. YOUR APP STYLES -->
+    <link href="~/css/ui/app-ui.css" rel="stylesheet" asp-append-version="true" />
 </head>
 
 <body>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-
-        <!-- HRMS HEADER -->
+    <!-- 1. SIDEBAR (Fixed Position) -->
+    <nav id="app-sidebar">
+        <!-- Brand -->
         <div class="sidebar-header">
-            HR<span>MS</span>
+            <div class="brand-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="brand-text">HR<span>MS</span></div>
         </div>
 
-        <nav class="nav flex-column px-3">
+        <!-- Navigation Links (Scrollable) -->
+        <div class="sidebar-content">
+            <div class="nav-group">
+                <div class="nav-label">General</div>
+                <a class="nav-link" asp-area="" asp-controller="Dashboard" asp-action="Index">
+                    <i class="fas fa-home"></i> <span>Dashboard</span>
+                </a>
+                <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="MyProfile">
+                    <i class="fas fa-id-card"></i> <span>My Profile</span>
+                </a>
+            </div>
 
-            <!-- 1. DASHBOARD (Everyone) -->
-            <a class="nav-link" asp-area="" asp-controller="Dashboard" asp-action="Index">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
+            <div class="nav-group">
+                <div class="nav-label">Workplace</div>
+                <a class="nav-link" asp-area="Attendance" asp-controller="Track" asp-action="Index">
+                    <i class="fas fa-clock"></i> <span>My Attendance</span>
+                </a>
+                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="MyLeave">
+                    <i class="fas fa-calendar-check"></i> <span>My Leave</span>
+                </a>
+                <a class="nav-link" asp-area="Employee" asp-controller="Mission" asp-action="Index">
+                    <i class="fas fa-plane"></i> <span>Missions</span>
+                </a>
+            </div>
 
-            <!-- 2. MY PROFILE (Everyone) -->
-            <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="MyProfile">
-                <i class="fas fa-id-card"></i> My Profile
-            </a>
-
-            <!-- 3. ATTENDANCE SECTION -->
-            <!-- My Attendance: Visible to Everyone -->
-            <a class="nav-link" asp-area="Attendance" asp-controller="Track" asp-action="Index">
-                <i class="fas fa-user-clock"></i> My Attendance
-            </a>
-
-            <!-- Admin/Manager Only Features -->
             @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
             {
-                <a class="nav-link" asp-area="Attendance" asp-controller="Shift" asp-action="Index">
-                    <i class="fas fa-calendar-alt"></i> Shift Planning
-                </a>
+                <div class="nav-group">
+                    <div class="nav-label">Management</div>
 
-                <a class="nav-link" asp-area="Attendance" asp-controller="AttendanceManager" asp-action="Index">
-                    <i class="fas fa-tasks"></i> Attendance Ops
-                </a>
+                    @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin"))
+                    {
+                        <a class="nav-link" asp-area="Employee" asp-controller="Manager" asp-action="Index">
+                            <i class="fas fa-users"></i> <span>Team Profiles</span>
+                        </a>
+                        <a class="nav-link" asp-area="Attendance" asp-controller="TeamAttendance" asp-action="Index">
+                            <i class="fas fa-user-check"></i> <span>Team Attendance</span>
+                        </a>
+                        <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
+                            <i class="fas fa-clipboard-check"></i> <span>Leave Requests</span>
+                        </a>
+                    }
+
+                    <a class="nav-link" asp-area="Attendance" asp-controller="Shift" asp-action="Index">
+                        <i class="fas fa-calendar-alt"></i> <span>Shifts</span>
+                    </a>
+                    <a class="nav-link" asp-area="Attendance" asp-controller="AttendanceManager" asp-action="Index">
+                        <i class="fas fa-tasks"></i> <span>Operations</span>
+                    </a>
+                </div>
             }
-            <!-- 4. LEAVES SECTION -->
-            <!-- My Leave (Employees) -->
-            <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="MyLeave">
-                <i class="fas fa-calendar-check"></i> My Leave
-            </a>
 
-            <!-- Leave Management (Manager only) -->
-            @if (User.IsInRole("Manager"))
+            @if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
             {
-                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
-                    <i class="fas fa-clipboard-list"></i> Leave Management
-                </a>
+                <div class="nav-group">
+                    <div class="nav-label">HR Admin</div>
+                    <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
+                        <i class="fas fa-address-book"></i> <span>Directory</span>
+                    </a>
+                    <a class="nav-link" asp-area="Employee" asp-controller="HRAdmin" asp-action="ProfileCompleteness">
+                        <i class="fas fa-percentage"></i> <span>Completeness</span>
+                    </a>
+                    <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
+                        <i class="fas fa-file-contract"></i> <span>Contracts</span>
+                    </a>
+                    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
+                        <i class="fas fa-sliders-h"></i> <span>Leave Config</span>
+                    </a>
+                </div>
             }
 
-            <!-- Leave Configuration (HR only) -->
-            @if (User.IsInRole("HRAdmin"))
-            {
-                <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
-                    <i class="fas fa-cogs"></i> Leave Config
-                </a>
-            }
-
-            <!-- 5. MISSIONS (Everyone) -->
-            <a class="nav-link" asp-area="Employee" asp-controller="Mission" asp-action="Index">
-                <i class="fas fa-briefcase"></i> Missions
-            </a>
-
-            <!-- 6. ROLE SPECIFIC SECTIONS -->
-            <!-- MANAGER ONLY -->
-            @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin"))
-            {
-                <a class="nav-link" asp-area="Employee" asp-controller="Manager" asp-action="Index">
-                    <i class="fas fa-users-cog"></i> My Team
-                </a>
-
-                <a class="nav-link" asp-area="Attendance" asp-controller="TeamAttendance" asp-action="Index">
-                    <i class="fas fa-user-clock"></i> Team Attendance
-                </a>
-            }
-
-            <!-- HR ADMIN ONLY -->
-            @if (User.IsInRole("HRAdmin"))
-            {
-                <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-users"></i> All Employees
-                </a>
-                <a class="nav-link" asp-area="Employee" asp-controller="HRAdmin" asp-action="ProfileCompleteness">
-                    <i class="fas fa-check-circle"></i> Profile Completeness
-                </a>
-                <a class="nav-link" asp-area="Employee" asp-controller="Contract" asp-action="Index">
-                    <i class="fas fa-file-contract me-2"></i> Contracts
-                </a>
-                @if (User.IsInRole("HRAdmin"))
-{
-    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="ManageTypes">
-        <i class="fas fa-cogs"></i> Leave Config
-    </a>
-
-    <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="AssignEntitlement">
-        <i class="fas fa-user-edit"></i> Leave Entitlements
-    </a>
-}
-            }
-
-            <!-- SYSTEM ADMIN ONLY -->
             @if (User.IsInRole("SystemAdmin"))
             {
-                <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-users"></i> Employee Directory
-                </a>
-                <a class="nav-link" asp-area="Employee" asp-controller="Role" asp-action="Index">
-                    <i class="fas fa-user-shield"></i> Roles Management
-                </a>
-                <a class="nav-link" asp-controller="AdminSettings" asp-action="Index">
-                    <i class="fas fa-cog"></i> System Settings
-                </a>
+                <div class="nav-group">
+                    <div class="nav-label">System</div>
+                    <a class="nav-link" asp-area="Employee" asp-controller="Role" asp-action="Index">
+                        <i class="fas fa-shield-alt"></i> <span>Roles</span>
+                    </a>
+                    <a class="nav-link" asp-controller="AdminSettings" asp-action="Index">
+                        <i class="fas fa-cogs"></i> <span>Settings</span>
+                    </a>
+                </div>
             }
+        </div>
 
-        </nav>
-
-        <!-- LOGOUT SECTION -->
-        <div class="p-3 border-top border-secondary" style="background-color: rgba(0,0,0,0.2);">
+        <!-- User Footer -->
+        <div class="sidebar-footer">
             @if (User.Identity!.IsAuthenticated)
             {
-                <div class="d-flex align-items-center mb-3 text-white-50 small">
-                    <div class="me-2">
-                        <i class="fas fa-user-circle fa-2x"></i>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        @User.Identity.Name?.Substring(0, 1).ToUpper()
                     </div>
-                    <div style="overflow: hidden;">
-                        <span class="d-block text-white fw-bold text-truncate">@User.Identity.Name</span>
-
-                        <!-- UPDATED: Display Highest Priority Role -->
-                        <span class="d-block text-truncate" style="font-size: 0.8em; opacity: 0.8;">
+                    <div class="user-details">
+                        <span class="d-block text-white fw-bold">@User.Identity.Name</span>
+                        <span class="d-block text-muted small">
                             @if (User.IsInRole("SystemAdmin"))
                             {
-                                <span>System Admin</span>
+                                <text>System Admin</text>
                             }
                             else if (User.IsInRole("HRAdmin"))
                             {
-                                <span>HR Admin</span>
+
+                                <text>HR Admin</text>
                             }
                             else if (User.IsInRole("Manager"))
                             {
-                                <span>Manager</span>
+
+                                <text>Manager</text>
                             }
                             else
                             {
-                                <span>Employee</span>
+
+                                <text>Employee</text>
                             }
                         </span>
                     </div>
                 </div>
             }
-
-            <a asp-area="" asp-controller="Account" asp-action="Logout" class="btn btn-danger w-100 btn-sm shadow-sm">
-                <i class="fas fa-sign-out-alt me-2"></i> Logout
+            <a asp-area="" asp-controller="Account" asp-action="Logout" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
             </a>
         </div>
+    </nav>
 
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
-        @RenderBody()
-    </div>
+    <!-- 2. MAIN CONTENT (Pushed Right) -->
+    <main id="app-main">
+        <div class="container-fluid">
+            @RenderBody()
+        </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @RenderSection("Scripts", required: false)
-
 </body>
 </html>

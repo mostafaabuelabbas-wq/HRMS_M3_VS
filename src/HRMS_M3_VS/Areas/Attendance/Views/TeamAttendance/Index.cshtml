@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<HRMS_M3_VS.Areas.Employee.Models.TeamAttendanceLogDto>
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Team Attendance";
@@ -13,255 +14,311 @@
     bool canViewAll = ViewBag.CanViewAll ?? false;
 }
 
-<div class="container-fluid p-0">
+<div class="container-fluid pb-5">
 
-    <!-- 1. HEADER & CONTROLS -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="text-primary fw-bold mb-1">
-                @if (isViewAll)
-                {
-                    <i class="fa fa-globe me-2"></i>
-                    <span>All Employees</span>
- }
-                else
-                {
-                    <i class="fa fa-users-cog me-2"></i>
-                    <span>My Team</span>
- }
-            </h3>
-            <p class="text-muted small mb-0">
-                Data: <strong>@ViewBag.Start.ToString("MMM dd")</strong> to <strong>@ViewBag.End.ToString("MMM dd")</strong>
-            </p>
-        </div>
+    <!-- 1. Header Section -->
+    <div class="row py-5 px-3 px-lg-5">
+        <div class="col-12">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
 
-        <div class="d-flex gap-2 mt-3 mt-md-0">
-            <!-- Quick Filter Buttons -->
-            <div class="btn-group shadow-sm" role="group">
-                <a asp-action="Index" asp-route-filter="today" asp-route-viewAll="@isViewAll" class="btn btn-outline-primary @(ViewBag.Filter == "today" ? "active" : "")">Today</a>
-                <a asp-action="Index" asp-route-filter="week" asp-route-viewAll="@isViewAll" class="btn btn-outline-primary @(ViewBag.Filter == "week" ? "active" : "")">Week</a>
-                <a asp-action="Index" asp-route-filter="month" asp-route-viewAll="@isViewAll" class="btn btn-outline-primary @(ViewBag.Filter == "month" ? "active" : "")">Month</a>
-            </div>
-
-            <!-- ADMIN ONLY: Toggle View All -->
-            @if (canViewAll)
-            {
-                if (isViewAll)
-                {
-                    <a asp-action="Index" asp-route-viewAll="false" class="btn btn-secondary shadow-sm">
-                        <i class="fa fa-compress-arrows-alt me-1"></i> My Team Only
-                    </a>
-                }
-                else
-                {
-                    <a asp-action="Index" asp-route-viewAll="true" class="btn btn-dark shadow-sm">
-                        <i class="fa fa-expand-arrows-alt me-1"></i> View All Employees
-                    </a>
-                }
-            }
-        </div>
-    </div>
-
-    <!-- 2. SUMMARY CARDS -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm border-start border-4 border-primary">
-                <div class="card-body">
-                    <h6 class="text-muted text-uppercase small fw-bold">Total Logs</h6>
-                    <h3 class="mb-0 text-dark">@totalRecords</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm border-start border-4 border-warning">
-                <div class="card-body">
-                    <h6 class="text-muted text-uppercase small fw-bold">Late Arrivals</h6>
-                    <h3 class="mb-0 text-warning">@late</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm border-start border-4 border-info">
-                <div class="card-body">
-                    <h6 class="text-muted text-uppercase small fw-bold">On Leave</h6>
-                    <h3 class="mb-0 text-info">@onLeave</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. DATA TABLE -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Attendance Logs</h6>
-
-            <!-- Instant Search Box -->
-            <input type="text" id="teamSearch" class="form-control bg-light border-0"
-                   placeholder="Search employee name..." onkeyup="filterTable()" style="max-width: 250px;">
-        </div>
-
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" id="attendanceTable">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">Employee</th>
-                        <th>Date</th>
-                        <th>In</th>
-                        <th>Out</th>
-                        <th>Duration</th>
-                        <th>Status</th>
-                        <th class="text-end pe-4">Action</th> <!-- RESTORED COLUMN -->
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Any())
-                    {
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <div class="text-muted opacity-50">
-                                    <i class="fa fa-search fa-3x mb-3"></i>
-                                    <h5>No records found</h5>
-                                    <p class="mb-3">No attendance data for this period.</p>
-
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <a asp-action="Index" asp-route-filter="month" asp-route-viewAll="@isViewAll" class="btn btn-sm btn-outline-primary">
-                                            Check this Month
-                                        </a>
-                                        @if (canViewAll && !isViewAll)
-                                        {
-                                            <a asp-action="Index" asp-route-viewAll="true" class="btn btn-sm btn-dark">
-                                                Search All Employees
-                                            </a>
-                                        }
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var log in Model)
+                <!-- Title Section -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 shadow-sm rounded-4 p-3 me-4 d-none d-md-block text-primary">
+                        @if (isViewAll)
                         {
-                            <tr>
-                                <!-- Employee Info -->
-                                <td class="ps-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light text-primary rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold" style="width: 40px; height: 40px;">
-                                            @(log.full_name?.Substring(0, 1) ?? "?")
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold text-dark">@log.full_name</div>
-                                            <div class="small text-muted">ID: @log.employee_id</div>
-                                        </div>
-                                    </div>
-                                </td>
+                            <i class="fa fa-globe fa-2x"></i>
+                        }
+                        else
+                        {
+                            <i class="fa fa-users-cog fa-2x"></i>
+                        }
+                    </div>
+                    <div>
+                        <h6 class="text-uppercase text-muted fw-bold tracking-wide mb-1 small">Workplace Module</h6>
+                        <h1 class="fw-bold text-white mb-0 display-6">
+                            @(isViewAll ? "Global Logs" : "Team Attendance")
+                        </h1>
+                        <p class="text-muted small mb-0 mt-1">
+                            <i class="fa fa-calendar-alt me-1"></i> @ViewBag.Start.ToString("MMM dd") — @ViewBag.End.ToString("MMM dd")
+                        </p>
+                    </div>
+                </div>
 
-                                <!-- Date -->
-                                <td class="fw-bold text-secondary">
-                                    @(log.entry_time.HasValue? log.entry_time.Value.ToString("MMM dd") : "-")
-                                </td>
+                <!-- Actions & Filters -->
+                <div class="d-flex flex-column flex-sm-row gap-2 align-items-end align-items-sm-center">
 
-                                <!-- In Time -->
-                                <td class="text-success font-monospace">
-                                    @(log.entry_time.HasValue? log.entry_time.Value.ToString("hh:mm tt") : "-")
-                                </td>
+                    <!-- Search Box -->
+                    <div class="input-group shadow-sm rounded-pill overflow-hidden border border-secondary" style="max-width: 250px;">
+                        <span class="input-group-text bg-dark border-0 text-secondary ps-3"><i class="fa fa-search"></i></span>
+                        <input type="text" id="teamSearch" class="form-control bg-dark border-0 text-white"
+                               placeholder="Search name..." onkeyup="filterCards()">
+                    </div>
 
-                                <!-- Out Time -->
-                                <td class="text-danger font-monospace">
-                                    @(log.exit_time.HasValue? log.exit_time.Value.ToString("hh:mm tt") : "-")
-                                </td>
+                    <!-- Filter Group -->
+                    <div class="btn-group shadow-sm bg-dark rounded-pill p-1 border border-secondary" role="group">
+                        <a asp-action="Index" asp-route-filter="today" asp-route-viewAll="@isViewAll"
+                           class="btn btn-sm rounded-pill px-3 fw-bold @(ViewBag.Filter == "today" ? "btn-primary" : "btn-dark text-secondary border-0")">Today</a>
+                        <a asp-action="Index" asp-route-filter="week" asp-route-viewAll="@isViewAll"
+                           class="btn btn-sm rounded-pill px-3 fw-bold @(ViewBag.Filter == "week" ? "btn-primary" : "btn-dark text-secondary border-0")">Week</a>
+                        <a asp-action="Index" asp-route-filter="month" asp-route-viewAll="@isViewAll"
+                           class="btn btn-sm rounded-pill px-3 fw-bold @(ViewBag.Filter == "month" ? "btn-primary" : "btn-dark text-secondary border-0")">Month</a>
+                    </div>
 
-                                <!-- Duration -->
-                                <td>
-                                    @if (log.duration.HasValue && log.duration > 0)
-                                    {
-                                        <span>@Math.Round(log.duration.Value / 60.0, 1) hrs</span>
-                                    }
-                                    else
-                                    {
-
-                                        <span class="text-muted">-</span>
-                                    }
-                                </td>
-
-                                <!-- Status Badge -->
-                                <td>
-                                    @if (log.login_method != null && (log.login_method.Contains("Leave")))
-                                    {
-                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">Leave</span>
-                                    }
-                                    else if (log.exception_id != null)
-                                    {
-
-                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">Exception</span>
-                                    }
-                                    else if (log.exit_time == null)
-                                    {
-
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Working</span>
-                                    }
-                                    else
-                                    {
-
-                                        <span class="badge bg-light text-secondary border rounded-pill">Done</span>
-                                    }
-                                </td>
-
-                                <!-- RESTORED ACTION BUTTON -->
-                                <td class="text-end pe-4">
-                                    <a asp-action="History" asp-route-id="@log.employee_id"
-                                       class="btn btn-sm btn-outline-secondary rounded-pill px-3"
-                                       title="View Full History">
-                                        <i class="fa fa-history me-1"></i> History
-                                    </a>
-                                </td>
-                            </tr>
+                    <!-- Admin Toggle -->
+                    @if (canViewAll)
+                    {
+                        if (isViewAll)
+                        {
+                            <a asp-action="Index" asp-route-viewAll="false" class="btn btn-outline-secondary rounded-pill px-3" title="Switch to My Team">
+                                <i class="fa fa-compress-arrows-alt"></i>
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-action="Index" asp-route-viewAll="true" class="btn btn-dark border border-secondary rounded-pill px-3" title="View All Employees">
+                                <i class="fa fa-expand-arrows-alt"></i>
+                            </a>
                         }
                     }
-                </tbody>
-            </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Manual Date Picker (Collapsed) -->
-    <div class="mt-3 text-end">
-        <button class="btn btn-sm btn-link text-decoration-none text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#manualFilter">
-            Need specific dates?
-        </button>
-        <div class="collapse mt-2" id="manualFilter">
-            <form method="get" class="card card-body shadow-sm d-inline-flex flex-row gap-2 align-items-center justify-content-end border-0">
-                <input type="hidden" name="filter" value="custom" />
-                <input type="hidden" name="viewAll" value="@isViewAll.ToString().ToLower()" />
-
-                <label class="small fw-bold">From:</label>
-                <input type="date" name="start" class="form-control form-control-sm" value="@ViewBag.Start.ToString("yyyy-MM-dd")" style="width: auto;" />
-
-                <label class="small fw-bold">To:</label>
-                <input type="date" name="end" class="form-control form-control-sm" value="@ViewBag.End.ToString("yyyy-MM-dd")" style="width: auto;" />
-
-                <button type="submit" class="btn btn-sm btn-secondary">Apply</button>
-            </form>
+    <!-- 2. Stats Row (Subtle) -->
+    <div class="row px-3 px-lg-5 mb-4">
+        <div class="col-12">
+            <div class="d-flex gap-4 border-bottom border-secondary pb-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-2 text-primary"><i class="fa fa-list"></i></div>
+                    <div>
+                        <div class="h5 fw-bold text-white mb-0">@totalRecords</div>
+                        <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.65rem;">Total Logs</div>
+                    </div>
+                </div>
+                <div class="vr bg-secondary opacity-50"></div>
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-2 me-2 text-warning"><i class="fa fa-clock"></i></div>
+                    <div>
+                        <div class="h5 fw-bold text-white mb-0">@late</div>
+                        <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.65rem;">Late Arrivals</div>
+                    </div>
+                </div>
+                <div class="vr bg-secondary opacity-50"></div>
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-2 me-2 text-info"><i class="fa fa-plane"></i></div>
+                    <div>
+                        <div class="h5 fw-bold text-white mb-0">@onLeave</div>
+                        <div class="text-muted small text-uppercase fw-bold" style="font-size: 0.65rem;">On Leave</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- 3. The List (Floating Row Cards) -->
+    <div class="row px-3 px-lg-5">
+        <div class="col-12">
+
+            <div id="cardContainer" class="d-flex flex-column gap-2">
+
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5">
+                        <div class="mb-4 opacity-25">
+                            <i class="fa fa-search fa-4x text-muted"></i>
+                        </div>
+                        <h4 class="fw-bold text-white">No records found</h4>
+                        <p class="text-muted">No attendance data available for this selection.</p>
+
+                        <!-- Manual Date Picker inside empty state -->
+                        <button class="btn btn-sm btn-link text-decoration-none text-primary mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#manualFilter">
+                            Try a specific date range?
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <!-- List Header (Visible on Desktop) -->
+                    <div class="d-none d-md-flex px-4 pb-2 text-uppercase text-muted small fw-bold tracking-wide">
+                        <div style="width: 30%;">Employee</div>
+                        <div style="width: 15%;">Date</div>
+                        <div style="width: 20%;">Timings</div>
+                        <div style="width: 15%;">Duration</div>
+                        <div style="width: 10%;">Status</div>
+                        <div style="width: 10%;" class="text-end">Action</div>
+                    </div>
+
+                    @foreach (var log in Model)
+                    {
+                        // 1. Initials & Color Logic
+                        string initials = "??";
+                        if (!string.IsNullOrEmpty(log.full_name))
+                        {
+                            var parts = log.full_name.Split(' ');
+                            initials = parts.Length > 1 ? $"{parts[0][0]}{parts[parts.Length - 1][0]}" : parts[0].Substring(0, 1);
+                        }
+
+                        // Determine Accent Color based on status
+                        string accentClass = "bg-primary";
+                        string statusText = "Present";
+                        string statusBadgeClass = "bg-secondary";
+
+                        if (log.login_method != null && log.login_method.Contains("Leave"))
+                        {
+                            accentClass = "bg-info";
+                            statusText = "Leave";
+                            statusBadgeClass = "bg-info";
+                        }
+                        else if (log.entry_time.HasValue && log.entry_time.Value.TimeOfDay > new TimeSpan(9, 15, 0))
+                        {
+                            accentClass = "bg-warning"; // Late
+                            statusText = "Late";
+                            statusBadgeClass = "bg-warning text-dark";
+                        }
+                        else if (log.exit_time == null)
+                        {
+                            accentClass = "bg-success";
+                            statusText = "Working";
+                            statusBadgeClass = "bg-success";
+                        }
+
+                        <!-- The Card -->
+                        <div class="card border border-secondary shadow-sm rounded-4 overflow-hidden employee-card" style="background-color: #1e293b;">
+                            <div class="card-body p-0 d-flex flex-column flex-md-row align-items-center">
+
+                                <!-- Left Accent Bar -->
+                                <div class="d-none d-md-block h-100 @accentClass" style="width: 5px; min-height: 70px;"></div>
+
+                                <div class="p-3 w-100 d-flex flex-column flex-md-row align-items-center">
+
+                                    <!-- 1. Employee -->
+                                    <div class="d-flex align-items-center w-100 mb-2 mb-md-0" style="flex: 0 0 30%;">
+                                        <div class="avatar-circle @accentClass text-white fw-bold me-3 shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            @initials
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-white fs-6 employee-name">@log.full_name</div>
+                                            <div class="small text-muted font-monospace">ID: @log.employee_id</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 2. Date -->
+                                    <div class="w-100 mb-1 mb-md-0" style="flex: 0 0 15%;">
+                                        <div class="text-white fw-medium">@(log.entry_time.HasValue? log.entry_time.Value.ToString("MMM dd") : "-")</div>
+                                        <div class="small text-muted">@(log.entry_time.HasValue? log.entry_time.Value.ToString("ddd") : "")</div>
+                                    </div>
+
+                                    <!-- 3. Timings -->
+                                    <div class="w-100 mb-1 mb-md-0 font-monospace small" style="flex: 0 0 20%;">
+                                        <div class="text-success"><i class="fa fa-arrow-right me-1 opacity-50"></i> @(log.entry_time.HasValue? log.entry_time.Value.ToString("hh:mm tt") : "-")</div>
+                                        <div class="text-danger"><i class="fa fa-arrow-left me-1 opacity-50"></i> @(log.exit_time.HasValue? log.exit_time.Value.ToString("hh:mm tt") : "-")</div>
+                                    </div>
+
+                                    <!-- 4. Duration -->
+                                    <div class="w-100 mb-2 mb-md-0" style="flex: 0 0 15%;">
+                                        @if (log.duration.HasValue && log.duration > 0)
+                                        {
+                                            <span class="badge bg-dark border border-secondary text-white font-monospace">
+                                                @Math.Round(log.duration.Value / 60.0, 1) hrs
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </div>
+
+                                    <!-- 5. Status -->
+                                    <div class="w-100 mb-3 mb-md-0" style="flex: 0 0 10%;">
+                                        <span class="badge rounded-pill fw-bold bg-opacity-25 border border-opacity-25 @statusBadgeClass.Replace("text-dark", "") @statusBadgeClass.Replace("bg-", "text-")">
+                                            @statusText
+                                        </span>
+                                    </div>
+
+                                    <!-- 6. Action -->
+                                    <div class="w-100 text-md-end" style="flex: 0 0 10%;">
+                                        <a asp-action="History" asp-route-id="@log.employee_id"
+                                           class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold transition-btn w-100 w-md-auto text-white border-secondary">
+                                            History
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Manual Filter Collapse (Kept from original logic) -->
+            <div class="collapse mt-3" id="manualFilter">
+                <form method="get" class="card card-body border border-secondary shadow-lg d-inline-flex flex-row gap-2 align-items-center justify-content-end float-end" style="background-color: #1E293B;">
+                    <input type="hidden" name="filter" value="custom" />
+                    <input type="hidden" name="viewAll" value="@isViewAll.ToString().ToLower()" />
+
+                    <label class="small fw-bold text-white">From:</label>
+                    <input type="date" name="start" class="form-control form-control-sm bg-dark border-secondary text-white"
+                           value="@ViewBag.Start.ToString("yyyy-MM-dd")" style="width: auto; color-scheme: dark;" />
+
+                    <label class="small fw-bold text-white">To:</label>
+                    <input type="date" name="end" class="form-control form-control-sm bg-dark border-secondary text-white"
+                           value="@ViewBag.End.ToString("yyyy-MM-dd")" style="width: auto; color-scheme: dark;" />
+
+                    <button type="submit" class="btn btn-sm btn-primary fw-bold">Apply</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
 </div>
 
-<!-- Search Script -->
+<style>
+    /* Typography */
+    .tracking-wide {
+        letter-spacing: 1px;
+        font-size: 0.75rem;
+    }
+
+    /* Transitions */
+    .transition-btn {
+        transition: all 0.2s;
+    }
+
+        .transition-btn:hover {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+            color: white !important;
+            transform: translateY(-2px);
+        }
+
+    /* Hover Lift for Cards */
+    .employee-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .employee-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+</style>
+
+<!-- Updated Search Script for Cards -->
 <script>
-    function filterTable() {
+    function filterCards() {
         var input = document.getElementById("teamSearch");
         var filter = input.value.toUpperCase();
-        var table = document.getElementById("attendanceTable");
-        var tr = table.getElementsByTagName("tr");
+        var container = document.getElementById("cardContainer");
+        var cards = container.getElementsByClassName("employee-card");
 
-        for (var i = 1; i < tr.length; i++) {
-            var td = tr[i].getElementsByTagName("td")[0];
-            if (td) {
-                var txtValue = td.textContent || td.innerText;
+        for (var i = 0; i < cards.length; i++) {
+            var nameEl = cards[i].getElementsByClassName("employee-name")[0];
+            if (nameEl) {
+                var txtValue = nameEl.textContent || nameEl.innerText;
                 if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
+                    cards[i].style.display = "";
                 } else {
-                    tr[i].style.display = "none";
+                    cards[i].style.display = "none";
                 }
             }
         }
