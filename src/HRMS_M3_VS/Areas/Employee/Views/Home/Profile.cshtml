@@ -4,189 +4,255 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "My Profile";
+    
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var returnUrl = Context.Request.Query["returnUrl"].ToString();
+    
+    bool isSuperUser = User.IsInRole("HRAdmin");
+    bool isSelf = currentUserId != null && Model.Employee_Id.ToString() == currentUserId;
+    bool canEdit = isSuperUser || isSelf;
 }
 
-<div class="container py-4">
+<div class="container-fluid py-4 px-lg-5">
 
-    <!-- Profile Card -->
-    <div class="card border-0 shadow-lg overflow-hidden">
+    <!-- HERO PROFILE SECTION -->
+    <div class="card border-0 shadow-lg rounded-4 mb-4" style="overflow: visible;">
         
-        <!-- HEADER / BANNER -->
-        <div class="position-relative" style="height: 220px; background: linear-gradient(135deg, var(--bg-surface-elevated) 0%, var(--bg-body) 100%);">
+        <!-- Gradient Banner -->
+        <div class="position-relative rounded-top-4" style="height: 140px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);">
+            <!-- Decorative Elements -->
+            <div style="position: absolute; top: 20px; right: 50px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+            <div style="position: absolute; top: 60px; right: 150px; width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 50%;"></div>
+            <div style="position: absolute; bottom: 20px; left: 30%; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
             
-            <!-- ACTION BUTTONS: Top Right -->
+            <!-- Action Buttons -->
             <div class="position-absolute top-0 end-0 p-4 d-flex gap-2">
-                
-                <!-- Back Buttons Logic -->
-                @{
-                    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    var returnUrl = Context.Request.Query["returnUrl"].ToString();
-
-                    // 1. Explicit Return URL (Highest Priority)
-                    if (returnUrl == "Directory")
-                    {
-                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary shadow-sm">
-                            <i class="fas fa-arrow-left me-2"></i> Directory
-                        </a>
-                    }
-                    else if (returnUrl == "Team")
-                    {
-                        <a asp-controller="Manager" asp-action="Index" class="btn btn-secondary shadow-sm">
-                            <i class="fas fa-users me-2"></i> My Team
-                        </a>
-                    }
-                    // 2. Fallback Role Based Logic
-                    else if (User.IsInRole("HRAdmin") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
-                    {
-                        <a asp-controller="HRAdmin" asp-action="ProfileCompleteness" class="btn btn-secondary shadow-sm">
-                            <i class="fas fa-arrow-left me-2"></i> Report
-                        </a>
-                    }
-                    // Fallback for SystemAdmin if accessing directly without param
-                    else if (User.IsInRole("SystemAdmin") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
-                     {
-                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary shadow-sm">
-                            <i class="fas fa-arrow-left me-2"></i> Directory
-                        </a>
-                    }
+                @if (returnUrl == "Directory")
+                {
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-light btn-sm shadow-sm rounded-pill px-3">
+                        <i class="fas fa-arrow-left me-2"></i> Directory
+                    </a>
+                }
+                else if (returnUrl == "Team")
+                {
+                    <a asp-controller="Manager" asp-action="Index" class="btn btn-light btn-sm shadow-sm rounded-pill px-3">
+                        <i class="fas fa-users me-2"></i> My Team
+                    </a>
+                }
+                else if (User.IsInRole("HRAdmin") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
+                {
+                    <a asp-controller="HRAdmin" asp-action="ProfileCompleteness" class="btn btn-light btn-sm shadow-sm rounded-pill px-3">
+                        <i class="fas fa-arrow-left me-2"></i> Report
+                    </a>
+                }
+                else if (User.IsInRole("SystemAdmin") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
+                {
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-light btn-sm shadow-sm rounded-pill px-3">
+                        <i class="fas fa-arrow-left me-2"></i> Directory
+                    </a>
                 }
 
-                @{
-                    bool canEdit = false;
-                    bool isSuperUser = User.IsInRole("HRAdmin");
-                    bool isSelf = currentUserId != null && Model.Employee_Id.ToString() == currentUserId;
-
-                    // Managers & SystemAdmins can ONLY edit themselves, never others.
-                    if (isSuperUser || isSelf) 
-                    { 
-                        canEdit = true; 
-                    }
-
-                    if (canEdit)
-                    {
-                         <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-primary shadow-sm">
-                            <i class="fas fa-pen me-2"></i> Edit
-                        </a>
-                    }
+                @if (canEdit)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Employee_Id" class="btn btn-warning text-dark btn-sm shadow-sm rounded-pill px-3 fw-bold">
+                        <i class="fas fa-pen me-2"></i> Edit Profile
+                    </a>
                 }
             </div>
         </div>
 
-        <!-- PROFILE BODY -->
-        <div class="card-body px-4 px-md-5 pb-5">
-
-            <!-- AVATAR & NAME ROW -->
-            <div class="row mb-5">
-                <!-- Avatar Column -->
-                <div class="col-lg-auto text-center text-lg-start" style="margin-top: -100px;">
-                    <div class="position-relative d-inline-block">
+        <!-- Profile Info Section -->
+        <div class="card-body px-4 px-lg-5 pt-4 pb-5">
+            <div class="row align-items-end">
+                <!-- Avatar -->
+                <div class="col-auto">
+                    <div class="position-relative">
                         @if (Model.Profile_Image != null && Model.Profile_Image.Length > 0)
                         {
                             var base64 = Convert.ToBase64String(Model.Profile_Image);
-                            <img src="data:image/*;base64,@base64" class="rounded-circle shadow-lg"
-                                 style="width: 160px; height: 160px; object-fit: cover; border: 6px solid var(--bg-card); background-color: var(--bg-card);"
-                                 onerror="this.src='https://ui-avatars.com/api/?name=@Model.Full_Name&background=random&size=160';"
+                            <img src="data:image/*;base64,@base64" 
+                                 class="rounded-circle shadow-lg"
+                                 style="width: 150px; height: 150px; object-fit: cover; border: 5px solid var(--bg-card);"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=@Model.Full_Name&background=3b82f6&color=fff&size=150';"
                                  alt="Profile" />
                         }
                         else
                         {
-                            <img src="https://ui-avatars.com/api/?name=@Model.Full_Name&background=random&size=160"
+                            <img src="https://ui-avatars.com/api/?name=@Model.Full_Name&background=3b82f6&color=fff&size=150"
                                  class="rounded-circle shadow-lg"
-                                 style="width: 160px; height: 160px; object-fit: cover; border: 6px solid var(--bg-card); background-color: var(--bg-card);"
+                                 style="width: 150px; height: 150px; object-fit: cover; border: 5px solid var(--bg-card);"
                                  alt="Default" />
+                        }
+                        <!-- Status Indicator -->
+                        <span class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-3 border-dark" 
+                              style="width: 24px; height: 24px;" title="Active"></span>
+                    </div>
+                </div>
+                
+                <!-- Name & Title -->
+                <div class="col ps-4">
+                    <h2 class="fw-bold mb-1 text-white">@Model.Full_Name</h2>
+                    <p class="text-primary fs-5 mb-3 fw-medium">@Model.Position</p>
+                    
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30 px-3 py-2 rounded-pill">
+                            <i class="fas fa-building me-2"></i> @Model.Department
+                        </span>
+                        <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-30 px-3 py-2 rounded-pill">
+                            <i class="fas fa-circle me-2 small"></i> @Model.Employment_Status
+                        </span>
+                        @if (Model.Hire_Date.HasValue)
+                        {
+                            var years = (DateTime.Now - Model.Hire_Date.Value).Days / 365;
+                            <span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 px-3 py-2 rounded-pill">
+                                <i class="fas fa-calendar-alt me-2"></i> @years+ years
+                            </span>
                         }
                     </div>
                 </div>
-
-                <!-- Name & Details Column -->
-                <div class="col-lg pt-3 ps-lg-4 text-center text-lg-start">
-                    <h1 class="fw-bold mb-1">@Model.Full_Name</h1>
-                    <p class="text-muted fs-5 mb-3">@Model.Position</p>
-                    
-                    <div class="d-flex justify-content-center justify-content-lg-start gap-2">
-                        <span class="badge rounded-pill bg-light border text-muted px-3 py-2">
-                            <i class="fas fa-building me-2"></i> @Model.Department
-                        </span>
-                        <span class="badge rounded-pill bg-success px-3 py-2">
-                            <i class="fas fa-circle me-2 small"></i> @Model.Employment_Status
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- INFORMATION GRID -->
-            <div class="row g-4">
-
-                <!-- MAIN INFO -->
-                <div class="col-lg-8">
-                    <div class="card h-100 border border-subtle shadow-sm" style="background-color: var(--bg-surface);">
-                        <div class="card-header border-bottom border-subtle bg-transparent py-3">
-                            <h6 class="mb-0 text-uppercase fw-bold text-primary" style="letter-spacing: 1px; font-size: 0.8rem;">
-                                <i class="fas fa-user-circle me-2"></i> Personal Information
-                            </h6>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 h-100 border border-subtle" style="background-color: var(--bg-body);">
-                                        <label class="d-block text-muted text-uppercase small fw-bold mb-1" style="font-size: 0.7rem;">Email Address</label>
-                                        <div class="fw-bold text-white text-break">@Model.Email</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 h-100 border border-subtle" style="background-color: var(--bg-body);">
-                                        <label class="d-block text-muted text-uppercase small fw-bold mb-1" style="font-size: 0.7rem;">Phone Number</label>
-                                        <div class="fw-bold text-white">@Model.Phone</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 h-100 border border-subtle" style="background-color: var(--bg-body);">
-                                        <label class="d-block text-muted text-uppercase small fw-bold mb-1" style="font-size: 0.7rem;">Address</label>
-                                        <div class="fw-bold text-white">@Model.Address</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 h-100 border border-subtle" style="background-color: var(--bg-body);">
-                                        <label class="d-block text-muted text-uppercase small fw-bold mb-1" style="font-size: 0.7rem;">Hire Date</label>
-                                        <div class="fw-bold text-white">@(Model.Hire_Date?.ToShortDateString() ?? "N/A")</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- EMERGENCY CONTACT -->
-                <div class="col-lg-4">
-                    <div class="card h-100 border border-danger border-opacity-25 shadow-sm" style="background-color: rgba(255, 68, 68, 0.03);">
-                        <div class="card-header border-bottom border-danger border-opacity-10 bg-transparent py-3">
-                            <h6 class="mb-0 text-uppercase fw-bold text-danger" style="letter-spacing: 1px; font-size: 0.8rem;">
-                                <i class="fas fa-heartbeat me-2"></i> Emergency Contact
-                            </h6>
-                        </div>
-                        <div class="card-body p-4 d-flex flex-column justify-content-center gap-4">
-                             <!-- Single Block Design for Emergency -->
-                             <div class="p-3 rounded-3 border border-danger border-opacity-10" style="background-color: var(--bg-body);">
-                                <div class="mb-3">
-                                    <label class="d-block text-danger text-uppercase small fw-bold mb-1 opacity-75" style="font-size: 0.65rem;">Contact Name</label>
-                                    <div class="fw-bold text-white">@(Model.Emergency_Contact_Name ?? "Not Provided")</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="d-block text-danger text-uppercase small fw-bold mb-1 opacity-75" style="font-size: 0.65rem;">Relationship</label>
-                                    <div class="fw-bold text-white">@(Model.Relationship ?? "N/A")</div>
-                                </div>
-                                <div>
-                                    <label class="d-block text-danger text-uppercase small fw-bold mb-1 opacity-75" style="font-size: 0.65rem;">Phone</label>
-                                    <div class="fw-bold text-danger">
-                                        <i class="fas fa-phone-alt me-2"></i>@(Model.Emergency_Contact_Phone ?? "N/A")
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
+
+    <!-- INFORMATION CARDS -->
+    <div class="row g-4">
+
+        <!-- Contact Information -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h6 class="text-uppercase fw-bold text-primary mb-0 d-flex align-items-center" style="font-size: 0.75rem; letter-spacing: 1px;">
+                        <span class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-envelope text-primary"></i>
+                        </span>
+                        Contact Details
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Email Address</label>
+                        <p class="fw-semibold mb-0 text-white d-flex align-items-center">
+                            <i class="fas fa-envelope text-primary me-2 opacity-50"></i>
+                            <span class="text-break">@Model.Email</span>
+                        </p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Phone Number</label>
+                        <p class="fw-semibold mb-0 text-white d-flex align-items-center">
+                            <i class="fas fa-phone text-primary me-2 opacity-50"></i>
+                            @Model.Phone
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Address</label>
+                        <p class="fw-semibold mb-0 text-white d-flex align-items-center">
+                            <i class="fas fa-map-marker-alt text-primary me-2 opacity-50"></i>
+                            @(string.IsNullOrEmpty(Model.Address) ? "Not Provided" : Model.Address)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Information -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h6 class="text-uppercase fw-bold text-success mb-0 d-flex align-items-center" style="font-size: 0.75rem; letter-spacing: 1px;">
+                        <span class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-briefcase text-success"></i>
+                        </span>
+                        Work Information
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Department</label>
+                        <p class="fw-semibold mb-0 text-white d-flex align-items-center">
+                            <i class="fas fa-building text-success me-2 opacity-50"></i>
+                            @Model.Department
+                        </p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Position</label>
+                        <p class="fw-semibold mb-0 text-white d-flex align-items-center">
+                            <i class="fas fa-user-tie text-success me-2 opacity-50"></i>
+                            @Model.Position
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Hire Date</label>
+                        <p class="fw-semibold mb-0 text-white d-flex align-items-center">
+                            <i class="fas fa-calendar-check text-success me-2 opacity-50"></i>
+                            @(Model.Hire_Date?.ToString("MMMM dd, yyyy") ?? "Not Available")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4" style="border-left: 4px solid #ef4444 !important;">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h6 class="text-uppercase fw-bold text-danger mb-0 d-flex align-items-center" style="font-size: 0.75rem; letter-spacing: 1px;">
+                        <span class="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="fas fa-heartbeat text-danger"></i>
+                        </span>
+                        Emergency Contact
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Contact Name</label>
+                        <p class="fw-semibold mb-0 text-white d-flex align-items-center">
+                            <i class="fas fa-user text-danger me-2 opacity-50"></i>
+                            @(Model.Emergency_Contact_Name ?? "Not Provided")
+                        </p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Relationship</label>
+                        <p class="fw-semibold mb-0 text-white d-flex align-items-center">
+                            <i class="fas fa-heart text-danger me-2 opacity-50"></i>
+                            @(Model.Relationship ?? "Not Specified")
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Phone Number</label>
+                        <p class="fw-bold mb-0 text-danger d-flex align-items-center fs-5">
+                            <i class="fas fa-phone-alt text-danger me-2"></i>
+                            @(Model.Emergency_Contact_Phone ?? "Not Available")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
+
+<style>
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+    
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .bg-opacity-10 {
+        --bs-bg-opacity: 0.1;
+    }
+    
+    .bg-opacity-20 {
+        --bs-bg-opacity: 0.2;
+    }
+    
+    .border-opacity-30 {
+        --bs-border-opacity: 0.3;
+    }
+</style>

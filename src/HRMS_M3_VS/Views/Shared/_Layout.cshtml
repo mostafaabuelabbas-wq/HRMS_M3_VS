@@ -88,16 +88,16 @@
                         </a>
                     }
                     
-                    @* TEAM ATTENDANCE: Manager, HRAdmin, SystemAdmin (TeamAttendanceController logic) *@
-                    @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin") || User.IsInRole("HRAdmin"))
+                    @* TEAM ATTENDANCE: Manager & System Admin Only *@
+                    @if (User.IsInRole("Manager") || User.IsInRole("SystemAdmin"))
                     {
                         <a class="nav-link" asp-area="Attendance" asp-controller="TeamAttendance" asp-action="Index">
                             <i class="fas fa-user-check"></i> <span>Team Attendance</span>
                         </a>
                     }
 
-                    @* LEAVE REQUESTS: Manager or HRAdmin Only (LeaveController has [Authorize(Roles="Manager,HRAdmin")]) *@
-                    @if (User.IsInRole("Manager") || User.IsInRole("HRAdmin"))
+                    @* LEAVE REQUESTS: Manager Only in Management Section *@
+                    @if (User.IsInRole("Manager"))
                     {
                         <a class="nav-link" asp-area="Leave" asp-controller="Leave" asp-action="Index">
                             <i class="fas fa-clipboard-check"></i> <span>Leave Requests</span>
@@ -191,9 +191,6 @@
                     <div class="nav-label">System</div>
                     <a class="nav-link" asp-area="Employee" asp-controller="Role" asp-action="Index">
                         <i class="fas fa-shield-alt"></i> <span>Roles</span>
-                    </a>
-                    <a class="nav-link" asp-controller="AdminSettings" asp-action="Index">
-                        <i class="fas fa-cogs"></i> <span>Settings</span>
                     </a>
                 </div>
             }

@@ -1783,12 +1783,12 @@ BEGIN
             l.leave_id,
             l.leave_type,
             ISNULL(le.entitlement, 0) AS raw_entitlement,
-             -- Approved Usage (Include Override)
+             -- Approved Usage (Include Override and Synced)
             ISNULL((SELECT SUM(duration) 
                     FROM LeaveRequest 
                     WHERE employee_id = @EmployeeID 
                       AND leave_id = l.leave_id 
-                      AND (status = 'Approved' OR status LIKE 'Approved%')), 0) AS used,
+                      AND (status = 'Approved' OR status LIKE 'Approved%' OR status = 'Synced')), 0) AS used,
             -- Pending Usage
             ISNULL((SELECT SUM(duration) 
                     FROM LeaveRequest 
