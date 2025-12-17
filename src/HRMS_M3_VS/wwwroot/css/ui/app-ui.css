@@ -13,12 +13,12 @@
     /* Backgrounds */
     --bg-body: #000000;
     /* Pure Black */
-    --bg-surface: #111111;
-    /* Very Dark Gray (almost black) */
-    --bg-card: #0a0a0a;
-    /* Near Black for cards */
-    --bg-input: #000000;
-    /* Pure Black */
+    --bg-surface: #1a1a1a;
+    /* Dark Gray (sidebar style) */
+    --bg-card: #1a1a1a;
+    /* Grey for cards - matches sidebar */
+    --bg-input: #111111;
+    /* Dark input background */
 
     /* Text */
     --text-main: #ffffff;
@@ -219,6 +219,12 @@ a:hover {
     background-color: var(--primary-light);
     color: var(--primary) !important;
     border-left: 3px solid var(--primary);
+    font-weight: 700;
+    transform: translateX(4px);
+}
+
+.nav-link.active i {
+    color: var(--primary);
 }
 
 .nav-link i {

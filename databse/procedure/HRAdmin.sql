@@ -3043,6 +3043,7 @@ END;
 GO
 
 -- 15. GetManagerNotes
+-- 15. GetManagerNotes
 CREATE OR ALTER PROCEDURE GetManagerNotes
 AS
 BEGIN
