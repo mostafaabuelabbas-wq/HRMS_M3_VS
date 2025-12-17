@@ -210,10 +210,11 @@ BEGIN
 
 END;
 GO
--- Fix profile_image column size
-ALTER TABLE Employee
-ALTER COLUMN profile_image VARCHAR(500);
-GO
+-- POISON PILL REMOVED: This block corrupted the profile_image column type.
+-- -- Fix profile_image column size
+-- ALTER TABLE Employee
+-- ALTER COLUMN profile_image VARCHAR(500);
+-- GO
 
 -- 3. UpdateEmployeeInfo
 /*

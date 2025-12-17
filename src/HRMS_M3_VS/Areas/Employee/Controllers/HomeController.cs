@@ -17,8 +17,8 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
             _env = env;
         }
 
-        // DIRECTORY: HR Admin & System Admin Only
-        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "HRAdmin,SystemAdmin")]
+        // DIRECTORY: System Admin Only
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> Index()
         {
             var employees = await _service.GetAllEmployeesAsync();
@@ -142,11 +142,28 @@ namespace HRMS_M3_VS.Areas.Employee.Controllers
             // Update the model with the final decision
             model.ExistingImageBytes = finalBytes;
 
-            // 3. Save Personal Info
-            await _service.UpdateEmployeeAsync(model);
-
-            // 4. Save Emergency Info
-            await _service.UpdateEmergencyContactAsync(model);
+            // 3. Save Personal Info & Emergency Info
+            try
+            {
+                await _service.UpdateEmployeeAsync(model);
+                await _service.UpdateEmergencyContactAsync(model);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex)
+            {
+                if (ex.Message.Contains("truncated"))
+                {
+                    ModelState.AddModelError("ProfileImage", "Database Schema Error: The image is too large for the current database setup. PLEASE RUN THE 'Fix_ProfileImage.sql' SCRIPT in the database folder.");
+                    // Reload the VM properly? We might need to reload model but ExistingImageBytes is already there. Assumes byte[] is valid.
+                    return View(model); 
+                }
+                throw; // Rethrow other SQL errors
+            }
+            catch (Exception ex)
+            {
+                 // Generic fallback
+                 ModelState.AddModelError("", "An error occurred updating the profile: " + ex.Message);
+                 return View(model);
+            }
 
             return RedirectToAction("Profile", new { id = model.EmployeeId });
         }

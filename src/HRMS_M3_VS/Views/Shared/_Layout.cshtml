@@ -127,8 +127,8 @@
                 <div class="nav-group">
                     <div class="nav-label">HR Admin</div>
                     
-                    @* DIRECTORY: HR Admin & System Admin Only *@
-                    @if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin"))
+                    @* DIRECTORY: System Admin Only (HR Admin Restricted) *@
+                    @if (User.IsInRole("SystemAdmin"))
                     {
                         <a class="nav-link" asp-area="Employee" asp-controller="Home" asp-action="Index">
                             <i class="fas fa-address-book"></i> <span>Directory</span>

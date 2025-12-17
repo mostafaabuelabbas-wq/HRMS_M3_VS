@@ -20,27 +20,47 @@
                 <!-- Back Buttons Logic -->
                 @{
                     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    // HR Admin Back
-                    if (User.IsInRole("HRAdmin") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
+                    var returnUrl = Context.Request.Query["returnUrl"].ToString();
+
+                    // 1. Explicit Return URL (Highest Priority)
+                    if (returnUrl == "Directory")
+                    {
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary shadow-sm">
+                            <i class="fas fa-arrow-left me-2"></i> Directory
+                        </a>
+                    }
+                    else if (returnUrl == "Team")
+                    {
+                        <a asp-controller="Manager" asp-action="Index" class="btn btn-secondary shadow-sm">
+                            <i class="fas fa-users me-2"></i> My Team
+                        </a>
+                    }
+                    // 2. Fallback Role Based Logic
+                    else if (User.IsInRole("HRAdmin") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
                     {
                         <a asp-controller="HRAdmin" asp-action="ProfileCompleteness" class="btn btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left me-2"></i> Report
                         </a>
                     }
-                    // Manager Back
-                    if (User.IsInRole("Manager") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
-                    {
-                        <a asp-controller="Manager" asp-action="Index" class="btn btn-secondary shadow-sm">
-                            <i class="fas fa-arrow-left me-2"></i> Team
+                    // Fallback for SystemAdmin if accessing directly without param
+                    else if (User.IsInRole("SystemAdmin") && currentUserId != null && Model.Employee_Id.ToString() != currentUserId)
+                     {
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary shadow-sm">
+                            <i class="fas fa-arrow-left me-2"></i> Directory
                         </a>
                     }
                 }
 
-                <!-- Edit Button Logic -->
                 @{
                     bool canEdit = false;
-                    if (User.IsInRole("HRAdmin") || User.IsInRole("SystemAdmin")) { canEdit = true; }
-                    else if (currentUserId != null && Model.Employee_Id.ToString() == currentUserId) { canEdit = true; }
+                    bool isSuperUser = User.IsInRole("HRAdmin");
+                    bool isSelf = currentUserId != null && Model.Employee_Id.ToString() == currentUserId;
+
+                    // Managers & SystemAdmins can ONLY edit themselves, never others.
+                    if (isSuperUser || isSelf) 
+                    { 
+                        canEdit = true; 
+                    }
 
                     if (canEdit)
                     {
