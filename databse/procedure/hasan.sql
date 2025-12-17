@@ -922,3 +922,58 @@ BEGIN
     FROM RawBalance
 END;
 GO
+
+INSERT INTO LatenessPolicy (grace_period_mins, deduction_rate)
+VALUES (10, 0.00);INSERT INTO ShiftSchedule (name, start_time, end_time, grace_period_minutes)
+VALUES 
+('Morning Shift', '09:00:00', '17:00:00', 10),
+('Strict Shift',  '09:00:00', '17:00:00', 5),
+('No Grace Shift','09:00:00', '17:00:00', 0);
+
+INSERT INTO Attendance (employee_id, shift_id, entry_time, exit_time, login_method, logout_method)
+VALUES
+(10, 1, '2025-12-17 09:07:00', '2025-12-17 17:00:00', 'Device', 'Device');
+
+
+INSERT INTO Attendance (employee_id, shift_id, entry_time, exit_time, login_method, logout_method)
+VALUES
+(10, 1, '2025-12-18 09:15:00', '2025-12-18 17:00:00', 'Device', 'Device');
+
+
+INSERT INTO Attendance (
+    employee_id,
+    shift_id,
+    entry_time,
+    exit_time,
+    login_method,
+    logout_method,
+    exception_id
+)
+VALUES (
+    10,
+    1,
+    '2025-12-20 09:20:00',
+    '2025-12-20 17:00:00',
+    'Device',
+    'Device',
+    1   -- LateArrival exception
+);
+
+
+INSERT INTO Attendance (
+    employee_id,
+    shift_id,
+    entry_time,
+    exit_time,
+    login_method,
+    logout_method
+)
+VALUES (
+    11,
+    1,
+    '2025-12-17 09:25:00',
+    '2025-12-17 17:00:00',
+    'Device',
+    'Device'
+);
+
