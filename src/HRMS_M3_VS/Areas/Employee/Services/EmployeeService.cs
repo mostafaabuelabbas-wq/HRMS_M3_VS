@@ -34,14 +34,16 @@ namespace HRMS_M3_VS.Areas.Employee.Services
         // 1. Updates Email, Address, Phone, Image
         public async Task UpdateEmployeeAsync(EmployeeEditViewModel vm)
         {
-            await _db.ExecuteAsync("UpdateEmployeeInfo", new
-            {
-                EmployeeID = vm.EmployeeId,
-                Email = vm.Email,
-                Phone = vm.Phone,
-                Address = vm.Address,
-                ProfileImage = vm.ExistingImageBytes
-            });
+            var p = new DynamicParameters();
+            p.Add("EmployeeID", vm.EmployeeId);
+            p.Add("Email", vm.Email);
+            p.Add("Phone", vm.Phone);
+            p.Add("Address", vm.Address);
+            
+            // Explicitly define as Binary with MAX size (-1) to avoid truncation by default mapping
+            p.Add("ProfileImage", vm.ExistingImageBytes, System.Data.DbType.Binary, size: -1);
+
+            await _db.ExecuteAsync("UpdateEmployeeInfo", p);
         }
 
         // 2. Updates Emergency Name, Relation, Phone

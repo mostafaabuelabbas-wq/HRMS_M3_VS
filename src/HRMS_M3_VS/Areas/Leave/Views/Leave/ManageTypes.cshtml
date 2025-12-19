@@ -5,14 +5,14 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container-fluid p-5" style="background-color: #f8f9fa;">
+<div class="container-fluid p-5">
     <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h2 class="fw-bold text-dark mb-2">Leave Configuration</h2>
+            <h2 class="fw-bold text-light mb-2">Leave Configuration</h2>
             <p class="text-muted mb-0">Define leave types, accrual rules, and eligibility criteria.</p>
         </div>
-        <a href="/Leave/Leave/EditType" class="btn btn-dark rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2">
+        <a href="/Leave/Leave/EditType" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2">
             <i class="fas fa-plus-circle"></i> Create New Policy
         </a>
     </div>
@@ -39,7 +39,7 @@
         {
             <div class="col-12 text-center py-5">
                 <div class="mb-3 opacity-25">
-                    <i class="fas fa-clipboard-list fa-4x"></i>
+                    <i class="fas fa-clipboard-list fa-4x text-muted"></i>
                 </div>
                 <h5 class="text-muted fw-normal">No leave policies have been configured yet.</h5>
                 <p class="text-muted small">Click "Create New Policy" to get started.</p>
@@ -57,7 +57,7 @@
                             <h5 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
                                 <i class="@GetIcon(item.leave_type)"></i> @item.leave_type
                             </h5>
-                            <span class="badge bg-white text-dark bg-opacity-25 rounded-pill px-3">Active</span>
+                            <span class="badge bg-black bg-opacity-25 text-white rounded-pill px-3">Active</span>
                         </div>
 
                         <div class="card-body p-4 d-flex flex-column">
@@ -68,15 +68,15 @@
                             <!-- Rules Grid -->
                             <div class="row g-3 mb-4">
                                 <div class="col-6">
-                                    <div class="p-3 bg-light rounded-3 text-center h-100 border border-light-subtle">
+                                    <div class="p-3 bg-secondary bg-opacity-10 rounded-3 text-center h-100 border border-secondary border-opacity-10">
                                         <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.7rem;">Notice Period</div>
-                                        <div class="fw-bold text-dark fs-5">@item.notice_period <span class="fs-6 text-muted fw-normal">days</span></div>
+                                        <div class="fw-bold text-light fs-5">@item.notice_period <span class="fs-6 text-muted fw-normal">days</span></div>
                                     </div>
                                 </div>
                                 <div class="col-6">
-                                    <div class="p-3 bg-light rounded-3 text-center h-100 border border-light-subtle">
+                                    <div class="p-3 bg-secondary bg-opacity-10 rounded-3 text-center h-100 border border-secondary border-opacity-10">
                                         <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.7rem;">Max Duration</div>
-                                        <div class="fw-bold text-dark fs-5">@item.max_duration <span class="fs-6 text-muted fw-normal">days</span></div>
+                                        <div class="fw-bold text-light fs-5">@item.max_duration <span class="fs-6 text-muted fw-normal">days</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -90,11 +90,11 @@
                                 <div>
                                     @if(item.eligibility_rules == "All" || string.IsNullOrWhiteSpace(item.eligibility_rules))
                                     {
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Everyone</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">Everyone</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 text-wrap text-start lh-sm">
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-3 text-wrap text-start lh-sm">
                                             @item.eligibility_rules
                                         </span>
                                     }
@@ -102,7 +102,7 @@
                             </div>
                             
                             <!-- Action Button -->
-                            <a href="/Leave/Leave/EditType?id=@item.leave_type" class="btn btn-outline-dark w-100 rounded-pill mt-auto">
+                            <a href="/Leave/Leave/EditType?id=@item.leave_type" class="btn btn-outline-primary w-100 rounded-pill mt-auto">
                                 <i class="fas fa-cog me-2"></i> Configure Settings
                             </a>
                         </div>

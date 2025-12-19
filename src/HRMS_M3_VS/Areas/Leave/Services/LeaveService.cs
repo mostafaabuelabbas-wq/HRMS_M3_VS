@@ -28,12 +28,12 @@ namespace HRMS_M3_VS.Areas.Leave.Services
 
         public async Task<string> ApproveLeaveRequest(int id, int managerId)
         {
-            // Call the approval stored procedure
-            await _db.ExecuteAsync("ApproveLeaveRequest", new
+            // Call the correct stored procedure: ReviewLeaveRequest
+            await _db.ExecuteAsync("ReviewLeaveRequest", new
             {
                 LeaveRequestID = id,
-                ApproverID = managerId,
-                Status = "Approved"
+                ManagerID = managerId,   // Mapped to @ManagerID
+                Decision = "Approved"    // Mapped to @Decision
             });
 
             // ✅ NEW: After approval succeeds, sync to attendance
@@ -47,7 +47,6 @@ namespace HRMS_M3_VS.Areas.Leave.Services
             catch (Exception ex)
             {
                 // If sync fails, log it but don't fail the approval
-                // The leave is already approved, sync can be done manually if needed
                 Console.WriteLine($"Attendance sync failed: {ex.Message}");
             }
 
@@ -55,12 +54,11 @@ namespace HRMS_M3_VS.Areas.Leave.Services
         }
         public async Task<string> RejectLeaveRequest(int id, int managerId, string reason)
         {
-            await _db.ExecuteAsync("ApproveLeaveRequest", new
+            await _db.ExecuteAsync("ReviewLeaveRequest", new
             {
                 LeaveRequestID = id,
-                ApproverID = managerId,
-                Status = "Rejected",
-                Reason = reason  // ✅ Pass reason for reject
+                ManagerID = managerId,   // Mapped to @ManagerID
+                Decision = "Rejected"    // Mapped to @Decision
             });
 
             return "Rejected successfully.";
@@ -92,7 +90,7 @@ namespace HRMS_M3_VS.Areas.Leave.Services
 
         private bool CheckEligibility(string rules, dynamic employee)
         {
-            if (string.IsNullOrEmpty(rules) || rules.Equals("All", StringComparison.OrdinalIgnoreCase)) 
+            if (string.IsNullOrEmpty(rules) || rules.Equals("All", StringComparison.OrdinalIgnoreCase))
                 return true;
 
             // Rules format: "Type=FullTime;Gender=Female"
@@ -114,7 +112,7 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                     // Let's rely on what we saw: ContractType IS there.
                     // For now, implement ContractType and Tenure.
                 }
-                
+
                 if (key.Equals("Type", StringComparison.OrdinalIgnoreCase)) // Contract Type
                 {
                     if (value.Equals("All", StringComparison.OrdinalIgnoreCase)) continue; // Allow "All"
@@ -127,9 +125,9 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                 {
                     if (int.TryParse(value, out int requiredDays))
                     {
-                         DateTime hireDate = employee.hire_date;
-                         var tenure = (DateTime.Now - hireDate).TotalDays;
-                         if (tenure < requiredDays) return false;
+                        DateTime hireDate = employee.hire_date;
+                        var tenure = (DateTime.Now - hireDate).TotalDays;
+                        if (tenure < requiredDays) return false;
                     }
                 }
             }
@@ -183,7 +181,7 @@ namespace HRMS_M3_VS.Areas.Leave.Services
                 // VALIDATION: Allowed Extensions
                 var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
                 var extension = Path.GetExtension(dto.attachment.FileName).ToLowerInvariant();
-                
+
                 if (!allowedExtensions.Contains(extension))
                 {
                     throw new Exception("Invalid file type. Only PDF, JPG, and PNG are allowed.");
@@ -340,12 +338,12 @@ namespace HRMS_M3_VS.Areas.Leave.Services
         {
             var result = await _db.QueryAsync<dynamic>(
                 "OverrideLeaveDecision",
-                new 
-                { 
-                    LeaveRequestID = requestId, 
-                    NewStatus = status, 
-                    Reason = reason, 
-                    AdminID = adminId 
+                new
+                {
+                    LeaveRequestID = requestId,
+                    NewStatus = status,
+                    Reason = reason,
+                    AdminID = adminId
                 }
             );
             return result.FirstOrDefault()?.ConfirmationMessage ?? "Decision overridden.";
@@ -354,34 +352,16 @@ namespace HRMS_M3_VS.Areas.Leave.Services
         public async Task<LeaveRequestDetailDto> GetLeaveRequestDetail(int id)
         {
             var result = await _db.QueryAsync<LeaveRequestDetailDto>(
-                "GetLeaveRequestDetail", 
+                "GetLeaveRequestDetail",
                 new { RequestID = id }
             );
             return result.FirstOrDefault() ?? throw new Exception("Request not found.");
         }
 
-        public async Task<IEnumerable<LeaveRequestDetailDto>> GetAllLeaveRequests()
+        
+        public async Task<IEnumerable<LeaveRequestDetailDto>> GetAllLeaveRequestsDetails()
         {
             return await _db.QueryAsync<LeaveRequestDetailDto>("GetAllLeaveRequests", null);
-        /// <summary>
-        /// HR Admin can override a leave decision (flip approved/rejected)
-        /// </summary>
-        public async Task<string> OverrideLeaveDecision(int requestId, string reason)
-        {
-            try
-            {
-                await _db.ExecuteAsync("OverrideLeaveDecision", new
-                {
-                    LeaveRequestID = requestId,
-                    Reason = reason
-                });
-
-                return "Leave decision overridden successfully.";
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Override failed: {ex.Message}");
-            }
         }
     }
 }

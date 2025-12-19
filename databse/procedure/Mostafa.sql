@@ -169,9 +169,6 @@ GO
 
 
 
-
-
-
 ---contracts
 SET NOCOUNT ON;
 
@@ -240,3 +237,5 @@ SELECT
     CAST(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Employee) AS DECIMAL(5,2)) AS Percentage
 FROM Contract c
 GROUP BY c.type;
+
+

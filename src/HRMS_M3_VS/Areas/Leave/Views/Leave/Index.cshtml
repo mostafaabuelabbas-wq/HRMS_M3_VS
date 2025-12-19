@@ -175,25 +175,27 @@
 
                                     <!-- MODALS -->
                                     <!-- Reject Modal -->
+                                    <!-- MODALS -->
+                                    <!-- Reject Modal -->
                                     <div class="modal fade text-start" id="rejectModal-@item.RequestId" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                            <div class="modal-content border-secondary shadow-lg rounded-4">
                                                 <div class="modal-header border-0 pb-0">
                                                     <h6 class="modal-title fw-bold text-danger">Reject Request</h6>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <div class="modal-body">
-                                                    <p class="text-muted small mb-3">Please provide a reason for rejecting <strong>@item.EmployeeName</strong>'s request.</p>
-                                                    <form action="/Leave/Leave/Reject" method="post">
+                                                <form action="/Leave/Leave/Reject" method="post">
+                                                    <div class="modal-body">
+                                                        <p class="text-muted small mb-3">Please provide a reason for rejecting <strong>@item.EmployeeName</strong>'s request.</p>
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="id" value="@item.RequestId" />
-                                                        <textarea name="reason" class="form-control bg-light border-0 mb-3 rounded-3" rows="3" required placeholder="Reason..."></textarea>
-                                                        <div class="d-flex justify-content-end gap-2">
-                                                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-danger rounded-pill px-4">Reject</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
+                                                        <textarea name="reason" class="form-control border-secondary mb-3 rounded-3" rows="3" required placeholder="Reason..."></textarea>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-danger rounded-pill px-4">Reject</button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
@@ -201,23 +203,23 @@
                                     <!-- Flag Modal -->
                                     <div class="modal fade text-start" id="flagModal-@item.RequestId" tabindex="-1">
                                         <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                            <div class="modal-content border-secondary shadow-lg rounded-4">
                                                 <div class="modal-header border-0 pb-0">
                                                     <h6 class="modal-title fw-bold text-warning">Flag Pattern</h6>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <div class="modal-body">
-                                                    <p class="text-muted small mb-3">Alert HR about irregular behavior for <strong>@item.EmployeeName</strong>.</p>
-                                                    <form action="/Leave/Leave/Flag" method="post">
+                                                <form action="/Leave/Leave/Flag" method="post">
+                                                    <div class="modal-body">
+                                                        <p class="text-muted small mb-3">Alert HR about irregular behavior for <strong>@item.EmployeeName</strong>.</p>
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="employeeId" value="@item.EmployeeId" />
-                                                        <textarea name="reason" class="form-control bg-light border-0 mb-3 rounded-3" rows="3" required placeholder="Describe the pattern..."></textarea>
-                                                        <div class="d-flex justify-content-end gap-2">
-                                                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                                            <button type="submit" class="btn btn-warning rounded-pill px-4 text-dark">Flag</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
+                                                        <textarea name="reason" class="form-control border-secondary mb-3 rounded-3" rows="3" required placeholder="Describe the pattern..."></textarea>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-warning rounded-pill px-4 text-dark">Flag</button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>

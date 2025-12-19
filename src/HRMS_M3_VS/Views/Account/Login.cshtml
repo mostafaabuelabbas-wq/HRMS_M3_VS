@@ -11,181 +11,130 @@
     <title>Login - HRMS</title>
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- FontAwesome for Icons -->
+    <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Main UI Theme (Pitch Black & Blue) -->
+    <link href="~/css/ui/app-ui.css" rel="stylesheet" />
 
     <style>
+        /* Specific overrides for Login Page centering */
         body {
-            font-family: 'Inter', sans-serif;
-            /* Professional Dark Gradient Background */
-            background: radial-gradient(circle at 10% 20%, rgb(15, 23, 42) 0%, rgb(30, 41, 59) 90.2%);
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            background-color: var(--bg-body); /* Inherit Black */
         }
 
-        /* The Main Card */
         .login-card {
             width: 100%;
-            max-width: 420px;
-            background: #ffffff;
-            border-radius: 16px;
-            /* Soft, deep shadow for a "floating" effect */
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            padding: 3rem 2.5rem;
+            max-width: 400px;
+            /* Card style inherited from app-ui.css .card, but we ensure z-index */
             position: relative;
             z-index: 10;
         }
 
-        /* Input Fields Styling */
-        .form-control {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 12px 15px;
-            font-size: 0.95rem;
-            color: #334155;
-            transition: all 0.3s ease;
-        }
-
-            .form-control:focus {
-                background-color: #fff;
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); /* Soft blue glow */
-            }
-
-        /* Input Icons */
+        /* Input Group tweaks to match theme */
         .input-group-text {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-right: none;
-            color: #94a3b8;
+            background-color: var(--bg-input);
+            border-color: var(--border);
+            color: var(--text-muted);
         }
-
+        
         .form-control {
-            border-left: none;
+            border-left: none; /* Seamless look with icon */
         }
 
-        /* Button Styling */
-        .btn-primary {
-            background-color: #2563eb;
-            border: none;
-            padding: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-            .btn-primary:hover {
-                background-color: #1d4ed8;
-                transform: translateY(-2px); /* Subtle lift effect */
-                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-            }
-
-        /* Typography decorations */
-        .brand-text {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: -1px;
-        }
-
-        .brand-accent {
-            color: #3b82f6;
-        }
-
-        /* Background decoration circles (Optional, makes it look premium) */
+        /* Floating Shapes for decoration */
         .bg-shape {
             position: absolute;
             border-radius: 50%;
-            background: rgba(59, 130, 246, 0.15);
-            filter: blur(60px);
+            filter: blur(80px);
             z-index: 1;
+            opacity: 0.3;
         }
-
         .shape-1 {
-            width: 300px;
+            width: 300px; 
             height: 300px;
-            top: -50px;
-            left: -50px;
+            background: var(--primary);
+            top: -50px; left: -50px;
         }
-
         .shape-2 {
-            width: 400px;
+            width: 400px; 
             height: 400px;
-            bottom: -100px;
-            right: -100px;
-            background: rgba(16, 185, 129, 0.1);
+            background: var(--primary-hover);
+            bottom: -100px; right: -100px;
         }
-
     </style>
 </head>
 <body>
 
-    <!-- Background Decorations -->
+    <!-- Background Decoration -->
     <div class="bg-shape shape-1"></div>
     <div class="bg-shape shape-2"></div>
 
-    <div class="login-card">
-
-        <!-- Header -->
-        <div class="text-center mb-5">
-            <div class="brand-text">HR<span class="brand-accent">MS</span></div>
-            <p class="text-muted small mt-2">Welcome back! Please access your account.</p>
-        </div>
-
-        <!-- Error Message -->
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger d-flex align-items-center p-2 mb-4 small rounded-3" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <div>@TempData["Error"]</div>
-            </div>
-        }
-
-        <!-- Form -->
-        <form asp-action="Login" method="post">
-
-            <!-- Email -->
-            <div class="mb-4">
-                <label class="form-label fw-bold small text-uppercase text-muted" style="font-size: 0.75rem;">Email Address</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                    <input asp-for="Email" class="form-control" placeholder="name@company.com" />
+    <div class="card login-card shadow-lg p-4 p-md-5 border-0">
+        <div class="card-body p-0">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <div class="brand-text display-4 mb-2">
+                    <i class="fas fa-cube text-primary me-2"></i>HR<span class="text-primary">MS</span>
                 </div>
-                <span asp-validation-for="Email" class="text-danger small mt-1"></span>
+                <p class="text-muted small">Welcome back! Please access your account.</p>
             </div>
 
-            <!-- Password -->
-            <div class="mb-4">
-                <label class="form-label fw-bold small text-uppercase text-muted" style="font-size: 0.75rem;">Password</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
+            <!-- Error Message -->
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger d-flex align-items-center p-2 mb-4 small rounded" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <div>@TempData["Error"]</div>
                 </div>
+            }
+
+            <!-- Form -->
+            <form asp-action="Login" method="post">
                 
+                <!-- Email -->
+                <div class="mb-4">
+                    <label class="form-label small text-uppercase text-muted fw-bold" style="letter-spacing: 0.1em;">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-end-0"><i class="fas fa-envelope"></i></span>
+                        <input asp-for="Email" class="form-control border-start-0 ps-0" placeholder="name@company.com" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-5">
+                    <label class="form-label small text-uppercase text-muted fw-bold" style="letter-spacing: 0.1em;">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-end-0"><i class="fas fa-lock"></i></span>
+                        <input asp-for="Password" type="password" class="form-control border-start-0 ps-0" placeholder="Enter password" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary py-2 fw-bold">
+                        Sign In
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Footer -->
+            <div class="text-center mt-5 pt-3 border-top border-secondary border-opacity-10">
+                <small class="text-muted">© 2025 HR Management System</small>
             </div>
-
-            <!-- Submit Button -->
-            <div class="d-grid mt-5">
-                <button type="submit" class="btn btn-primary shadow-sm">
-                    Sign In <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
-
-        </form>
-
-        <!-- Footer -->
-        <div class="text-center mt-4 pt-3 border-top">
-            <small class="text-muted">© 2025 HR Management System</small>
         </div>
     </div>
 
-    <!-- Scripts for validation -->
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>

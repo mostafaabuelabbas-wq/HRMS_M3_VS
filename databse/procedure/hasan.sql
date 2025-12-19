@@ -117,12 +117,12 @@ BEGIN
             l.leave_id,
             l.leave_type,
             ISNULL(le.entitlement, 0) AS raw_entitlement,
-             -- Approved Usage (Include Override)
+             -- Approved Usage (Include Override and Synced)
             ISNULL((SELECT SUM(duration) 
                     FROM LeaveRequest 
                     WHERE employee_id = @EmployeeID 
                       AND leave_id = l.leave_id 
-                      AND (status = 'Approved' OR status LIKE 'Approved%')), 0) AS used,
+                      AND (status = 'Approved' OR status LIKE 'Approved%' OR status = 'Synced')), 0) AS used,
             -- Pending Usage
             ISNULL((SELECT SUM(duration) 
                     FROM LeaveRequest 
@@ -320,15 +320,18 @@ BEGIN
         END;
 
         --------------------------------------------------------
-        -- STEP 5: Finalize Status
+        -- STEP 5: Deduct Leave Balance from Entitlement
         --------------------------------------------------------
-        -- Only update status if it is NOT 'Approved - Override' (preserve the Override tag)
-        IF @Status NOT IN ('Approved - Override')
-        BEGIN
-            UPDATE LeaveRequest
-            SET status = 'Synced'
-            WHERE request_id = @LeaveRequestID;
-        END
+        UPDATE LeaveEntitlement
+        SET entitlement = entitlement - @Duration
+        WHERE employee_id = @EmployeeID
+          AND leave_type_id = (SELECT leave_id FROM LeaveRequest WHERE request_id = @LeaveRequestID);
+
+        --------------------------------------------------------
+        -- STEP 6: Keep Status as 'Approved' (Do NOT change to 'Synced')
+        -- The status should remain Approved for user clarity
+        --------------------------------------------------------
+        -- Status remains 'Approved' - no update needed
 
         COMMIT TRANSACTION;
 
@@ -549,12 +552,12 @@ BEGIN
             l.leave_id,
             l.leave_type,
             ISNULL(le.entitlement, 0) AS raw_entitlement,
-             -- Approved Usage (Include Override)
+             -- Approved Usage (Include Override and Synced)
             ISNULL((SELECT SUM(duration) 
                     FROM LeaveRequest 
                     WHERE employee_id = @EmployeeID 
                       AND leave_id = l.leave_id 
-                      AND (status = 'Approved' OR status LIKE 'Approved%')), 0) AS used,
+                      AND (status = 'Approved' OR status LIKE 'Approved%' OR status = 'Synced')), 0) AS used,
             -- Pending Usage
             ISNULL((SELECT SUM(duration) 
                     FROM LeaveRequest 
@@ -615,12 +618,12 @@ BEGIN
             l.leave_id,
             l.leave_type,
             ISNULL(le.entitlement, 0) AS raw_entitlement,
-             -- Approved Usage (Include Override)
+             -- Approved Usage (Include Override and Synced)
             ISNULL((SELECT SUM(duration) 
                     FROM LeaveRequest 
                     WHERE employee_id = @EmployeeID 
                       AND leave_id = l.leave_id 
-                      AND (status = 'Approved' OR status LIKE 'Approved%')), 0) AS used,
+                      AND (status = 'Approved' OR status LIKE 'Approved%' OR status = 'Synced')), 0) AS used,
             -- Pending Usage
             ISNULL((SELECT SUM(duration) 
                     FROM LeaveRequest 
@@ -726,4 +729,251 @@ GO
 
 
 
+
+CREATE OR ALTER PROCEDURE SyncLeaveToAttendance
+    @LeaveRequestID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        DECLARE @EmployeeID INT, @LeaveType VARCHAR(50), @Duration INT, 
+                @Status VARCHAR(50), @Justification VARCHAR(255), @StartDate DATE;
+
+        SELECT 
+            @EmployeeID = lr.employee_id,
+            @LeaveType = l.leave_type,
+            @Duration = lr.duration,
+            @Status = lr.status,
+            @Justification = lr.justification
+        FROM LeaveRequest lr
+        JOIN [Leave] l ON lr.leave_id = l.leave_id
+        WHERE lr.request_id = @LeaveRequestID;
+
+        IF @EmployeeID IS NULL
+        BEGIN
+            RAISERROR('Leave request does not exist.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        IF @Status NOT IN ('Approved', 'Finalized', 'Approved - Balance Updated', 'Approved - Override')
+        BEGIN
+            RAISERROR('Only approved leaves can be synced.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        -- Parse Start Date from Justification
+        DECLARE @FromIndex INT = CHARINDEX('(From: ', @Justification);
+        
+        IF @FromIndex > 0
+        BEGIN
+            DECLARE @DateStr VARCHAR(10) = SUBSTRING(@Justification, @FromIndex + 7, 10);
+            SET @StartDate = TRY_CAST(@DateStr AS DATE);
+        END
+        
+        IF @StartDate IS NULL
+        BEGIN
+             SELECT @StartDate = CAST(approval_timing AS DATE) FROM LeaveRequest WHERE request_id = @LeaveRequestID;
+        END
+
+        IF @StartDate IS NULL
+        BEGIN
+            RAISERROR('Could not determine start date from justification.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+
+        -- Process Each Day
+        DECLARE @i INT = 0;
+        DECLARE @CurrentDate DATE;
+        DECLARE @ShiftID INT;
+        DECLARE @ShiftStart TIME;
+        DECLARE @ShiftEnd TIME;
+        DECLARE @ExceptionID INT;
+
+        WHILE @i < @Duration
+        BEGIN
+            SET @CurrentDate = DATEADD(DAY, @i, @StartDate);
+
+            INSERT INTO [Exception] ([name], category, [date], status)
+            VALUES (@LeaveType + ' Leave', 'Leave', @CurrentDate, 'Approved');
+
+            SET @ExceptionID = SCOPE_IDENTITY();
+
+            SELECT TOP 1 
+                @ShiftID = s.shift_id,
+                @ShiftStart = s.start_time,
+                @ShiftEnd = s.end_time
+            FROM ShiftAssignment sa
+            JOIN ShiftSchedule s ON sa.shift_id = s.shift_id
+            WHERE sa.employee_id = @EmployeeID
+              AND sa.status = 'Active'
+              AND @CurrentDate BETWEEN sa.start_date AND sa.end_date;
+
+            IF @ShiftID IS NOT NULL
+            BEGIN
+                INSERT INTO Attendance (
+                    employee_id, shift_id, entry_time, exit_time, 
+                    login_method, logout_method, exception_id
+                )
+                VALUES (
+                    @EmployeeID, @ShiftID,
+                    CAST(@CurrentDate AS DATETIME) + CAST(@ShiftStart AS DATETIME), 
+                    CAST(@CurrentDate AS DATETIME) + CAST(@ShiftEnd AS DATETIME),
+                    'LeaveSync', 'LeaveSync', @ExceptionID
+                );
+            END
+            ELSE
+            BEGIN
+                INSERT INTO Attendance (
+                    employee_id, entry_time, exit_time,
+                    login_method, logout_method, exception_id
+                )
+                VALUES (
+                    @EmployeeID, 
+                    CAST(@CurrentDate AS DATETIME) + CAST('09:00:00' AS DATETIME),
+                    CAST(@CurrentDate AS DATETIME) + CAST('17:00:00' AS DATETIME),
+                    'LeaveSync', 'LeaveSync', @ExceptionID
+                );
+            END
+
+            INSERT INTO Employee_Exception (employee_id, exception_id)
+            VALUES (@EmployeeID, @ExceptionID);
+
+            SET @i = @i + 1;
+        END;
+
+        -- Deduct Leave Balance from Entitlement
+        UPDATE LeaveEntitlement
+        SET entitlement = entitlement - @Duration
+        WHERE employee_id = @EmployeeID
+          AND leave_type_id = (SELECT leave_id FROM LeaveRequest WHERE request_id = @LeaveRequestID);
+
+        -- Status remains 'Approved' - no update needed
+
+        COMMIT TRANSACTION;
+
+        SELECT 'Leave successfully synced to Attendance with Exceptions.' AS ConfirmationMessage;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO
+
+
+
+-- FIX 1: Update existing Synced records to show as Approved
+UPDATE LeaveRequest SET status = 'Approved' WHERE status = 'Synced';
+
+-- FIX 2: Update GetLeaveBalance to count Synced status
+CREATE OR ALTER PROCEDURE GetLeaveBalance
+    @EmployeeID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    WITH RawBalance AS (
+        SELECT 
+            l.leave_id,
+            l.leave_type,
+            ISNULL(le.entitlement, 0) AS raw_entitlement,
+            ISNULL((SELECT SUM(duration) 
+                    FROM LeaveRequest 
+                    WHERE employee_id = @EmployeeID 
+                      AND leave_id = l.leave_id 
+                      AND (status = 'Approved' OR status LIKE 'Approved%' OR status = 'Synced')), 0) AS used,
+            ISNULL((SELECT SUM(duration) 
+                    FROM LeaveRequest 
+                    WHERE employee_id = @EmployeeID 
+                      AND leave_id = l.leave_id 
+                      AND status = 'Pending'), 0) AS pending
+        FROM [Leave] l
+        LEFT JOIN LeaveEntitlement le ON l.leave_id = le.leave_type_id AND le.employee_id = @EmployeeID
+        WHERE l.leave_type NOT IN ('Holiday')
+    )
+    SELECT
+        leave_type,
+        CASE 
+            WHEN leave_type = 'Vacation' THEN 'Annual'
+            WHEN leave_type IN ('Probation', 'Holiday') THEN 'Policy'
+            WHEN raw_entitlement > 0 OR leave_type = 'Sick' THEN 'Entitled'
+            ELSE 'Policy'
+        END AS category,
+        CASE 
+            WHEN leave_type IN ('Probation', 'Holiday') THEN 0
+            WHEN leave_type = 'Vacation' AND raw_entitlement = 0 THEN 30.00 
+            WHEN (raw_entitlement > 0 OR leave_type = 'Sick') THEN raw_entitlement
+            ELSE 0 
+        END AS entitlement,
+        days_used = used,
+        days_pending = pending,
+        CASE 
+            WHEN leave_type IN ('Probation', 'Holiday') THEN 0
+            WHEN leave_type = 'Vacation' AND raw_entitlement = 0 THEN 30.00 - used
+            WHEN (raw_entitlement > 0 OR leave_type = 'Sick') THEN raw_entitlement - used
+            ELSE 0 
+        END AS remaining_balance
+    FROM RawBalance
+END;
+GO
+
+INSERT INTO LatenessPolicy (grace_period_mins, deduction_rate)
+VALUES (10, 0.00);INSERT INTO ShiftSchedule (name, start_time, end_time, grace_period_minutes)
+VALUES 
+('Morning Shift', '09:00:00', '17:00:00', 10),
+('Strict Shift',  '09:00:00', '17:00:00', 5),
+('No Grace Shift','09:00:00', '17:00:00', 0);
+
+INSERT INTO Attendance (employee_id, shift_id, entry_time, exit_time, login_method, logout_method)
+VALUES
+(10, 1, '2025-12-17 09:07:00', '2025-12-17 17:00:00', 'Device', 'Device');
+
+
+INSERT INTO Attendance (employee_id, shift_id, entry_time, exit_time, login_method, logout_method)
+VALUES
+(10, 1, '2025-12-18 09:15:00', '2025-12-18 17:00:00', 'Device', 'Device');
+
+
+INSERT INTO Attendance (
+    employee_id,
+    shift_id,
+    entry_time,
+    exit_time,
+    login_method,
+    logout_method,
+    exception_id
+)
+VALUES (
+    10,
+    1,
+    '2025-12-20 09:20:00',
+    '2025-12-20 17:00:00',
+    'Device',
+    'Device',
+    1   -- LateArrival exception
+);
+
+
+INSERT INTO Attendance (
+    employee_id,
+    shift_id,
+    entry_time,
+    exit_time,
+    login_method,
+    logout_method
+)
+VALUES (
+    11,
+    1,
+    '2025-12-17 09:25:00',
+    '2025-12-17 17:00:00',
+    'Device',
+    'Device'
+);
 

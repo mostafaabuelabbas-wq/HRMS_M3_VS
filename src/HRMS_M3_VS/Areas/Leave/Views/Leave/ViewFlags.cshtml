@@ -22,6 +22,7 @@
     </div>
 
     <!-- Content -->
+    <!-- Content -->
     @if (!Model.Any())
     {
         <div class="text-center py-5">
@@ -45,12 +46,12 @@
                         <div class="card-body p-4 pt-5">
                             <!-- Header: Reported By -->
                             <div class="d-flex align-items-center mb-4">
-                                <div class="rounded-circle bg-light text-secondary d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px;">
+                                <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px;">
                                     <i class="fas fa-user-shield fs-5"></i>
                                 </div>
                                 <div>
                                     <div class="small text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Flagged By</div>
-                                    <div class="fw-bold text-dark">@item.ManagerName</div>
+                                    <div class="fw-bold text-light">@item.ManagerName</div>
                                 </div>
                                 <div class="ms-auto text-end">
                                     <div class="small text-muted">@item.CreatedAt.ToString("MMM dd")</div>
@@ -59,14 +60,14 @@
                             </div>
 
                             <!-- Subject: The Employee -->
-                            <div class="bg-light bg-opacity-50 rounded-3 p-3 mb-3 border border-light">
+                            <div class="bg-secondary bg-opacity-10 rounded-3 p-3 mb-3 border border-secondary border-opacity-25">
                                 <div class="d-flex align-items-center">
                                      <div class="rounded-circle bg-danger text-white d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 40px; height: 40px;">
                                         <i class="fas fa-user fs-6"></i>
                                     </div>
                                     <div>
                                         <div class="small text-uppercase text-danger fw-bold" style="font-size: 0.65rem;">Subject</div>
-                                        <div class="fw-bold text-dark">@item.EmployeeName</div>
+                                        <div class="fw-bold text-light">@item.EmployeeName</div>
                                     </div>
                                 </div>
                             </div>
@@ -74,14 +75,14 @@
                             <!-- Content: The Reason -->
                             <div class="p-3">
                                 <h6 class="fw-bold text-secondary mb-2 text-uppercase text-xs"><i class="fas fa-quote-left me-2 opacity-25"></i>Pattern Description</h6>
-                                <p class="text-dark mb-0 fw-medium" style="line-height: 1.6;">
+                                <p class="text-light mb-0 fw-medium" style="line-height: 1.6;">
                                     @item.NoteContent
                                 </p>
                             </div>
                         </div>
                         
                         <!-- Footer Actions -->
-                        <div class="card-footer bg-white border-0 p-3 pt-0 text-end d-flex justify-content-end gap-2">
+                        <div class="card-footer bg-transparent border-0 p-3 pt-0 text-end d-flex justify-content-end gap-2">
                             <!-- ARCHIVE BUTTON -->
                             <form action="/Leave/Leave/ArchiveFlag" method="post" style="display:inline;">
                                 @Html.AntiForgeryToken()
@@ -92,7 +93,7 @@
                             </form>
 
                             <!-- INVESTIGATE BUTTON -->
-                            <a href="/Employee/Home/Profile/@item.EmployeeId" class="btn btn-dark btn-sm rounded-pill px-3">
+                            <a href="/Employee/Home/Profile/@item.EmployeeId" class="btn btn-primary btn-sm rounded-pill px-3">
                                 <i class="fas fa-search me-1"></i> Investigate
                             </a>
                         </div>

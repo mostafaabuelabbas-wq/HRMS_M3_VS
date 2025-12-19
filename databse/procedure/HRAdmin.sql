@@ -2632,6 +2632,7 @@ GO
 -- 43 SyncLeaveToAttendance
 -- PROCEDURE: SyncLeaveToAttendance
 -- PROCEDURE: SyncLeaveToAttendance
+/*
 CREATE OR ALTER PROCEDURE SyncLeaveToAttendance
     @LeaveRequestID INT
 AS
@@ -2753,13 +2754,14 @@ BEGIN
             SET @i = @i + 1;
         END;
 
-        -- 5. UPDATE STATUS (Protect Override Status)
-        IF @Status NOT IN ('Approved - Override') 
-        BEGIN
-            UPDATE LeaveRequest
-            SET status = 'Synced'
-            WHERE request_id = @LeaveRequestID;
-        END
+        -- 5. Deduct Leave Balance from Entitlement
+        UPDATE LeaveEntitlement
+        SET entitlement = entitlement - @Duration
+        WHERE employee_id = @EmployeeID
+          AND leave_type_id = (SELECT leave_id FROM LeaveRequest WHERE request_id = @LeaveRequestID);
+
+        -- 6. Keep Status as 'Approved' (Do NOT change to 'Synced')
+        -- Status remains 'Approved' for user clarity - no update needed
 
         COMMIT TRANSACTION;
 
@@ -2772,7 +2774,7 @@ BEGIN
     END CATCH
 END;
 GO
-
+*/
 --- 44 UpdateInsuranceBrackets
 -- PROCEDURE: UpdateInsuranceBrackets
 CREATE PROCEDURE UpdateInsuranceBrackets
@@ -3042,6 +3044,7 @@ BEGIN
 END;
 GO
 
+-- 15. GetManagerNotes
 -- 15. GetManagerNotes
 CREATE OR ALTER PROCEDURE GetManagerNotes
 AS
